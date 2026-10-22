@@ -190,9 +190,10 @@ footer{background:var(--ink);color:#b9d0da;padding:22px 0;font-size:14px}
   <form id="fLogin" onsubmit="return doLogin(event)">
     <label>Username</label><input id="lu" autocomplete="username" required>
     <label for="lp">Password</label><div class="pwbox"><input id="lp" type="password" autocomplete="current-password" required><button type="button" class="eye" onclick="tp('lp',this)" aria-label="Tampilkan password"></button></div>
-    <p><button class="btn" id="bLogin">Masuk</button> <a href="#/daftar" onclick="swAuth('r')" style="color:var(--teal)">Belum punya akun? Daftar</a></p>
+    <p><button class="btn" id="bLogin">Masuk</button> <a href="#/daftar" onclick="swAuth('r')" id="lnkDaftar" style="color:var(--teal)">Belum punya akun? Daftar</a></p>
   </form>
   <form id="fReg" style="display:none" onsubmit="return doReg(event)">
+    <p id="regTutup" style="display:none;color:var(--bad);font-weight:600">Pendaftaran mandiri sedang ditutup. Silakan hubungi admin sekolah untuk dibuatkan akun.</p>
     <label>Nama lengkap</label><input id="rn" required>
     <label>Email</label><input id="re" type="email">
     <label>Username</label><input id="ru" required>
@@ -293,7 +294,8 @@ async function openArticle(slug){
 }
 
 /* ---------- Auth ---------- */
-function swAuth(w){$('#fLogin').style.display=w==='l'?'':'none';$('#fReg').style.display=w==='r'?'':'none';$('#authT').textContent=w==='l'?'Masuk':'Daftar akun'}
+function swAuth(w){$('#fLogin').style.display=w==='l'?'':'none';$('#fReg').style.display=w==='r'?'':'none';$('#authT').textContent=w==='l'?'Masuk':'Daftar akun' ;daftarCek()}
+async function daftarCek(){ try{ const r=await api('public.daftar'),buka=r.buka!==false; $('#lnkDaftar').style.display=buka?'':'none'; $('#regTutup').style.display=buka?'none':''; ['rn','re','ru','rp','bReg'].forEach(i=>$('#'+i).disabled=!buka) }catch(e){} }
 function closeAuth(){go('#/')}
 const _svg=p=>'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
 const EYE=_svg('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
@@ -486,6 +488,7 @@ navAuth();route();kampusLoad();
 const ROLES=['Admin','Guru','Wali Kelas','Murid'];
 const PG={tab:''};   
 const PGU={id:'',role:'',ta:'',rows:[],wali:''};   
+const PGR={sibuk:false};                            
 const PGI_KOLOM={nama:'nama',namalengkap:'nama',username:'username',user:'username',password:'password',katasandi:'password',sandi:'password',email:'email',role:'role',peran:'role',aktif:'aktif',status:'aktif',ta:'ta',tahunajaran:'ta',nis:'nis',kelas:'kelas',mengajar:'mengajar',wali:'wali',walikelas:'wali'};
 const PGI_MAX=300, PGI_CHUNK=15;   
 let PGI=pgImBaru();                
@@ -524,7 +527,7 @@ function drawUsers(){const all=MEM.users;if(!all||!$('#ut'))return;
   const groups=(PG.tab===''?['-',...ROLES]:[PG.tab]).map(k=>[k,l.filter(u=>uRole(u)===k)]).filter(g=>g[1].length);
   const n=groups.reduce((t,g)=>t+g[1].length,0);let left=200;
   $('#ut').innerHTML=n?groups.map(([k,rows])=>{const sh=rows.slice(0,Math.max(0,left));left-=sh.length;
-    return sh.length?(PG.tab===''?`<h3 style="margin:18px 0 6px">${k==='-'?'Belum ada role (menunggu verifikasi)':esc(k)} <small>(${rows.length})</small></h3>`:'')+uTable(sh)+(sh.length<rows.length?'<p><small>Sebagian tidak ditampilkan. Gunakan pencarian.</small></p>':''):''}).join(''):'<div class="empty">Tidak ada pengguna yang cocok.</div>'}
+    return sh.length?(PG.tab===''?`<h3 style="margin:18px 0 6px">${k==='-'?'Belum ada role (menunggu verifikasi)':esc(k)} <small>(${rows.length})</small></h3>`:'')+uTable(sh)+(sh.length<rows.length?'<p><small>Sebagian tidak ditampilkan. Gunakan pencarian.</small></p>':''):''}).join(''):'<div class="empty">Tidak ada pengguna yang cocok.</div>';pgMenunggu()}
 
 async function saveUser2(b){const tr=b.closest('tr'),a=tr.querySelector('.a').checked,r=tr.querySelector('.r').value,id=tr.dataset.id;
   if(a&&!r){toast('Pilih role sebelum mengaktifkan akun',1);return}
@@ -535,13 +538,25 @@ async function saveUser2(b){const tr=b.closest('tr'),a=tr.querySelector('.a').ch
 
 /* ---------- pendaftaran mandiri (buka/tutup) ---------- */
 function pgDaftarDraw(buka){const el=$('#pgreg');if(!el)return;
-  el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><span>Pendaftaran mandiri: <b style="color:${buka?'var(--teal)':'var(--bad)'}">${buka?'Terbuka':'Ditutup'}</b><br><small>${buka?'Pendaftar baru tidak bisa masuk sebelum Anda mengaktifkannya (tab "Belum ada role").':'Orang yang belum punya akun tidak bisa mendaftar sendiri.'}</small></span><button class="btn ghost sm" onclick="pgDaftarSet(${buka?'false':'true'})">${buka?'Tutup pendaftaran':'Buka pendaftaran'}</button></div>`}
+  el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center;gap:12px"><div><b>Pendaftaran mandiri</b> &middot; <b style="color:${buka?'var(--teal)':'var(--bad)'}">${buka?'Terbuka':'Ditutup'}</b>
+    <br><small>${buka?'Calon pengguna bisa mendaftar dari halaman depan. Akun baru tidak bisa masuk sebelum Anda memverifikasinya.':'Formulir pendaftaran di halaman depan dinonaktifkan. Akun hanya dibuat oleh admin (tombol Tambah pengguna atau Impor CSV).'}</small>
+    <br><small id="pgwait"></small></div>
+    <button class="btn${buka?' ghost':''}" id="pgregb" onclick="pgDaftarSet(${buka?'false':'true'})">${buka?'Tutup pendaftaran':'Buka pendaftaran'}</button></div>`;
+  pgMenunggu()}
+// jumlah akun yang belum diberi role (pendaftar baru menunggu verifikasi), dengan jalan pintas ke tab-nya
+function pgMenunggu(){const el=$('#pgwait');if(!el||!MEM.users)return;const n=MEM.users.filter(u=>!u.Role).length;
+  el.innerHTML=n?`<b>${n}</b> akun belum diberi role (menunggu verifikasi) &middot; <a href="javascript:void 0" onclick="uTab('-')" style="color:var(--teal);font-weight:600">Lihat</a>`:'Tidak ada akun yang menunggu verifikasi.'}
 async function pgDaftarMuat(){
   try{const r=await api('registrasi.get');pgDaftarDraw(r.buka!==false)}
-  catch(e){if(e.message==='SESI_HABIS')return fail(e);const el=$('#pgreg');if(el)el.innerHTML='<small>Status pendaftaran belum bisa dimuat.</small>'}}
-async function pgDaftarSet(buka){
-  if(buka&&!await ask('Buka pendaftaran mandiri? Siapa pun bisa mengirim pendaftaran. Akun baru tetap menunggu verifikasi Anda.'))return;
-  try{const r=await api('registrasi.set',{buka:buka===true});pgDaftarDraw(r.buka!==false);toast(r.buka?'Pendaftaran dibuka':'Pendaftaran ditutup')}catch(e){fail(e)}}
+  catch(e){if(e.message==='SESI_HABIS')return fail(e);const el=$('#pgreg');
+    if(el)el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><span><b>Pendaftaran mandiri</b><br><small>Status belum bisa dimuat (${esc(e.message)}).</small></span><button class="btn ghost sm" onclick="pgDaftarMuat()">Coba lagi</button></div>`}}
+async function pgDaftarSet(buka){if(PGR.sibuk)return;PGR.sibuk=true;   // penjaga dipasang sebelum dialog, jadi klik ganda tidak membuka dua dialog atau mengirim dua permintaan
+  try{
+    if(!await ask(buka?'Buka pendaftaran mandiri? Siapa pun bisa mengirim pendaftaran dari halaman depan. Akun baru tetap menunggu verifikasi Anda.':'Tutup pendaftaran mandiri? Formulir pendaftaran di halaman depan dinonaktifkan. Akun yang sudah mendaftar tidak terpengaruh.',{title:buka?'Buka pendaftaran':'Tutup pendaftaran',ok:buka?'Buka':'Tutup'}))return;
+    const b=$('#pgregb');if(b)b.disabled=true;
+    try{const r=await api('registrasi.set',{buka:buka===true});pgDaftarDraw(r.buka!==false);toast(r.buka?'Pendaftaran mandiri dibuka':'Pendaftaran mandiri ditutup')}
+    catch(e){fail(e);pgDaftarMuat()}   // gagal: tampilkan status sebenarnya dari server dan aktifkan lagi tombolnya
+  }finally{PGR.sibuk=false}}
 
 /* ---------- tambah pengguna ---------- */
 function formUser(){
@@ -592,7 +607,7 @@ async function pgSimpanProfil(){const b=$('#pgpb'),nama=$('#pgn').value,email=$(
     delete MEM.master;delete MEM.stats;toast('Profil tersimpan')}
   catch(e){fail(e)}if($('#pgpb'))$('#pgpb').disabled=false}
 
- 
+/* murid: NIS dan kelas */
 function pgMuridHtml(u,d){
   const tas=pgTaList(d);
   if(!tas.length)return pgKartu('Kelas dan NIS','<p><small>Belum ada kelas. Tambahkan kelas lebih dulu di menu Kelas.</small></p>');
@@ -653,14 +668,14 @@ async function pgSimpanGuru(){const b=$('#pgsv'),rows=PGU.rows.filter(r=>r[0]||r
   catch(e){fail(e)}
   if($('#pgsv')){b.disabled=false;b.textContent='Simpan penugasan'}}
 
-/* ---------- hapus & reset password ---------- */
+ 
 async function delUser(id){const u=(MEM.users||[]).find(x=>x.User_ID===id);
   const cat=u&&(u.Role==='Guru'||u.Role==='Wali Kelas')?' Penugasan mengajar dan wali kelasnya TETAP ada dan otomatis dialihkan bila guru baru ditugaskan ke kelas dan mata pelajaran yang sama lewat tombol Ubah.':(u&&u.Role==='Murid'?' Data siswa (NIS dan kelas) TETAP ada di menu Siswa; akun baru bisa ditautkan ke data itu lewat tombol Ubah.':'');
   if(!await ask('Hapus pengguna "'+(u?u.Username:id)+'"? Akun tidak bisa masuk lagi. Data akademik (nilai, tugas) tidak ikut terhapus.'+cat))return;
   try{await api('user.delete',{id});MEM.users=(MEM.users||[]).filter(x=>x.User_ID!==id);delete MEM.stats;delete MEM.master;toast('Pengguna dihapus');drawUsers()}
   catch(e){fail(e)}}
 
-/* ---------- reset password (password lama tidak bisa dilihat: disimpan sebagai hash) ---------- */
+ 
 function formReset(id){const u=(MEM.users||[]).find(x=>x.User_ID===id);if(!u)return;
   M(`<h2>Reset password</h2><div style="max-width:520px"><p>Pengguna: <b>${esc(u.Nama_Lengkap)}</b> (${esc(u.Username)})${u.Role?' &middot; '+esc(u.Role):''}</p>
   <p><small>Password lama tidak dapat dilihat karena disimpan dalam bentuk terenkripsi satu arah. Anda bisa membuat password baru: isi sendiri, atau kosongkan agar dibuatkan acak.</small></p>
@@ -678,8 +693,8 @@ function salinPw(){const el=$('#rpv');el.select();let ok=false;
   if(!ok&&navigator.clipboard)navigator.clipboard.writeText(el.value).then(()=>toast('Password disalin'),()=>toast('Salin manual: blok teks lalu Ctrl+C',1));
   else toast(ok?'Password disalin':'Salin manual: blok teks lalu Ctrl+C',ok?0:1)}
 
-/* ---------- impor akun massal dari CSV ---------- */
-// penguraian CSV: pemisah koma atau titik koma (dideteksi dari baris judul), kutip ganda, BOM, baris kosong diabaikan
+ 
+
 function pgCsv(text){
   text=String(text||'').replace(/^\uFEFF/,'');
   const first=text.split(/\r\n|\n|\r/)[0]||'',sep=first.split(';').length>first.split(',').length?';':',';
@@ -700,7 +715,7 @@ function pgImBaca(text){
   const data=t.slice(1);if(data.length>PGI_MAX)throw new Error('Maksimal '+PGI_MAX+' baris per file ('+data.length+' baris ditemukan). Pecah file menjadi beberapa bagian.');
   const rows=data.map((r,i)=>{const o={_n:i+1};head.forEach((k,j)=>{if(k&&!(k in o))o[k]=String(r[j]==null?'':r[j]).trim()});return o});
   return {rows,tak}}
-// sel CSV aman: awalan = + - @ diberi tanda kutip supaya tidak dibaca Excel sebagai rumus
+
 function pgCsvSel(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return /[",;\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function pgUnduh(nama,teks,mime){const url=URL.createObjectURL(new Blob([teks],{type:mime})),a=document.createElement('a');a.href=url;a.download=nama;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 function pgImContoh(){const ta=pgTaBawaan()||'2026/2027';
