@@ -3459,12 +3459,12 @@ const DS_GROUPS=[
 
 const DS_RING_G={id:'ringkasan',l:'Ringkasan',i:'grid',k:['g-ringkasan']};
 const DS_RING_W={id:'ringkasan',l:'Ringkasan',i:'grid',k:['w-ringkasan']};
-const DS_MAPEL={id:'mapel',l:'Mata Pelajaran',i:'book',k:['g-kelas','g-tugas','g-ujian','g-nilai']};
+const DS_MAPEL={id:'mapel',l:'Mata Pelajaran',i:'kelas',k:['g-mapel','g-kelas','g-tugas','g-ujian','g-nilai']};
 const DS_LAB={id:'lab',l:'Booking Labkom',i:'monitor',k:['g-lab']};
 const DS_SERT={id:'sert',l:'Sertifikat',i:'award',k:['g-sert']};
 const DS_BANTU={id:'bantuan',l:'Panduan',i:'help',k:['panduan']};
 const DS_PERAN={
- 'Wali Kelas':[DS_RING_W,{id:'binaan',l:'Kelas Binaan',i:'school',k:['w-binaan']},DS_MAPEL,DS_LAB,DS_SERT,DS_BANTU],
+ 'Wali Kelas':[DS_RING_W,DS_MAPEL,{id:'binaan',l:'Kelas Binaan',i:'school',k:['w-binaan']},DS_LAB,DS_SERT,DS_BANTU],
  Guru:[DS_RING_G,DS_MAPEL,DS_LAB,DS_SERT,DS_BANTU]};
 function dsPack(defs,menus){
   const used=new Set(),out=[];
