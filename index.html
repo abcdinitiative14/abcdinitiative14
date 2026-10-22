@@ -3394,6 +3394,7 @@ body>footer{flex:none}
 
 const DS={cur:''};
 const DS_P={
+ kelas:'<rect x="2.5" y="3" width="19" height="11" rx="2"/><path d="M7 7.5h5M7 10.5h3"/><circle cx="8" cy="19" r="2"/><circle cx="16" cy="19" r="2"/><path d="M4.5 23v-.8A2.2 2.2 0 0 1 6.7 20h2.6a2.2 2.2 0 0 1 2.2 2.2v.8M12.5 23v-.8a2.2 2.2 0 0 1 2.2-2.2h2.6a2.2 2.2 0 0 1 2.2 2.2v.8"/>',
  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -3418,9 +3419,9 @@ const DS_P={
  dot:'<circle cx="12" cy="12" r="3"/>',
  school:'<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/>',
  tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'};
-const DS_K={ringkasan:'grid',pengguna:'users',siswa:'user',guru:'user',kelas:'users',mapel:'book',wali:'users',pengampu:'clip',artikel:'edit',kampus:'globe',lab:'monitor',sert:'award',profil:'cap',bobot:'chart',backup:'db',migrasi:'upload',cek:'shield',log:'list',panduan:'help',
- 'g-kelas':'cap','g-tugas':'clip','g-ujian':'edit','g-lab':'monitor','g-nilai':'chart','g-sert':'award','w-siswa':'users','w-rekap':'chart','w-rapor':'file','m-materi':'book','m-tugas':'clip','m-ujian':'edit','m-kelas':'book','m-ringkasan':'grid','m-lab':'monitor','m-pid':'monitor',
- 'w-ringkasan':'grid','g-ringkasan':'grid','w-nilai':'chart','w-binaan':'school','g-mapel':'book'};
+const DS_K={ringkasan:'grid',pengguna:'users',siswa:'user',guru:'user',kelas:'kelas',mapel:'book',wali:'users',pengampu:'clip',artikel:'edit',kampus:'globe',lab:'monitor',sert:'award',profil:'cap',bobot:'chart',backup:'db',migrasi:'upload',cek:'shield',log:'list',panduan:'help',
+ 'g-kelas':'cap','g-tugas':'clip','g-ujian':'edit','g-lab':'monitor','g-nilai':'chart','g-sert':'award','w-siswa':'users','w-rekap':'chart','w-rapor':'file','m-materi':'book','m-tugas':'clip','m-ujian':'edit','m-kelas':'kelas','m-ringkasan':'grid','m-lab':'monitor','m-pid':'monitor',
+ 'w-ringkasan':'grid','g-ringkasan':'grid','w-nilai':'chart','w-binaan':'kelas','g-mapel':'kelas'};
 const dsI=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${DS_P[n]||DS_P.dot}</svg>`;
 const dsK=k=>dsI(DS_K[k]||'dot');
 
