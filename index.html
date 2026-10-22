@@ -841,6 +841,23 @@ async function tgUnduh(tipe,id,b){const t0=b&&b.innerHTML;if(b){b.disabled=true;
   try{const r=await api('tugas.file',{tipe,id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     const url=URL.createObjectURL(new Blob([u],{type:r.mime})),a=document.createElement('a');a.href=url;a.download=r.nama||'berkas';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
   catch(e){fail(e)}if(b){b.disabled=false;b.innerHTML=t0}}
+/* gambar pratinjau tugas: diperkecil di browser (maks 1280 px, JPEG) lalu diunggah; ditampilkan lewat 'tugas.file' (tipe gambar) */
+async function tgBacaGambar(inp){const f=inp&&inp.files&&inp.files[0];if(!f)return null;
+  if(!/^image\/(jpeg|png)$/.test(f.type))throw new Error('Gambar harus berformat JPG atau PNG.');
+  if(f.size>15*1024*1024)throw new Error('Gambar terlalu besar (maks 15 MB sebelum diperkecil)');
+  const url=URL.createObjectURL(f);
+  try{const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));i.src=url});
+    const k=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    const d=c.toDataURL('image/jpeg',0.85).split(',')[1];if(d.length>5400000)throw new Error('Gambar masih terlalu besar setelah diperkecil');
+    return{data:d,name:(f.name.replace(/\.[^.]*$/,'')||'gambar')+'.jpg'}}
+  finally{URL.revokeObjectURL(url)}}
+const TG_IMG={};   // Tugas_ID -> blob URL (kunci memuat token sesi agar tidak bocor antar pengguna)
+async function tgGambar(id,el){if(!el)return;const key=(S&&S.token||'')+'|'+id;
+  try{if(!TG_IMG[key]){const r=await api('tugas.file',{tipe:'gambar',id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);TG_IMG[key]=URL.createObjectURL(new Blob([u],{type:r.mime}))}
+    if(document.body.contains(el))el.innerHTML=`<img src="${TG_IMG[key]}" alt="Gambar tugas" style="max-width:100%;max-height:420px;border-radius:8px;border:1px solid var(--line)">`}
+  catch(e){if(document.body.contains(el))el.innerHTML='<small style="opacity:.75">Gambar tidak bisa dimuat.</small>'}}
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{for(const k in TG_IMG){try{URL.revokeObjectURL(TG_IMG[k])}catch(e){}delete TG_IMG[k]}});
 const tgBtn=(tipe,id,nama)=>`<button class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">&#128206; ${esc(nama)}</button>`;
 
 function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}:{};
@@ -848,12 +865,16 @@ function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}
   <label>Judul</label><input id="tj" value="${esc(r.Judul)}">
   <label>Petunjuk tugas</label><textarea id="td" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
   <label>Tenggat (opsional, waktu setempat)</label><input id="tt" type="datetime-local" value="${esc(r.Tenggat_Input)}">
+  <label>Gambar pratinjau (opsional)</label>${r.Gambar?`<div id="tgp" style="margin-bottom:6px"></div><p style="margin:0 0 6px"><label style="display:inline;font-weight:400"><input type="checkbox" id="thg" style="width:auto;margin-right:5px">hapus gambar</label></p>`:''}
+  <input id="tg" type="file" accept="image/jpeg,image/png"><small style="display:block;opacity:.75">JPG atau PNG. Diperkecil otomatis. Tampil di halaman tugas murid. ${r.Gambar?'Memilih gambar baru akan menggantikan yang lama.':''}</small>
   <label>Lampiran tugas (opsional)</label>${r.Lampiran?`<p style="margin:0 0 6px">Lampiran sekarang: <b>${esc(r.Lampiran)}</b> &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="thl" style="width:auto;margin-right:5px">hapus lampiran</label></p>`:''}
   <input id="tf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${r.Lampiran?'Memilih berkas baru akan menggantikan lampiran lama.':''}</small>
-  <p class="row"><button class="btn" id="tsv" data-id="${esc(id||'')}" onclick="gSaveTugas(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Batal</button></p></div>`)}
+  <p class="row"><button class="btn" id="tsv" data-id="${esc(id||'')}" onclick="gSaveTugas(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Batal</button></p></div>`);
+  if(r.Gambar)tgGambar(id,$('#tgp'))}
 async function gSaveTugas(id){const [k,m]=GS.pair.split('|'),b=$('#tsv');b.disabled=true;b.textContent='Menyimpan...';
-  try{const fl=await tgBaca($('#tf'));if(fl)b.textContent='Mengunggah...';
-    const r=await api('tugas.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#tj').value,Deskripsi:$('#td').value,Tenggat:$('#tt').value,file:fl,hapusLampiran:!!($('#thl')&&$('#thl').checked)});
+  try{const fl=await tgBaca($('#tf')),gm=await tgBacaGambar($('#tg'));if(fl||gm)b.textContent='Mengunggah...';
+    const r=await api('tugas.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#tj').value,Deskripsi:$('#td').value,Tenggat:$('#tt').value,file:fl,hapusLampiran:!!($('#thl')&&$('#thl').checked),gambar:gm,hapusGambar:!!($('#thg')&&$('#thg').checked)});
+    if(gm||$('#thg')&&$('#thg').checked){const kk=(S&&S.token||'')+'|'+r.Tugas_ID;if(TG_IMG[kk]){try{URL.revokeObjectURL(TG_IMG[kk])}catch(e){}delete TG_IMG[kk]}}
     const l=MEM.gd.tugas,i=l.findIndex(x=>x.Tugas_ID===r.Tugas_ID);if(i>=0)l[i]=r;else l.push(r);toast('Tugas tersimpan');GS.tab='tugas';gHome()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
 async function gDelTugas(id){if(!await ask('Hapus tugas ini?',{title:'Hapus tugas',ok:'Hapus',bad:true}))return;
@@ -864,11 +885,12 @@ async function gPeriksa(id){MT('<div class="skel"></div><br><div class="skel"></
 function gDrawKumpul(){const r=GS.cur,t=r.tugas;
   MT(`<div class="row" style="justify-content:space-between"><h2>${esc(t.Judul)}</h2><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Kembali</button></div>
   <p><small>${esc(pairLabel())} &middot; Tenggat: ${esc(t.Tenggat_Teks||'tanpa tenggat')}</small></p>
+  ${t.Gambar?'<div id="tgp" style="margin-bottom:8px"></div>':''}
   ${t.Lampiran?`<p>Lampiran tugas: ${tgBtn('lampiran',t.Tugas_ID,t.Lampiran)}</p>`:''}
   <div class="tw"><table><tr><th>Siswa</th><th>Jawaban</th><th>Waktu kirim</th><th>Nilai (0-100)</th><th>Umpan balik</th><th></th></tr>`+
   (r.daftar.length?r.daftar.map((x,i)=>x.Pengumpulan_ID?
     `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:380px;white-space:pre-wrap">${esc(x.Jawaban)}${x.File_Nama?`${x.Jawaban?'<br>':''}${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
-    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>')}
+    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>');if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'))}
 async function gNilai(i){const x=GS.cur.daftar[i],b=$('#sb_'+i);b.disabled=true;b.textContent='...';
   try{const r=await api('tugas.nilai',{id:x.Pengumpulan_ID,Nilai:$('#n_'+i).value,Umpan_Balik:$('#u_'+i).value});
     x.Nilai=r.Nilai;x.Umpan_Balik=r.Umpan_Balik;toast('Nilai tersimpan');
@@ -881,9 +903,9 @@ async function gNilai(i){const x=GS.cur.daftar[i],b=$('#sb_'+i);b.disabled=true;
    stBadge dipertahankan karena dipakai KelasUI. */
 const stBadge=t=>{const c={Belum:'var(--bad)',Terkumpul:'#8a6500',Dinilai:'var(--teal)'}[t.Status];return `<span class="tag" style="color:${c}">${t.Status}${t.Terlambat?' (terlambat)':''}</span>`};
 
- 
+/* gHome: tujuan setelah simpan/batal/kembali. Halaman lama memuat ulang Materi & Tugas; MapelUI menimpanya agar tetap di dalam tab Mata Pelajaran. */
 function gHome(){vGTugas()}
- 
+/* dipanggil Index.html saat keluar/ganti akun: kosongkan keadaan halaman milik akun sebelumnya */
 (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GS.pair='';GS.tab='materi';GS.cur=null});
 Object.assign(VIEWS,{'g-kelas':vGKelas,'g-tugas':vGTugas});
 </script><style>
@@ -2031,6 +2053,7 @@ function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);
   const lock=t.Status==='Dinilai',late=t.Tenggat&&new Date(t.Tenggat)<new Date(),dr=mkDraft()[id],isi=!lock&&dr!==undefined?dr:t.Jawaban;
   $('#mkb').innerHTML=`<div style="max-width:680px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">${esc(t.Judul)}</h3><button class="btn ghost sm" onclick="mkTutup()">Kembali</button></div>
   <p><small>Guru: ${esc(t.Guru)} &middot; Tenggat: ${esc(t.Tenggat_Teks||'tanpa tenggat')}</small></p>${paras(t.Deskripsi)}
+  ${t.Gambar?'<div id="tgp" style="margin:0 0 10px"></div>':''}
   ${t.Lampiran?`<p>Lampiran dari guru: ${tgBtn('lampiran',t.Tugas_ID,t.Lampiran)}</p>`:''}
   ${late&&!lock?'<p style="color:var(--bad)">Tenggat sudah lewat. Jawaban tetap bisa dikirim, tetapi ditandai terlambat.</p>':''}
   ${lock?`<div class="stat"><b>${esc(t.Nilai)}</b>Nilai dari guru${t.Umpan_Balik?`<br><br>${esc(t.Umpan_Balik)}`:''}</div>`:''}
@@ -2039,7 +2062,8 @@ function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);
   ${t.File_Nama?`<p style="margin:0 0 6px">Berkas terkirim: ${tgBtn('jawaban',t.Pengumpulan_ID,t.File_Nama)} &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="mkh" style="width:auto;margin-right:5px">hapus berkas</label></p>`:''}
   <input id="mkf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${t.File_Nama?'Memilih berkas baru akan menggantikan berkas lama.':'Boleh dikirim bersama jawaban teks atau sendiri.'}</small>`}
   ${t.Waktu_Teks?`<small>Terakhir dikirim: ${esc(t.Waktu_Teks)}${t.Terlambat?' (terlambat)':''}</small>`:''}
-  ${lock?'':`<p><button class="btn" id="mkk" onclick="mkKirim('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kirim jawaban':'Perbarui jawaban'}</button></p>`}</div>`}
+  ${lock?'':`<p><button class="btn" id="mkk" onclick="mkKirim('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kirim jawaban':'Perbarui jawaban'}</button></p>`}</div>`;
+  if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'))}
 function mkTutup(){MK.t='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
 async function mkKirim(id){const b=$('#mkk'),jw=$('#mkj').value,key=mkKey(),t0=b.textContent;b.disabled=true;b.textContent='Memeriksa...';
   try{const fl=await tgBaca($('#mkf'));b.textContent=fl?'Mengunggah... (jangan tutup halaman)':'Mengirim...';
