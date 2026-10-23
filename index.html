@@ -312,8 +312,8 @@ async function logout(){try{await api('logout')}catch(e){}clearSess();go('#/')}
 
 /* ---------- Dashboard ---------- */
 const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
- Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
- 'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['g-mapel','Mata Pelajaran'],['w-binaan','Kelas Binaan'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
+ Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
+ 'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['w-binaan','Kelas Binaan'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  Murid:[['m-ringkasan','Ringkasan'],['m-kelas','Kelas'],['m-lab','Booking Lab'],['m-pid','Pemakaian PID']]};
 const VIEWS={ringkasan:vRingkasan,pengguna:vPengguna,artikel:vArtikel,backup:vBackup,migrasi:vMigrasi,soon:vSoon};
 function openDash(m){
