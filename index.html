@@ -4327,6 +4327,7 @@ if(typeof negRender==='function'){const o=negRender;negRender=function(){const r
       const cb=a.querySelector('.cb');if(cb)cb.insertAdjacentHTML('beforeend','<span class="go">Lihat info lengkap &rarr;</span>');
       el.replaceWith(a)})}catch(e){}
   return r}}
+try{if(typeof NEG!=='undefined'&&NEG.length)negRender()}catch(e){}
 /* halaman terpisah satu kampus: #/kampus/<id> */
 const KD={};
 function kdView(){let v=document.getElementById('v-kampus');if(!v){v=document.createElement('section');v.className='view';v.id='v-kampus';v.innerHTML='<div class="sec wrap kdet" id="kdBox"></div>';
