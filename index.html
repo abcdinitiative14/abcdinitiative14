@@ -3179,7 +3179,7 @@ function jbxForm(id,seed){const l=MEM.jumbo||[],r=id?l.find(x=>x.Jumbo_ID===id):
   ${r&&r.Gambar_URL?`<label style="font-weight:400"><input type="checkbox" id="jb_x" style="width:auto" onchange="jbxPrev()"> Hapus gambar saat ini</label>`:''}
   <label for="jb_bt">Teks tombol (opsional)</label><input id="jb_bt" maxlength="40" placeholder="Contoh: Lihat beasiswa" oninput="jbxPrev()">
   <label for="jb_bs">Tombol membuka</label><select id="jb_bs" onchange="jbxTujuan()">${JBX_TUJUAN.map(t=>`<option value="${esc(t[0])}">${esc(t[1])}</option>`).join('')}</select>
-  <div id="jb_blw" style="display:none"><label for="jb_bl">Alamat tujuan</label><input id="jb_bl" placeholder="https:
+  <div id="jb_blw" style="display:none"><label for="jb_bl">Alamat tujuan</label><input id="jb_bl" placeholder="https://contoh.com atau #/berita/judul-artikel"></div>
   <label for="jb_s">Status</label><select id="jb_s" onchange="jbxPrev()"><option value="1">Tampil di beranda</option><option value="0">Sembunyikan</option></select>
   <p class="row"><button class="btn" id="jbSv" onclick="jbxSave()">Simpan</button><button class="btn ghost" onclick="JBX.f=null;vJumbo()">Batal</button></p></div>`);
   $('#jb_l').value=r?r.Label:'';$('#jb_h').value=r?r.Judul:'';$('#jb_p').value=r?r.Teks:'';$('#jb_bt').value=r?r.Tombol_Teks:'';
