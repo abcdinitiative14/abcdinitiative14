@@ -3179,16 +3179,18 @@ function jbxForm(id,seed){const l=MEM.jumbo||[],r=id?l.find(x=>x.Jumbo_ID===id):
   ${r&&r.Gambar_URL?`<label style="font-weight:400"><input type="checkbox" id="jb_x" style="width:auto" onchange="jbxPrev()"> Hapus gambar saat ini</label>`:''}
   <label for="jb_bt">Teks tombol (opsional)</label><input id="jb_bt" maxlength="40" placeholder="Contoh: Lihat beasiswa" oninput="jbxPrev()">
   <label for="jb_bs">Tombol membuka</label><select id="jb_bs" onchange="jbxTujuan()">${JBX_TUJUAN.map(t=>`<option value="${esc(t[0])}">${esc(t[1])}</option>`).join('')}</select>
-  <div id="jb_blw" style="display:none"><label for="jb_bl">Alamat tujuan</label><input id="jb_bl" placeholder="https://contoh.com atau #/berita/judul-artikel"></div>
+  <div id="jb_blw" style="display:none"><label for="jb_bl">Alamat tujuan</label><input id="jb_bl" placeholder="https:&#47;&#47;contoh.com atau #/berita/judul-artikel"></div>
   <label for="jb_s">Status</label><select id="jb_s" onchange="jbxPrev()"><option value="1">Tampil di beranda</option><option value="0">Sembunyikan</option></select>
   <p class="row"><button class="btn" id="jbSv" onclick="jbxSave()">Simpan</button><button class="btn ghost" onclick="JBX.f=null;vJumbo()">Batal</button></p></div>`);
   $('#jb_l').value=r?r.Label:'';$('#jb_h').value=r?r.Judul:'';$('#jb_p').value=r?r.Teks:'';$('#jb_bt').value=r?r.Tombol_Teks:'';
   $('#jb_bs').value=pre;$('#jb_bl').value=pre==='@lain'?link:'';$('#jb_s').value=r&&r.Status===false?'0':'1';
   jbxTabsPv();jbxDragInit();jbxTujuan();jbxTfUi()}
 function jbxTujuan(){const w=$('#jb_blw');if(w)w.style.display=$('#jb_bs').value==='@lain'?'':'none';jbxPrev()}
-
-
-const jbxHeroH=vh=>Math.min(640,Math.max(460,Math.round(vh*.76)));   
+/* ---------- Pratinjau = beranda yang SEBENARNYA ----------
+   Hero beranda digambar di dalam iframe berukuran layar contoh (Desktop 1366x768 atau HP 390x844) memakai CSS asli
+   Index.html, lalu diperkecil. Dengan begitu satuan vw/vh, media query HP, lapisan gelap, huruf, dan tombol
+   persis sama dengan beranda. Keadaan akhir animasi dipakai (animasi masuk dimatikan). */
+const jbxHeroH=vh=>Math.min(640,Math.max(460,Math.round(vh*.76)));   // = clamp(460px,76vh,640px) di Index.html
 function jbxCss(){const s=[...document.querySelectorAll('style')].find(x=>x.textContent.indexOf('#hero{')>=0);return s?s.textContent:''}
 function jbxCount(){const f=JBX.f,s=$('#jb_s');return Math.max(1,(MEM.jumbo||[]).filter(x=>x.Status&&(!f||x.Jumbo_ID!==f.id)).length+(s&&s.value==='1'?1:0))}
 function jbxDocHtml(m){
@@ -3216,16 +3218,16 @@ function jbxGeom(){const f=JBX.f;if(!f||!f.dim||!f.dim.w||!f.dim.h)return null;
   if(ai>=W/H){ih=H;iw=H*ai}else{iw=W;ih=W/ai}
   const box=$('#jbPvBox');return{W,H,iw,ih,k:box&&box.clientWidth?box.clientWidth/W:1}}
 const jbxCl=n=>Math.round(Math.min(100,Math.max(0,n))*10)/10;
-
+// geser gambar sebesar (dx,dy) px layar contoh; sisa gerak per sumbu R = ukuran gambar terzoom - bingkai
 function jbxPan(dx,dy){const f=JBX.f,g=jbxGeom();if(!f||!g||!jbxHasImg())return;
   const Rx=g.iw*f.z-g.W,Ry=g.ih*f.z-g.H;
   if(Rx>0.5)f.px=jbxCl(f.px0-dx/Rx*100);if(Ry>0.5)f.py=jbxCl(f.py0-dy/Ry*100);jbxTf()}
 function jbxHasImg(){return !!jbxSrc()}
-function jbxNudge(dx,dy,big){const f=JBX.f;if(!f||!jbxHasImg())return;const s=big?10:2;   
+function jbxNudge(dx,dy,big){const f=JBX.f;if(!f||!jbxHasImg())return;const s=big?10:2;   // arah = arah gerak gambar
   f.px=jbxCl(f.px-dx*s);f.py=jbxCl(f.py-dy*s);jbxTf()}
 function jbxZoom(v){const f=JBX.f;if(!f||!jbxHasImg())return;f.z=Math.round(jbxNum(v,1,1,JBX_ZMAX)*100)/100;jbxTf()}
 function jbxTfReset(){const f=JBX.f;if(!f)return;f.px=JBX_DEF.px;f.py=JBX_DEF.py;f.z=JBX_DEF.z;jbxTf()}
-
+// terapkan ke gambar di dalam iframe tanpa memuat ulang; bila tidak bisa, muat ulang pratinjau
 function jbxTf(){const f=JBX.f;if(!f)return;jbxTfUi();let ok=false;
   try{const d=$('#jbPvF').contentDocument,im=d&&d.querySelector('.sl img');
     if(im){im.setAttribute('style',jbxImgStyle(f.px,f.py,f.z,true));ok=true}}catch(e){}
@@ -3244,7 +3246,7 @@ function jbxDragInit(){const o=$('#jbPvO');if(!o)return;let st=null;
     if(m){e.preventDefault();jbxNudge(m[0],m[1],e.shiftKey)}}}
 function jbxRender(m){const f=JBX.f,fr=$('#jbPvF');if(!f||!fr)return;
   const key=m.mode+'|'+m.n+'|'+(m.src?m.src.length+':'+m.src.slice(-16):'');
-  if(f.dk===key){try{const d=fr.contentDocument;   
+  if(f.dk===key){try{const d=fr.contentDocument;   // perubahan teks saja: ubah isi iframe langsung (tanpa muat ulang)
     if(d&&d.getElementById('jbxh1')){d.getElementById('jbxpl').textContent=m.tag;d.getElementById('jbxh1').textContent=m.h;d.getElementById('jbxp').textContent=m.p;
       d.getElementById('jbxbt').innerHTML=m.bt?`<a class="btn sun" href="javascript:void 0">${esc(m.bt)}</a>`:'';return}}catch(e){}}
   f.dk=key;f.ok=false;fr.onload=()=>{f.ok=true;clearTimeout(JBX.lt);try{const im=fr.contentDocument.querySelector('.sl img');if(im)im.setAttribute('style',jbxImgStyle(f.px,f.py,f.z,true))}catch(e){}};fr.srcdoc=jbxDocHtml(m);jbxFit();
