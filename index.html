@@ -3464,10 +3464,11 @@ function gprForm(){
      <p class="gpr-hint" id="gpr-hint"></p>
      <label for="gpr-mat">Sumber materi</label><select id="gpr-mat" onchange="gprMatUbah()"></select>
      <p class="gpr-hint" id="gpr-matnote"></p>
-     <div id="gpr-matbox"><label for="gpr-materi">Tempel materi di sini</label><textarea id="gpr-materi" maxlength="12000" oninput="gprHitung()" placeholder="Tempel teks materi (minimal sekitar 80 karakter, maksimal 12.000)."></textarea><p class="gpr-hint" id="gpr-mc"></p>
+     <div id="gpr-matbox"><label for="gpr-materi">Tempel materi di sini</label><textarea id="gpr-materi" dir="auto" maxlength="12000" oninput="gprHitung()" placeholder="Tempel teks materi (minimal sekitar 80 karakter, maksimal 12.000)."></textarea><p class="gpr-hint" id="gpr-mc"></p>
        <label for="gpr-pdf">Atau ambil teks dari berkas PDF (maks. 5 MB)</label>
        <div class="row" style="gap:8px;align-items:center"><input type="file" id="gpr-pdf" accept="application/pdf,.pdf" style="flex:1 1 220px"><button class="btn ghost" id="gpr-pdfbtn" type="button" onclick="gprPdf()">Ambil teks dari PDF</button></div>
-       <p class="gpr-hint" id="gpr-pdfnote">Teks hasilnya masuk ke kotak di atas dan bisa Anda sunting. PDF hasil scan mungkin kurang terbaca.</p></div>
+       <p class="gpr-hint" id="gpr-pdfnote">Teks hasilnya masuk ke kotak di atas dan bisa Anda sunting. PDF hasil scan mungkin kurang terbaca.</p>
+       <div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost sm" id="gpr-arabbtn" type="button" style="display:none" onclick="gprPdf(GPR._arabTerbalik?'normal':'balik')">Teks Arab terlihat salah? Coba urutan sebaliknya</button></div></div>
      <label for="gpr-topik">Topik <span id="gpr-topikopt" style="font-weight:400;color:#5b7083"></span></label><input id="gpr-topik" maxlength="120" placeholder="Contoh: Fotosintesis">
    </div>
    <div class="gpr-sec"><h3>2. ${j==='media'?'Jenis media':'Jenis game'}</h3>${khusus}</div>
@@ -3520,23 +3521,25 @@ function gprSimpan(){if(!$('#gpr-form'))return;const j=GPR.tab;if(j!=='media'&&j
   const ta=$('#gpr-out');if(ta&&GPR.hasil[j])GPR.hasil[j].prompt=ta.value}
 
 /* ---------- Ambil teks dari PDF ---------- */
-async function gprPdf(){
+async function gprPdf(modeArab){
   if(GPR.busy||!gprOk())return;
   const inp=$('#gpr-pdf'),f=inp&&inp.files&&inp.files[0];
   if(!f){toast('Pilih berkas PDF terlebih dahulu',1);return}
   if(f.size>5*1024*1024){toast('Ukuran PDF maksimal 5 MB',1);return}
   if(!/\.pdf$/i.test(f.name)&&f.type!=='application/pdf'){toast('Berkas harus berformat PDF',1);return}
   const ta=$('#gpr-materi');
-  if(ta&&ta.value.trim()&&!await ask('Teks yang sudah ada di kotak materi akan diganti dengan teks dari PDF.',{title:'Ganti teks materi?',ok:'Ganti'}))return;
+  if(ta&&ta.value.trim()&&ta.value!==GPR._pdfTeks&&!await ask('Teks yang sudah ada di kotak materi akan diganti dengan teks dari PDF.',{title:'Ganti teks materi?',ok:'Ganti'}))return;
   GPR.busy=true;const btn=$('#gpr-pdfbtn');if(btn){btn.disabled=true;btn.textContent='Membaca PDF... (bisa sampai 1 menit)'}
   try{
     const b64=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=()=>no(new Error('Berkas tidak bisa dibaca'));r.readAsDataURL(f)});
-    const r=await api('prompt.pdf',{file:{data:b64,name:f.name}});
-    const t2=$('#gpr-materi');if(t2){t2.value=r.teks;gprHitung()}
+    const r=await api('prompt.pdf',{file:{data:b64,name:f.name},arab:modeArab||'otomatis'});
+    const t2=$('#gpr-materi');if(t2){t2.value=r.teks;GPR._pdfTeks=r.teks;gprHitung()}
     const tp=$('#gpr-topik');if(tp&&!tp.value.trim())tp.value=f.name.replace(/\.pdf$/i,'').replace(/[_\-]+/g,' ').trim().slice(0,120);
     const n=$('#gpr-pdfnote');
     if(n)n.textContent=r.potong?'Teks PDF berisi '+r.total.toLocaleString('id-ID')+' karakter; yang diambil hanya '+r.batas.toLocaleString('id-ID')+' karakter pertama. Hapus bagian yang tidak perlu, atau unggah PDF per bab.':'Teks PDF berhasil diambil ('+r.total.toLocaleString('id-ID')+' karakter). Periksa dan sunting bila perlu.';
     toast(r.potong?'Teks PDF dipotong sesuai batas. Periksa hasilnya.':'Teks PDF berhasil diambil');
+    GPR._arabTerbalik=!!(r.arab&&r.arab.terbalik);const ab=$('#gpr-arabbtn');if(ab)ab.style.display=r.arab&&r.arab.ada?'':'none';
+    if(r.arab&&r.arab.ada&&n){const d=r.arab.diperbaiki||[];n.textContent+=' '+(d.length?'Teks Arab diperbaiki otomatis ('+d.map(x=>x==='bentuk-huruf'?'huruf disambungkan':'urutan dibalik').join(', ')+').':'Teks Arab terdeteksi.')+' Jika huruf masih tampak salah, klik "Teks Arab terlihat salah?" (PDF dibaca ulang dengan urutan sebaliknya).'}
   }catch(e){fail(e)}
   finally{GPR.busy=false;const b2=$('#gpr-pdfbtn');if(b2){b2.disabled=false;b2.textContent='Ambil teks dari PDF'}}
 }
@@ -3607,7 +3610,7 @@ async function gprHapus(id){
 }
 
 /* dipanggil Index.html saat keluar/ganti akun: kosongkan semua data di memori */
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR.tab='media';GPR.opsi=null;GPR.form={media:null,game:null};GPR.hasil={media:null,game:null};GPR.sentuh={style:false,jumlah:false};GPR.busy=false;GPR._mat=''});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR.tab='media';GPR.opsi=null;GPR.form={media:null,game:null};GPR.hasil={media:null,game:null};GPR.sentuh={style:false,jumlah:false};GPR.busy=false;GPR._mat='';GPR._pdfTeks='';GPR._arabTerbalik=false});
 Object.assign(VIEWS,{'g-prompt':vGPrompt});
 </script>
 <style>
@@ -4107,6 +4110,11 @@ function dcHeroWali(){const m=$('#dmain');if(!m)return;const h=m.querySelector('
 .kd-toc a:hover{background:#eaf5f6;color:var(--teal,#0a8f9d)}.kd-toc a.sub{padding-left:20px;font-size:13px}
 .kd-body h2,.kd-body h3{scroll-margin-top:90px}
 @media(max-width:900px){.kd-grid.has-toc{grid-template-columns:minmax(0,1fr)}.kd-toc{position:static;order:-1}}
+/* artikel dan profil: selebar halaman */
+#v-article .prose,#profilBox.prose{max-width:none}
+.rich.rtart{margin-top:14px}
+.rich.rtart>*{max-width:100%}
+#profilBox .rich{margin:0 0 1em}
 </style>
 <script id="rt-js">
 /* Pembersih teks kaya (daftar putih). Dipakai SAMA PERSIS di server (Rich.gs) dan di browser (EditorTeksUI.html). */
@@ -4287,11 +4295,12 @@ function rtBuat(ta,tinggi){
   return w}
 /* pasang editor pada sebuah textarea (yang disembunyikan; nilainya tetap diisi, jadi fungsi simpan asli tidak perlu diubah) */
 function rtMount(id,tinggi,label){const ta=document.getElementById(id);if(!ta||ta.dataset.rt)return null;ta.dataset.rt='1';
+  let lb=document.querySelector('label[for="'+id+'"]');if(!lb){const pv=ta.previousElementSibling;if(pv&&pv.tagName==='LABEL')lb=pv}   // label tanpa "for" = label tepat di atas isian
   const w=rtBuat(ta,tinggi);ta.style.display='none';ta.parentNode.insertBefore(w,ta);
-  const lb=document.querySelector('label[for="'+id+'"]');if(lb){lb.removeAttribute('for');if(label)lb.textContent=label;lb.addEventListener('click',()=>w.querySelector('.rte').focus())}
+  if(lb){lb.removeAttribute('for');if(label)lb.textContent=label;lb.addEventListener('click',()=>w.querySelector('.rte').focus())}
   return w}
 /* susun isian form admin menjadi grid selebar halaman (label + isian dibungkus berpasangan) */
-function rtGrid(){const c=document.querySelector('#dmain div[style*="max-width:560px"]');if(!c||c.classList.contains('kform'))return;
+function rtGrid(){const c=document.querySelector('#dmain > div[style*="max-width:560px"],#dmain > div[style*="max-width:640px"]');if(!c||c.classList.contains('kform'))return;
   c.style.maxWidth='none';c.classList.add('kform');const kids=[...c.children];let cur=null;
   kids.forEach(k=>{
     if(k.tagName==='LABEL'){cur=document.createElement('div');cur.className='kf';c.insertBefore(cur,k);cur.appendChild(k);return}
@@ -4314,6 +4323,25 @@ if(typeof formKampus==='function'){const o=formKampus;formKampus=function(id){co
 /* kirim isi editor "Informasi lengkap" bersama aksi simpan kampus */
 if(typeof api==='function'){const o=api;api=function(a,p){if(a==='kampus.save'){const ta=document.getElementById('kk_d');if(ta&&ta.dataset.ready==='1')p=Object.assign({},p,{Detail:ta.value})}return o.call(this,a,p)}}
 
+/* ---------- Artikel dan Profil sekolah (profil singkat, visi, misi) ---------- */
+if(typeof formArt==='function'){const o=formArt;formArt=async function(){const r=await o.apply(this,arguments);
+  if(document.getElementById('ai')){rtMount('ai',true,'Isi artikel');rtGrid();const k=document.getElementById('aj');if(k&&k.closest('.kf'))k.closest('.kf').classList.add('full')}
+  return r}}
+if(typeof vProfil==='function'){const o=vProfil;vProfil=function(){const r=o.apply(this,arguments);
+  [['p_profil_sekolah','Profil singkat sekolah'],['p_visi','Visi'],['p_misi','Misi (boleh pakai daftar poin)']].forEach(a=>rtMount(a[0],false,a[1]));rtGrid();
+  return r};if(typeof VIEWS==='object')VIEWS.profil=vProfil}   // VIEWS menyimpan fungsi lama, jadi diganti juga
+/* isi artikel yang lama (teks biasa, tiap baris = paragraf) tetap tampil sama; yang baru tampil sebagai teks kaya */
+function rtArtikel(isi){isi=String(isi==null?'':isi);
+  if(isi.indexOf('<')<0)return isi.split(/\n{1,}/).map(p=>`<p>${esc(p)}</p>`).join('');
+  const d=document.createElement('div');d.innerHTML=rtBersih_(isi);rtWrapTabel(d);return d.innerHTML}
+if(typeof renderProfil==='function'){const o=renderProfil;renderProfil=function(){o.apply(this,arguments);
+  try{const p=BOOT.profil||{},B=document.getElementById('profilBox');if(!B)return;
+    const R=t=>{t=String(t||'').trim();if(!t)return'';return t.indexOf('<')<0?t.split(/\n+/).filter(Boolean).map(x=>`<p>${esc(x)}</p>`).join(''):rtBersih_(t)};
+    const para=t=>String(t||'').split(/\n+/).filter(Boolean).map(x=>`<p>${esc(x)}</p>`).join(''),ps=R(p.profil_sekolah),vi=R(p.visi),mi=R(p.misi);
+    B.innerHTML=(ps?`<div class="rich">${ps}</div>`:'<p>Profil sekolah belum diisi.</p>')+(vi?`<h3>Visi</h3><div class="rich">${vi}</div>`:'')+(mi?`<h3>Misi</h3><div class="rich">${mi}</div>`:'')+((p.alamat||p.kontak)?`<h3>Kontak</h3>${para(p.alamat)}${para(p.kontak)}`:'');
+    rtWrapTabel(B)}catch(e){}}
+  try{renderProfil()}catch(e){}}   // render ulang sekali: pemanggilan awal terjadi sebelum modul ini aktif
+
 /* ---------- halaman depan: deskripsi negara selebar kotak, kartu kampus tersusun rapi (tanpa geser), kartu dengan info lengkap membuka halaman sendiri ---------- */
 function rtWrapTabel(el){el.querySelectorAll('table').forEach(t=>{if(t.parentElement.classList.contains('rtscroll'))return;const d=document.createElement('div');d.className='rtscroll';t.before(d);d.appendChild(t)})}
 if(typeof negRender==='function'){const o=negRender;negRender=function(){const r=o.apply(this,arguments);
@@ -4327,7 +4355,6 @@ if(typeof negRender==='function'){const o=negRender;negRender=function(){const r
       const cb=a.querySelector('.cb');if(cb)cb.insertAdjacentHTML('beforeend','<span class="go">Lihat info lengkap &rarr;</span>');
       el.replaceWith(a)})}catch(e){}
   return r}}
-try{if(typeof NEG!=='undefined'&&NEG.length)negRender()}catch(e){}
 /* halaman terpisah satu kampus: #/kampus/<id> */
 const KD={};
 function kdView(){let v=document.getElementById('v-kampus');if(!v){v=document.createElement('section');v.className='view';v.id='v-kampus';v.innerHTML='<div class="sec wrap kdet" id="kdBox"></div>';
@@ -4354,5 +4381,25 @@ if(typeof route==='function'){const o=route;route=function(){
   return o.apply(this,arguments)}}
 document.addEventListener('selectionchange',()=>{const a=document.activeElement;if(a&&a.classList&&a.classList.contains('rte')){const w=a.closest('.rtw');if(w){rtPilih(w);rtAktif(w)}}});
 </script>
+<style id="scl-css">
+/* ===== Daftar panjang di dashboard (siswa, pengguna, artikel, nilai, dst.) bergulir di dalam kotaknya sendiri =====
+   Semua tabel dashboard berada di dalam .tw. Daftar pendek tidak terpengaruh (batas tinggi hanya berlaku bila isinya lebih panjang).
+   Untuk mengubah tinggi: ganti angka pada --tw-maks. Untuk mematikan seluruhnya: hapus berkas ini dan barisnya di Index. */
+:root{--tw-maks:clamp(300px,calc(100vh - 240px),760px)}
+#dmain .tw{max-height:var(--tw-maks);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#9fb7bf transparent;padding-top:0;
+  background:linear-gradient(#fff 30%,#fff0) 0 100%/100% 34px no-repeat local,linear-gradient(#fff0,#fff 70%) 0 100%/100% 34px no-repeat local,
+   radial-gradient(farthest-side at 50% 100%,rgba(10,37,64,.18),transparent) 0 100%/100% 12px no-repeat scroll,#fff}
+#dmain .tw::-webkit-scrollbar{width:10px;height:10px}
+#dmain .tw::-webkit-scrollbar-thumb{background:#b5cbd2;border-radius:99px;border:2px solid #fff}
+#dmain .tw::-webkit-scrollbar-thumb:hover{background:#8fb0ba}
+#dmain .tw table{margin-top:0}
+#dmain .tw th{position:sticky;top:0;z-index:2;background:#eef6f7;box-shadow:0 1px 0 #d5e4e8}
+#dmain .tw th:first-child{border-top-left-radius:10px}#dmain .tw th:last-child{border-top-right-radius:10px}
+/* daftar ringkas di Ringkasan Wali Kelas dan Murid */
+#dmain .wr-list,#dmain .mr-list{max-height:min(380px,52vh);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#9fb7bf transparent;padding-right:6px}
+#dmain .wr-list::-webkit-scrollbar,#dmain .mr-list::-webkit-scrollbar{width:8px}
+#dmain .wr-list::-webkit-scrollbar-thumb,#dmain .mr-list::-webkit-scrollbar-thumb{background:#b5cbd2;border-radius:99px}
+@media(max-width:700px){:root{--tw-maks:clamp(300px,calc(100vh - 150px),700px)}}
+</style>
 </body>
 </html>
