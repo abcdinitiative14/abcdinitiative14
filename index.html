@@ -4242,6 +4242,35 @@ function dcHeroWali(){const m=$('#dmain');if(!m)return;const h=m.querySelector('
  .rich figure.mh-sembunyi{display:none}
  .rich section.mk-2{column-count:2}}
 @container (max-width:900px) and (min-width:561px){.rich section.mg-kol3{column-count:2}}
+/* ===== BLOK TAMPILAN (Banner foto penuh + Langkah garis waktu). Hanya berlaku untuk artikel yang MEMAKAI blok ini; artikel lama tidak berubah. ===== */
+.rich section.bl-banner{position:relative;clear:both;margin:1.4em 0;min-height:340px;padding:30px 28px;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:10px;color:#fff;background:#0a2540}
+.rich section.bl-banner figure{position:absolute;inset:0;width:100%!important;max-width:none;float:none;margin:0;z-index:0}
+.rich section.bl-banner figure img{width:100%;height:100%;object-fit:cover;display:block;border-radius:0}
+.rich section.bl-banner figcaption{display:none}
+.rich section.bl-banner::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(10,37,64,.15) 0%,rgba(10,37,64,.78) 100%)}
+.rich section.bl-banner>:not(figure){position:relative;z-index:2;margin:0;max-width:640px;color:#fff}
+.rich section.bl-banner h2{font-family:Georgia,"Times New Roman",serif;font-size:2em;line-height:1.15;color:#fff}
+.rich section.bl-banner p{font-size:1.02em;line-height:1.55}
+.rich a.bl-tombol{display:inline-block;margin-top:6px;padding:10px 18px;border-radius:10px;background:var(--teal,#0a8f9d);color:#fff;text-decoration:none;font-weight:600}
+.rich section.bl-banner a.bl-tombol{background:#fff;color:#0a2540}
+.rich section.bl-langkah{position:relative;clear:both;display:grid;grid-template-columns:1fr 1fr;column-gap:56px;row-gap:8px;grid-template-rows:1fr repeat(4,auto) 1fr;align-items:center;margin:2.2em 0;padding-top:6px}
+.rich section.bl-langkah>figure{grid-column:1;grid-row:1/-1;width:100%!important;float:none;margin:0}
+.rich section.bl-langkah>figure img{width:100%;aspect-ratio:7/5;object-fit:cover;border-radius:6px}
+.rich section.bl-langkah>figure figcaption{display:none}
+.rich section.bl-langkah>:not(figure){grid-column:2;margin:0}
+.rich section.bl-langkah>:nth-child(2){grid-row:2}.rich section.bl-langkah>:nth-child(3){grid-row:3}.rich section.bl-langkah>:nth-child(4){grid-row:4}.rich section.bl-langkah>:nth-child(5){grid-row:5}
+.rich section.bl-langkah.bl-balik>figure{grid-column:2}
+.rich section.bl-langkah.bl-balik>:not(figure){grid-column:1}
+.rich section.bl-langkah h3{font-family:Georgia,"Times New Roman",serif;font-size:1.6em;color:#0a2540;line-height:1.2}
+.rich section.bl-langkah::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:linear-gradient(180deg,var(--teal,#0a8f9d),#c9d6df)}
+.rich section.bl-langkah::after{content:"";position:absolute;left:50%;top:0;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#fff;border:2px solid var(--teal,#0a8f9d)}
+@container (max-width:560px){
+ .rich section.bl-banner{min-height:300px;padding:22px 18px}
+ .rich section.bl-banner h2{font-size:1.5em}
+ .rich section.bl-langkah{grid-template-columns:1fr;grid-template-rows:none;column-gap:0}
+ .rich section.bl-langkah>figure,.rich section.bl-langkah>:not(figure),.rich section.bl-langkah.bl-balik>figure,.rich section.bl-langkah.bl-balik>:not(figure),.rich section.bl-langkah>h3{grid-column:1;grid-row:auto}
+  .rich section.bl-langkah>:nth-child(n){grid-row:auto;grid-column:1}
+.rich section.bl-langkah::before,.rich section.bl-langkah::after{display:none}}
 #dmain .rte.hp{max-width:390px;margin-left:auto;margin-right:auto;border-radius:22px;box-shadow:0 0 0 9px #17324a14;resize:none}
 #dmain .rte figure.mh-sembunyi{display:block!important;opacity:.35;outline:2px dashed #b3261e;outline-offset:2px}
 #dmain .rtmode{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px;font-size:13px;color:#4d6677}
@@ -4272,7 +4301,7 @@ const RT_OKTAG_ = { p: 1, br: 1, strong: 1, em: 1, u: 1, s: 1, h2: 1, h3: 1, h4:
 const RT_ALIAS_ = { b: 'strong', i: 'em', strike: 's', del: 's', div: 'p', h1: 'h2', h5: 'h4', h6: 'h4', font: 'span' };
 const RT_BUANG_ = { script: 1, style: 1, iframe: 1, object: 1, embed: 1, svg: 1, math: 1, noscript: 1, xml: 1, textarea: 1, title: 1, template: 1, head: 1, select: 1, button: 1, form: 1, applet: 1, frameset: 1 };
 const RT_BLOK_ = { p: 1, h2: 1, h3: 1, h4: 1, ul: 1, ol: 1, li: 1, blockquote: 1, hr: 1, table: 1, figure: 1, section: 1 };
-const RT_KELAS_ = { figure: [['mg-kiri', 'mg-kanan', 'mg-tengah', 'mg-penuh'], ['mh-kiri', 'mh-kanan', 'mh-tengah', 'mh-penuh', 'mh-sembunyi'], ['mw-25', 'mw-33', 'mw-40', 'mw-50', 'mw-66', 'mw-75', 'mw-100']], section: [['mg-kol2', 'mg-kol3', 'mg-galeri'], ['mk-2']], blockquote: [['mg-kutip']] };   // satu kelas per kelompok: web (mg-), HP (mh-, mw-, mk-)
+const RT_KELAS_ = { figure: [['mg-kiri', 'mg-kanan', 'mg-tengah', 'mg-penuh'], ['mh-kiri', 'mh-kanan', 'mh-tengah', 'mh-penuh', 'mh-sembunyi'], ['mw-25', 'mw-33', 'mw-40', 'mw-50', 'mw-66', 'mw-75', 'mw-100']], section: [['mg-kol2', 'mg-kol3', 'mg-galeri', 'bl-banner', 'bl-langkah'], ['mk-2', 'bl-balik']], blockquote: [['mg-kutip']], a: [['bl-tombol']] };   // satu kelas per kelompok: web (mg-), HP (mh-, mw-, mk-)
 const RT_TBL_ = { table: 1, thead: 1, tbody: 1, tfoot: 1, tr: 1, td: 1, th: 1 };
 
 function rtEsc_(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -4400,7 +4429,7 @@ const RT_BTN=[
  ['undo','Urungkan (Ctrl+Z)',rtI('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>')],['redo','Ulangi (Ctrl+Y)',rtI('<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>')],['removeFormat','Hapus format',rtI('<path d="M5 5h14M12 5v14M8 19h8"/><path d="M4 4l16 16"/>')]];
 function rtBarHtml(){
   const sel=(c,a,l)=>`<select class="rts" data-s="${c}" aria-label="${l}">${a.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select>`;
-  return `<div class="rtbar" role="toolbar" aria-label="Pengaturan teks">${sel('block',RT_BLOCKS,'Gaya paragraf')}${sel('font',RT_FONTS,'Jenis huruf')}${sel('size',RT_SIZES,'Ukuran huruf')}${sel('kol',[['','Kolom'],['2','2 kolom'],['3','3 kolom'],['0','1 kolom (lepas)']],'Kolom teks')}<span class="rtsep"></span>`+
+  return `<div class="rtbar" role="toolbar" aria-label="Pengaturan teks">${sel('block',RT_BLOCKS,'Gaya paragraf')}${sel('font',RT_FONTS,'Jenis huruf')}${sel('size',RT_SIZES,'Ukuran huruf')}${sel('kol',[['','Kolom'],['2','2 kolom'],['3','3 kolom'],['0','1 kolom (lepas)']],'Kolom teks')}${sel('blok',[['','+ Blok tampilan'],['banner','Banner foto penuh'],['langkah','Langkah garis waktu']],'Sisipkan blok tampilan')}<span class="rtsep"></span>`+
    RT_BTN.map(b=>b==='|'?'<span class="rtsep"></span>':`<button type="button" class="rtb" data-c="${b[0]}" title="${b[1]}" aria-label="${b[1]}">${b[2]}</button>`).join('')+
    `<span class="rtsep"></span><label class="rtc" title="Warna huruf"><span style="border-bottom:3px solid #0a2540">A</span><input type="color" data-k="foreColor" value="#0a2540" aria-label="Warna huruf"></label><label class="rtc" title="Sorot teks"><span style="background:#fff3a3;padding:0 4px;border-radius:3px">ab</span><input type="color" data-k="hiliteColor" value="#fff3a3" aria-label="Warna sorot"></label></div>`+
    `<div class="rtbar rttb" hidden role="toolbar" aria-label="Pengaturan tabel"><b>Tabel:</b><button type="button" class="rtb txt" data-t="addRow">+ Baris</button><button type="button" class="rtb txt" data-t="addCol">+ Kolom</button><button type="button" class="rtb txt" data-t="delRow">&minus; Baris</button><button type="button" class="rtb txt" data-t="delCol">&minus; Kolom</button><button type="button" class="rtb txt bad" data-t="delTbl">Hapus tabel</button></div>`}
@@ -4483,10 +4512,20 @@ function rtFig(url,cap,kelas,lebar){const f=document.createElement('figure');if(
   const i=document.createElement('img');i.src=url;i.alt=cap||'';f.appendChild(i);
   if(cap){const c=document.createElement('figcaption');c.textContent=cap;f.appendChild(c)}return f}
 function rtBlokKursor(w){const ed=w.querySelector('.rte');let n=w._r&&ed.contains(w._r.startContainer)?w._r.startContainer:null;if(!n)return null;n=n.nodeType===1?n:n.parentElement;
-  while(n&&n!==ed){const p=n.parentElement;if(p===ed||(p&&p.tagName==='SECTION'&&p.parentElement===ed&&!p.classList.contains('mg-galeri')))return n;n=p}return null}
+  while(n&&n!==ed){const p=n.parentElement;if(p&&p.tagName==='SECTION'&&p.parentElement===ed&&/(^|\s)bl-/.test(p.className))return p;if(p===ed||(p&&p.tagName==='SECTION'&&p.parentElement===ed&&!p.classList.contains('mg-galeri')))return n;n=p}return null}
 function rtTaruh(w,el){const ed=w.querySelector('.rte'),b=rtBlokKursor(w);
   if(b)b.before(el);else ed.appendChild(el);
   if(!el.nextElementSibling&&el.parentElement===ed){const p=document.createElement('p');p.innerHTML='<br>';ed.appendChild(p)}}
+/* blok tampilan: banner foto penuh dan langkah garis waktu (foto + judul + teks + tombol) */
+async function rtBlokBaru(w,jenis){rtPilih(w);const us=await rtDialogGambar(false);if(!us.length)return;
+  const ed=w.querySelector('.rte'),s=document.createElement('section');
+  if(jenis==='banner'){s.className='bl-banner';s.appendChild(rtFig(us[0],''));
+    s.insertAdjacentHTML('beforeend','<h2>Judul banner</h2><p>Tulis penjelasan singkat di sini.</p><p><a class="bl-tombol" href="https://contoh.com">Pelajari</a></p>')}
+  else{const n=ed.querySelectorAll('section.bl-langkah').length;s.className='bl-langkah'+(n%2?' bl-balik':'');s.appendChild(rtFig(us[0],''));
+    s.insertAdjacentHTML('beforeend','<h3>Judul langkah</h3><p>Tulis penjelasan singkat di sini.</p><p><a class="bl-tombol" href="https://contoh.com">Pelajari</a></p>')}
+  rtTaruh(w,s);rtSync(w);
+  if(!rtBersih_(ed.innerHTML).includes('<img'))toast('Gambar tidak diterima (alamat harus https)',1)}
+function rtBlokBalik(w){const ed=w.querySelector('.rte'),b=rtBlokKursor(w);if(b&&b.classList&&b.classList.contains('bl-langkah')){b.classList.toggle('bl-balik');rtSync(w)}}
 async function rtGambarBaru(w,galeri){rtPilih(w);const us=await rtDialogGambar(galeri);if(!us.length)return;
   const ed=w.querySelector('.rte');
   if(galeri||us.length>1){const s=document.createElement('section');s.className='mg-galeri';us.forEach(u=>s.appendChild(rtFig(u,'')));rtTaruh(w,s);rtSync(w);rtPilihFig(w,s.querySelector('figure'))}
@@ -4573,6 +4612,7 @@ function rtBuat(ta,tinggi){
   w.querySelectorAll('.rts').forEach(s=>s.addEventListener('change',()=>{const k=s.dataset.s,v=s.value;
     if(k==='block')rtBlok(w,v);
     else if(k==='kol'){if(v!=='')rtKolom(w,+v)}
+    else if(k==='blok'){if(v)rtBlokBaru(w,v);s.value=''}
     else if(k==='font'&&v)rtExec(w,'fontName',v);
     else if(k==='size'&&v)rtExec(w,'fontSize',v);
     if(k!=='block')s.value=''}));
@@ -4895,10 +4935,21 @@ function mnuBeranda(){try{const home=document.getElementById('v-home');if(!home)
   const h=MNU.hide||[],kat=mnuTop().map(a=>String(a.getAttribute('href')||'')).filter(x=>/^#\/kategori\//.test(x));
   const set=(s,l)=>{if(s)s.classList.toggle('nvx',l.length>0&&l.every(x=>h.indexOf(x)>=0))};
   set(kam,['#/kampus']);set(pro,['#/profil']);set(ber,kat)}catch(e){console.warn(e)}}
+/* ikon baru untuk menu Cabang dan Paket Akses (ditambahkan ke daftar ikon TemaDashboard) */
+try{if(typeof DS_P==='object'){
+  DS_P.cabang='<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>';
+  DS_P.paket='<path d="M16.5 9.4l-9-5.19"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/>'}
+  if(typeof DS_K==='object')DS_K['sa-cabang']='cabang'}catch(e){}
+const mnuCabPaket=x=>x[0]==='sa-cabang'||/paket\s*akses/i.test(String(x[1]))||/(^|[-_])paket/i.test(String(x[0]));
 /* Dashboard: menu dikelompokkan oleh TemaDashboard (dsGroups). Urutan kelompok (ikon di rel) dan urutan item dalam kelompok diatur di sini. */
 if(typeof dsGroups==='function'){const o=dsGroups;dsGroups=function(role,menus){let g=o.apply(this,arguments);
   try{if(role==='Admin'){const lain=g.find(x=>x.id==='lain'),mt=g.find(x=>x.id==='maint');
       if(lain&&mt){const i=lain.items.findIndex(x=>x[0]==='urutmenu');if(i>=0){mt.items.push(lain.items.splice(i,1)[0]);if(!lain.items.length)g=g.filter(x=>x!==lain)}}}
+    /* Cabang dan Paket Akses dipindah ke kelompok Pengguna (bersama menu Pengguna) dan diberi ikon sendiri */
+    const pen=g.find(x=>x.id==='pengguna');
+    if(pen)g.filter(x=>x!==pen).forEach(x=>{const k=x.items.filter(mnuCabPaket);if(!k.length)return;x.items=x.items.filter(y=>!mnuCabPaket(y));k.forEach(y=>pen.items.push(y))});
+    g=g.filter(x=>x.items.length);
+    g.forEach(x=>x.items.forEach(y=>{if(typeof DS_K==='object'&&mnuCabPaket(y)){DS_K[y[0]]=y[0]==='sa-cabang'?'cabang':'paket'}}));
     const gi=(MNU.grp||{})[role],it=(MNU.dash||{})[role];
     if(it)g.forEach(x=>{x.items=mnuUrut(x.items,it,y=>y[0])});
     if(gi)g=mnuUrut(g,gi,x=>x.id)}catch(e){console.warn(e)}
@@ -5100,6 +5151,7 @@ async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?')
         return '<tr><td>' + k + '</td><td>' + esc(c.nama) + '</td><td>' + (c.status ? 'Aktif' : 'Nonaktif') + '</td><td>' + aksi + '</td></tr>'; }).join('');
       M('<h2>Cabang</h2><p>Cabang aktif: <b>' + esc(nama) + '</b>. Semua menu (siswa, guru, nilai, dst.) menampilkan data cabang ini.</p>' +
         '<div class="tw"><table><thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        '<h3 style="margin-top:22px">Pemeriksaan</h3><p><button class="btn ghost" id="cbCek" onclick="cabCek()">Periksa semua cabang</button> <button class="btn ghost" id="cbMig" onclick="cabMigrasi()">Migrasi semua cabang</button> <small>Periksa hanya membaca. Migrasi hanya menambah sheet atau kolom yang kurang.</small></p><div id="cabHasil" role="status"></div>' +
         '<h3 style="margin-top:22px">Tambah cabang baru</h3>' +
         '<form id="fCab" onsubmit="return cabTambah(event)" autocomplete="off">' +
         '<label for="cbk">Kode cabang (huruf kecil dan angka, 3-20 karakter, contoh: karantina)</label><input id="cbk" required pattern="[a-z][a-z0-9]{2,19}">' +
@@ -5128,6 +5180,29 @@ async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?')
       supBar(); vCabang();
     } catch (x) { fail(x); b.disabled = false; b.textContent = 'Buat cabang'; }
     return false;
+  };
+
+    window.cabCek = async function () {
+    var b = $('#cbCek'); b.disabled = true; b.textContent = 'Memeriksa...';
+    try {
+      var d = await api('super.cabang.cek');
+      var h = d.cabang.map(function (c) { return '<li>' + (c.nonaktif ? '&#9675; ' : c.ok ? '&#10003; ' : '&#9888; ') + '<b>' + esc(c.nama) + '</b> (' + esc(c.kode) + ')' + (c.nonaktif ? ' nonaktif' : c.ok ? ': sehat, ' + c.pengguna + ' pengguna, ' + c.admin + ' admin' : ': ' + c.masalah.map(esc).join('; ')) + '</li>'; }).join('');
+      h += '<li>' + (d.pusat.ok ? '&#10003; ' : '&#9888; ') + '<b>PUSAT</b>' + (d.pusat.aktif ? (d.pusat.ok ? ': sehat' : ': ' + d.pusat.masalah.map(esc).join('; ')) : ': belum aktif') + '</li>';
+      $('#cabHasil').innerHTML = '<p><b>' + (d.semuaOk ? 'Semua sehat.' : 'Ada yang perlu diperbaiki. Masalah sheet atau kolom biasanya selesai dengan "Migrasi semua cabang".') + '</b></p><ul>' + h + '</ul>';
+    } catch (x) { fail(x); }
+    b.disabled = false; b.textContent = 'Periksa semua cabang';
+  };
+
+  window.cabMigrasi = async function () {
+    var ya = await ask('Jalankan migrasi skema untuk semua cabang aktif?\n\nHanya menambah sheet atau kolom yang kurang. Data tidak diubah.', { title: 'Migrasi semua cabang', ok: 'Jalankan' });
+    if (!ya) return;
+    var b = $('#cbMig'); b.disabled = true; b.textContent = 'Memigrasi...';
+    try {
+      var d = await api('super.cabang.migrasi', {});
+      $('#cabHasil').innerHTML = '<p><b>' + (d.selesai ? 'Migrasi selesai.' : 'Belum semua selesai. Tekan tombol lagi untuk melanjutkan.') + '</b></p><ul>' +
+        d.hasil.map(function (r) { return '<li>' + esc(r.kode) + ': ' + (r.status === 'ok' ? 'berhasil' : r.status === 'tersisa' ? 'menunggu' : 'GAGAL, ' + esc(r.error)) + '</li>'; }).join('') + '</ul>';
+    } catch (x) { fail(x); }
+    b.disabled = false; b.textContent = 'Migrasi semua cabang';
   };
 
   window.cabUbahNama = async function (kode) {
