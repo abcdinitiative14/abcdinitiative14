@@ -873,7 +873,7 @@ async function ytHapus(e) {
 const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const lnk=u=>okUrl(u)?`<a href="${esc(okUrl(u))}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">Buka tautan</a>`:'';
-const paras=t=>String(t||'').split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('');
+const paras=t=>typeof mxParas==='function'?mxParas(t):String(t||'').split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('');
 const NOAMPU='<div class="empty">Anda belum ditetapkan sebagai pengampu mapel. Minta admin mengisinya di menu Pengampu Mapel.</div>';
 
 
@@ -3380,7 +3380,7 @@ function mpBody(){const b=$('#mp-body');if(!b||!MP.pair||!MEM.gd)return;
   b.innerHTML='<div class="tabs" id="gtabs" style="display:none"></div><div id="gbody"></div>';gDraw()}
 /* tab Ujian CBT: daftar ujian pasangan ini; Soal/Hasil/Edit/Buat memakai layar Fase5UI yang menggambar ke #mp-body lewat MT() */
 function mpUjian(){const b=$('#mp-body');GS.pair=MP.pair;UJ.pair=MP.pair;UJ.req=0;
-  b.innerHTML='<p><button class="btn" onclick="uForm()">Buat ujian</button></p><p><small>Pilihan ganda A-E, nilai otomatis. Alur: buat ujian (Draft), tambah soal, lalu aktifkan.</small></p><div class="tw" id="ub"></div>';
+  b.innerHTML='<p><button class="btn" onclick="uForm()">Buat ujian</button></p><p><small>Bentuk soal: pilihan ganda, pilihan ganda kompleks, dan benar/salah; mendukung rumus matematika; nilai otomatis. Alur: buat ujian (Draft), tambah soal atau impor dari CSV, lalu aktifkan.</small></p><div class="tw" id="ub"></div>';
   if(MEM.ug)uDraw();else $('#ub').innerHTML='<div class="skel"></div>';
   uLoad()}
 /* tab Input Nilai: pasangan sudah ditentukan, hanya semester yang dipilih; sisanya nLoad/nDraw/nSimpan/nTarik milik NilaiUI */
@@ -4917,13 +4917,58 @@ async function aluPeriksa(nid,simpan){const t=$('#alc_t').value,h=$('#alc_h'),p=
       var aktif = (S.user && S.user.cab) || d.aktif, nama = aktif;
       d.cabang.forEach(function (c) { if (c.kode === aktif) nama = c.nama; });
       var rows = d.cabang.map(function (c) {
-        return '<tr><td>' + esc(c.kode) + '</td><td>' + esc(c.nama) + '</td><td>' + (c.status ? 'Aktif' : 'Nonaktif') + '</td><td>' +
-          (c.status && c.kode !== aktif ? '<button class="btn ghost sm" onclick="superPilih(\'' + esc(c.kode) + '\')">Pakai cabang ini</button>' : (c.kode === aktif ? '<b>Sedang dipakai</b>' : '')) + '</td></tr>'; }).join('');
+        var k = esc(c.kode), aksi = '';
+        if (c.status && c.kode !== aktif) aksi += '<button class="btn ghost sm" onclick="superPilih(\'' + k + '\')">Pakai</button> ';
+        if (c.kode === aktif) aksi += '<b>Sedang dipakai</b> ';
+        aksi += '<button class="btn ghost sm" onclick="cabUbahNama(\'' + k + '\')">Ubah nama</button> ';
+        if (!c.bawaan) aksi += '<button class="btn ' + (c.status ? 'bad ' : 'ghost ') + 'sm" onclick="cabStatus(\'' + k + '\',' + (c.status ? 'false' : 'true') + ')">' + (c.status ? 'Nonaktifkan' : 'Aktifkan') + '</button> ';
+        if (c.url) aksi += '<a href="' + esc(c.url) + '" target="_blank" rel="noopener" style="font-size:.85rem">Spreadsheet</a>';
+        return '<tr><td>' + k + '</td><td>' + esc(c.nama) + '</td><td>' + (c.status ? 'Aktif' : 'Nonaktif') + '</td><td>' + aksi + '</td></tr>'; }).join('');
       M('<h2>Cabang</h2><p>Cabang aktif: <b>' + esc(nama) + '</b>. Semua menu (siswa, guru, nilai, dst.) menampilkan data cabang ini.</p>' +
         '<div class="tw"><table><thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-        '<p><small>Menu Artikel, Kampus Tujuan, dan Mata Pelajaran adalah data bersama untuk semua cabang; hanya Superadmin yang bisa mengubahnya. Menambah cabang baru disiapkan pada tahap berikutnya.</small></p>');
+        '<h3 style="margin-top:22px">Tambah cabang baru</h3>' +
+        '<form id="fCab" onsubmit="return cabTambah(event)" autocomplete="off">' +
+        '<label for="cbk">Kode cabang (huruf kecil dan angka, 3-20 karakter, contoh: karantina)</label><input id="cbk" required pattern="[a-z][a-z0-9]{2,19}">' +
+        '<label for="cbn">Nama cabang (tampil di pilihan saat masuk)</label><input id="cbn" required maxlength="80">' +
+        '<label for="cbu">Username admin pertama</label><input id="cbu" required pattern="[A-Za-z0-9_.]{3,30}">' +
+        '<label for="cba">Nama lengkap admin</label><input id="cba" required maxlength="100">' +
+        '<label for="cbe">Email admin (boleh kosong)</label><input id="cbe" type="email">' +
+        '<p><button class="btn" id="cbs">Buat cabang</button> <small>Maksimal ' + d.maks + ' cabang. Proses beberapa detik.</small></p></form>' +
+        '<p><small>Menu Artikel, Kampus Tujuan, dan Mata Pelajaran adalah data bersama untuk semua cabang; hanya Superadmin yang bisa mengubahnya. ' +
+        'Cabang nonaktif tidak bisa dipakai masuk, tetapi datanya tidak dihapus. Lupa password admin cabang: pindah ke cabang itu, menu Pengguna, Reset password.</small></p>');
     } catch (e) { fail(e); }
   }
+
+  window.cabTambah = async function (e) {
+    e.preventDefault();
+    var f = { kode: $('#cbk').value.trim().toLowerCase(), nama: $('#cbn').value.trim(), adminUsername: $('#cbu').value.trim(),
+      adminNama: $('#cba').value.trim(), adminEmail: $('#cbe').value.trim() };
+    var yakin = await ask('Buat cabang baru?\n\nKode: ' + f.kode + '\nNama: ' + f.nama + '\nAdmin: ' + f.adminUsername + ' (' + f.adminNama + ')\n\nSebuah spreadsheet baru akan dibuat di Drive Anda.', { title: 'Tambah cabang', ok: 'Buat cabang' });
+    if (!yakin) return false;
+    var b = $('#cbs'); b.disabled = true; b.textContent = 'Membuat cabang...';
+    try {
+      var r = await api('super.cabang.tambah', f);
+      CABS = null;
+      await ask('Cabang "' + r.nama + '" berhasil dibuat.\n\nUsername admin: ' + r.username + '\nPassword sementara: ' + r.password +
+        '\n\nCatat password ini SEKARANG, tidak akan ditampilkan lagi. Minta admin cabang menggantinya setelah masuk pertama.', { title: 'Cabang dibuat', ok: 'Sudah saya catat', no: 'Tutup' });
+      supBar(); vCabang();
+    } catch (x) { fail(x); b.disabled = false; b.textContent = 'Buat cabang'; }
+    return false;
+  };
+
+  window.cabUbahNama = async function (kode) {
+    var lama = ''; ((CABS && CABS.cabang) || []).forEach(function (c) { if (c.kode === kode) lama = c.nama; });
+    var nm = await ask('Nama baru untuk cabang ' + kode + ' (tampil di pilihan saat masuk):', { title: 'Ubah nama cabang', ok: 'Simpan', input: { label: 'Nama cabang', value: lama } });
+    if (nm === null || !String(nm).trim()) return;
+    try { await api('super.cabang.ubah', { kode: kode, nama: nm }); CABS = null; toast('Nama cabang diubah'); supBar(); vCabang(); } catch (x) { fail(x); }
+  };
+
+  window.cabStatus = async function (kode, aktifkan) {
+    var yakin = await ask(aktifkan ? 'Aktifkan kembali cabang ' + kode + '?' : 'Nonaktifkan cabang ' + kode + '?\n\nSemua pengguna cabang itu langsung keluar dan tidak bisa masuk sampai diaktifkan lagi. Data tidak dihapus.',
+      { title: aktifkan ? 'Aktifkan cabang' : 'Nonaktifkan cabang', ok: aktifkan ? 'Aktifkan' : 'Nonaktifkan', bad: !aktifkan });
+    if (!yakin) return;
+    try { await api('super.cabang.ubah', { kode: kode, status: aktifkan }); CABS = null; toast(aktifkan ? 'Cabang diaktifkan' : 'Cabang dinonaktifkan'); supBar(); vCabang(); } catch (x) { fail(x); }
+  };
   VIEWS['sa-cabang'] = vCabang;
 })();
 </script>
