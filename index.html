@@ -4883,7 +4883,14 @@ function mnuTerapkan(){const nav=document.getElementById('nav'),ref=document.get
   if(nav&&ref){const as=mnuTop(),oi=a=>{const i=ORIG_TOP.findIndex(x=>x[0]===a.getAttribute('href'));return i<0?1e6:i};
     const dasar=as.map((a,i)=>[a,i]).sort((x,y)=>oi(x[0])-oi(y[0])||x[1]-y[1]).map(x=>x[0]);
     mnuUrut(dasar,MNU.top,a=>a.getAttribute('href')).forEach(a=>nav.insertBefore(a,ref));
-    const h=MNU.hide||[];as.forEach(a=>a.classList.toggle('nvx',h.indexOf(a.getAttribute('href'))>=0))}}
+    const h=MNU.hide||[];as.forEach(a=>a.classList.toggle('nvx',h.indexOf(a.getAttribute('href'))>=0))}
+  mnuBeranda()}
+/* isi Beranda mengikuti urutan menu atas: Kampus Tujuan, Berita/Beasiswa/Jalur Kampus (satu bagian "Kabar terbaru"), dan Profil. Sorotan (jumbotron) tetap paling atas. */
+function mnuBeranda(){try{const home=document.getElementById('v-home');if(!home)return;
+  const kam=document.getElementById('kampus'),pro=document.getElementById('profil'),gr=document.getElementById('homeGrid'),ber=gr?gr.closest('.sec'):null;
+  const urut=[];mnuTop().forEach(a=>{const h=String(a.getAttribute('href')||'');const s=h==='#/kampus'?kam:h==='#/profil'?pro:/^#\/kategori\//.test(h)?ber:null;if(s&&urut.indexOf(s)<0)urut.push(s)});
+  [kam,ber,pro].forEach(s=>{if(s&&urut.indexOf(s)<0)urut.push(s)});
+  urut.forEach(s=>{if(s.parentNode===home)home.appendChild(s)})}catch(e){console.warn(e)}}
 /* Dashboard: menu dikelompokkan oleh TemaDashboard (dsGroups). Urutan kelompok (ikon di rel) dan urutan item dalam kelompok diatur di sini. */
 if(typeof dsGroups==='function'){const o=dsGroups;dsGroups=function(role,menus){let g=o.apply(this,arguments);
   try{if(role==='Admin'){const lain=g.find(x=>x.id==='lain'),mt=g.find(x=>x.id==='maint');
