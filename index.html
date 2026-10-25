@@ -296,7 +296,7 @@ async function doReg(e){e.preventDefault();$('#bReg').disabled=true;$('#bReg').t
 async function logout(){try{await api('logout')}catch(e){}clearSess();go('#/')}
 
  
-const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
+const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['surat','Surat'],['sert','Sertifikat'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
  Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['w-binaan','Kelas Binaan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  Murid:[['m-ringkasan','Ringkasan'],['m-kelas','Kelas'],['m-lab','Booking Lab'],['m-pid','Pemakaian PID']]};
@@ -2728,6 +2728,164 @@ Object.assign(VIEWS,{'g-lab':vLabkom,lab:vLabkom,'m-lab':vMLab,'m-pid':vMPid});
 <script>
 
 
+const SV={id:'',daftar:[],p:null,logo:'',logoBaru:'',hapusLogo:false,ttd:'',ttdBaru:'',hapusTtd:false,ada:false,kotor:false,rz:0};
+const SV_LOGO_MAX=46000;   
+const SV_F=[
+ ['Kop surat',[
+  ['nama','Nama sekolah (judul kop)','in','SMP IT Al Biruni Mandiri',100],
+  ['slogan','Slogan (boleh kosong)','in','Leadership - Entrepreneurship - Qur\'anic',100],
+  ['alamat','Alamat (Enter = baris baru)','ta','Jl. Jipang No. 11 Kel. Karunrung\nKec. Rappocini, Kota Makassar',250],
+  ['kontak','Telepon / email (boleh kosong)','in','+62 411 8205500 - 0821 8855 2038',150],
+  ['web','Situs web (boleh kosong)','in','www.sitalbirunimakassar.sch.id',100]]],
+ ['Isi surat',[
+  ['nama_lengkap','Nama lengkap sekolah di dalam isi surat','in','Sekolah Menengah Pertama Islam Terpadu (SMP IT) Al Biruni Mandiri',200],
+  ['kota','Kota tempat surat dibuat','in','Makassar',60]]],
+ ['Penandatangan',[
+  ['kepala_nama','Nama kepala sekolah (beserta gelar)','in','Muhammad Irham, S.Pd.I',100],
+  ['kepala_jabatan','Jabatan (bagian "Yang bertanda tangan di bawah ini")','in','Kepala Sekolah',60],
+  ['ttd_jabatan','Jabatan di blok tanda tangan','in','Kepala SMP IT Al Biruni Mandiri',100],
+  ['kepala_idlabel','Label nomor induk','in','NIY',10],
+  ['kepala_id','Nomor induk kepala sekolah','in','13 14 003',40]]]];
+
+ 
+const SV_CSS=`.sv-paper{background:#fff;color:#000;font-family:"Times New Roman",Times,serif;font-size:12pt;line-height:1.4;padding:14mm 18mm;box-sizing:border-box;width:210mm;min-height:297mm}
+.sv-paper *{box-sizing:border-box}
+.sv-kop{display:flex;align-items:center;gap:5mm;padding-bottom:3mm;border-bottom:3px double var(--w,#0b3a5b);margin-bottom:6mm}
+.sv-kop img{height:22mm;width:auto;max-width:30mm;object-fit:contain}
+.sv-kop .sp{width:22mm;flex:none}
+.sv-kop .t{flex:1;text-align:center;font-family:Arial,Helvetica,sans-serif}
+.sv-kop .n{font-weight:bold;font-size:17pt;letter-spacing:.4px;text-transform:uppercase;color:var(--w,#0b3a5b);line-height:1.15}
+.sv-kop .s{font-size:9.5pt;font-style:italic;margin-top:.5mm}
+.sv-kop .a{font-size:9.5pt;white-space:pre-line;margin-top:1mm}
+.sv-paper .jd{text-align:center;font-weight:bold;text-decoration:underline;margin-top:2mm}
+.sv-paper .no{text-align:center;font-weight:bold;margin-bottom:5mm}
+.sv-paper p{margin:0 0 3mm;text-align:justify}
+.sv-paper table.f{border-collapse:collapse;margin:0 0 3mm 10mm}
+.sv-paper table.f td{padding:.6mm 0;vertical-align:top}
+.sv-paper table.f td:first-child{width:46mm}
+.sv-paper table.f td:nth-child(2){width:4mm}
+.sv-paper .tt{margin:8mm 0 0 auto;width:78mm}
+.sv-paper .tt .sp{height:24mm}
+.sv-paper .tt b.n{text-decoration:underline}
+.sv-contoh{background:#fff8d6;padding:0 1mm}`;
+function svCssPasang(){if(document.getElementById('sv_css'))return;const s=document.createElement('style');s.id='sv_css';
+  s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:22px;align-items:start}
+.sv-wrap{border:1px solid var(--line);border-radius:10px;background:var(--mist);overflow:hidden;position:relative}
+.sv-wrap .sv-paper{position:absolute;left:0;top:0;transform-origin:0 0;box-shadow:0 1px 8px rgba(0,0,0,.18)}
+.sv-h{margin:18px 0 2px;font-size:1rem}
+@media(max-width:900px){.sv-g{grid-template-columns:minmax(0,1fr)}}`;
+  document.head.appendChild(s)}
+
+ 
+
+function svKop(p,logo){
+  const ln=(c,t)=>t?`<div class="${c}">${esc(t)}</div>`:'';
+  const alamat=[p.alamat,[p.kontak,p.web].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
+  return `<div class="sv-kop" style="--w:${esc(p.warna||'#0b3a5b')}">${logo?`<img src="${esc(logo)}" alt="">`:''}<div class="t">${ln('n',p.nama||'NAMA SEKOLAH')}${ln('s',p.slogan)}${ln('a',alamat)}</div>${logo?'<div class="sp"></div>':''}</div>`}
+// blok tanda tangan kepala sekolah. ttdGambar (opsional, dipakai di tahap berikutnya) = data URL tanda tangan/stempel.
+function svTtd(p,tanggal,ttdGambar){
+  return `<div class="tt">${esc(p.kota||'')}, ${esc(tanggal)}<br>${esc(p.ttd_jabatan||'')}<div class="sp">${ttdGambar?`<img src="${esc(ttdGambar)}" alt="" style="height:24mm;max-width:70mm;object-fit:contain">`:''}</div><b class="n">${esc(p.kepala_nama||'')}</b><br>${esc(p.kepala_idlabel||'NIY')}. ${esc(p.kepala_id||'')}</div>`}
+const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
+const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
+// contoh isi: Surat Keterangan Aktif Belajar. Bagian kuning = contoh data siswa (belum diambil dari database).
+function svContoh(p,logo,ttd){
+  const c=t=>`<span class="sv-contoh">${esc(t)}</span>`;
+  return `<div class="sv-paper">${svKop(p,logo)}
+  <div class="jd">SURAT KETERANGAN</div><div class="no">Nomor: ${c('(diisi otomatis, tahap S3)')}</div>
+  <p>Yang bertanda tangan di bawah ini:</p>
+  <table class="f">${svRow('Nama',`<b>${esc(p.kepala_nama||'')}</b>`)}${svRow(esc(p.kepala_idlabel||'NIY'),esc(p.kepala_id||''))}${svRow('Jabatan',esc(p.kepala_jabatan||''))}</table>
+  <p>Menerangkan dengan benar bahwa:</p>
+  <table class="f">${svRow('Nama',c('Muhammad Kenzie Amadeuz'))}${svRow('Tempat/Tanggal Lahir',c('Makassar, 2 Maret 2012'))}${svRow('NIS / NISN',c('7 AB 24 022 / 0122540766'))}${svRow('Kelas',c('IX (Sembilan)'))}${svRow('Semester',c('I (Ganjil)'))}</table>
+  <p>Yang bersangkutan benar sebagai siswa aktif di <b>${esc(p.nama_lengkap||p.nama||'')}</b> Tahun Ajaran ${c('2026-2027')}.</p>
+  <p>Demikian surat ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
+  ${svTtd(p,svTgl(new Date()),ttd)}</div>`}
+
+/* ---------- pratinjau dan cetak ---------- */
+// mengecilkan kertas 210 mm agar muat di lebar kolom pratinjau
+function svFit(){const w=$('#sv_wrap'),k0=w&&w.firstElementChild;if(!w||!k0||!w.clientWidth)return;const k=Math.min(1,w.clientWidth/k0.offsetWidth);k0.style.transform='scale('+k+')';w.style.height=Math.ceil(k0.offsetHeight*k)+'px'}
+function svPrev(){const w=$('#sv_wrap');if(!w)return;w.innerHTML=svContoh(SV.p,svNow('logo'),svNow('ttd'));svFit()}
+// cetak lewat iframe tersembunyi: pengguna memilih "Simpan sebagai PDF" di dialog cetak. Margin diatur @page, bukan padding kertas.
+function svCetak(html,judul){
+  const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  f.srcdoc='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(judul||'Surat')+'</title><style>'+SV_CSS+
+    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0}.sv-contoh{background:none}</style></head><body>'+html+'</body></html>';
+  f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},250)};
+  document.body.appendChild(f)}
+function svCetakContoh(){svCetak(svContoh(SV.p,svNow('logo'),svNow('ttd')),'Contoh surat')}
+
+/* ---------- logo: perkecil di peramban ---------- */
+function svShrink(file,s0,smin){return new Promise((ok,no)=>{
+  if(!/^image\
+  const fr=new FileReader();fr.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
+  fr.onload=()=>{const im=new Image();im.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
+    im.onload=()=>{
+      if(!im.naturalWidth||!im.naturalHeight)return no(new Error('Gambar tidak bisa dibaca'));
+      for(let side=s0;side>=smin;side-=40){   
+        const k=Math.min(1,side/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k));
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);
+        let u=cv.toDataURL('image/png');if(u.length<=SV_LOGO_MAX)return ok(u);
+        c.globalCompositeOperation='destination-over';c.fillStyle='#fff';c.fillRect(0,0,w,h);
+        for(const q of [.9,.75,.6]){u=cv.toDataURL('image/jpeg',q);if(u.length<=SV_LOGO_MAX)return ok(u)}}
+      no(new Error('Gambar terlalu rumit. Pakai gambar yang lebih sederhana.'))};
+    im.src=fr.result};fr.readAsDataURL(file)})}
+
+const svJ={logo:{baru:'logoBaru',hapus:'hapusLogo',s0:300,min:80,nama:'logo'},ttd:{baru:'ttdBaru',hapus:'hapusTtd',s0:400,min:120,nama:'tanda tangan'}};
+const svNow=j=>SV[svJ[j].hapus]?'':(SV[svJ[j].baru]||SV[j]);
+function svGbrFile(i,j){const f=i.files[0];if(!f)return;const c=svJ[j];
+  svShrink(f,c.s0,c.min).then(u=>{SV[c.baru]=u;SV[c.hapus]=false;SV.kotor=true;svGbrInfo(j);svPrev()}).catch(e=>{i.value='';fail(e)})}
+function svGbrHapus(j){const c=svJ[j];SV[c.baru]='';SV[c.hapus]=true;SV.kotor=true;const i=$('#sv_f'+j);if(i)i.value='';svGbrInfo(j);svPrev()}
+function svGbrInfo(j){const e=$('#sv_i'+j);if(!e)return;const u=svNow(j),c=svJ[j];
+  e.innerHTML=u?`<img src="${esc(u)}" alt="" style="height:56px;max-width:140px;object-fit:contain;border:1px solid var(--line);border-radius:6px;background:#fff;padding:3px"> <button type="button" class="btn bad sm" onclick="svGbrHapus('${j}')">Hapus ${c.nama}</button>${SV[c.baru]?' <small>Belum disimpan</small>':''}`:`<small>Belum ada ${c.nama}.</small>`}
+const svGbrBlok=(j,judul,info)=>`<label for="sv_f${j}">${judul}</label><input id="sv_f${j}" type="file" accept="image/png,image/jpeg,image/webp" onchange="svGbrFile(this,'${j}')"><small>${info}</small><div id="sv_i${j}" class="row" style="margin-top:6px"></div>`;
+
+/* ---------- tampilan ---------- */
+// kotor = ada perubahan yang belum disimpan (ditanyakan dulu sebelum pindah sekolah)
+function svSet(k,v){if(!SV.p)return;SV.p[k]=v;SV.kotor=true;svPrev()}
+const svPakai=d=>{SV.id=d.id;SV.p=d.profil;SV.logo=d.logo||'';SV.logoBaru='';SV.hapusLogo=false;SV.ttd=d.ttd||'';SV.ttdBaru='';SV.hapusTtd=false;SV.ada=d.tersimpan;SV.kotor=false};
+async function vSurat(){svCssPasang();
+  M(`<h2>Surat</h2><div id="svb"><div class="skel"></div></div>`);
+  try{SV.daftar=await api('surat.sekolah.list',{});
+    const id=SV.daftar.some(x=>x.id===SV.id)?SV.id:(SV.daftar[0]?SV.daftar[0].id:'');
+    const d=await api('surat.sekolah.get',{id});if(!$('#svb'))return;svPakai(d);svForm()}
+  catch(e){fail(e)}}
+async function svLepas(){return !SV.kotor||await ask('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan itu?',{title:'Perubahan belum disimpan',ok:'Buang perubahan',bad:true})}
+async function svPilih(id){if(id===SV.id)return;
+  if(!await svLepas()){svForm();return}
+  try{svPakai(await api('surat.sekolah.get',{id}));svForm()}catch(e){fail(e);svForm()}}
+async function svBaru(){if(!await svLepas())return;
+  try{svPakai(await api('surat.sekolah.get',{id:''}));svForm()}catch(e){fail(e)}}
+async function svHapus(){const x=SV.daftar.find(y=>y.id===SV.id);if(!x)return;
+  if(!await ask('Hapus sekolah "'+x.nama+'" beserta logonya? Surat yang sudah dibuat tidak terpengaruh, tetapi sekolah ini tidak bisa dipilih lagi.',{title:'Hapus sekolah',ok:'Hapus',bad:true}))return;
+  try{SV.daftar=await api('surat.sekolah.hapus',{id:SV.id});SV.id='';SV.kotor=false;toast('Sekolah dihapus');vSurat()}catch(e){fail(e)}}
+function svForm(){const p=SV.p;
+  const fld=([k,l,ty,ph,mx])=>`<label for="sv_${k}">${l}</label>`+(ty==='ta'
+    ?`<textarea id="sv_${k}" maxlength="${mx}" style="min-height:70px" placeholder="${esc(ph)}" oninput="svSet('${k}',this.value)">${esc(p[k])}</textarea>`
+    :`<input id="sv_${k}" maxlength="${mx}" autocomplete="off" placeholder="${esc(ph)}" value="${esc(p[k])}" oninput="svSet('${k}',this.value)">`);
+  const opt=SV.daftar.map(x=>`<option value="${esc(x.id)}" ${x.id===SV.id?'selected':''}>${esc(x.nama)}</option>`).join('')+(SV.id===''?'<option value="" selected>(sekolah baru, belum disimpan)</option>':'');
+  $('#svb').innerHTML=`<div style="max-width:560px"><label for="sv_pilih">Sekolah</label>
+   <select id="sv_pilih" onchange="svPilih(this.value)">${opt}</select>
+   <p class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="svBaru()">+ Tambah sekolah</button>${SV.id?'<button class="btn bad sm" id="sv_hs" onclick="svHapus()">Hapus sekolah ini</button>':''}</p>
+   <small>${SV.daftar.length?'Pilih sekolah yang profilnya ingin dilihat atau diubah. Setiap sekolah punya kop, logo, dan kepala sekolah sendiri.':'<b>Belum ada sekolah.</b> Isi data sekolah pertama di bawah, lalu klik Simpan.'}</small></div>
+  <div class="sv-g" style="margin-top:6px"><div>
+   ${SV_F.map(([judul,fs],i)=>`<h3 class="sv-h">${judul}</h3>`+(i===0?svGbrBlok('logo','Logo (PNG atau JPG, otomatis diperkecil)','Logo tampil di kiri kop.'):'')+fs.map(fld).join('')+(i===2?svGbrBlok('ttd','Tanda tangan (gambar, boleh kosong)','Foto atau pindai tanda tangan di kertas putih. Cap boleh ikut dalam gambar yang sama. Otomatis diperkecil.'):'')).join('')}
+   <label for="sv_warna">Warna kop</label><input id="sv_warna" type="color" value="${esc(p.warna)}" style="width:64px;padding:2px" oninput="svSet('warna',this.value)">
+   <p class="row" style="margin-top:18px"><button class="btn" id="sv_sv" onclick="svSimpan()">${SV.id?'Simpan perubahan':'Simpan sekolah'}</button><button class="btn ghost" onclick="svCetakContoh()">Cetak contoh</button></p>
+  </div>
+  <div><h3 class="sv-h" style="margin-top:0">Pratinjau (contoh Surat Keterangan Aktif)</h3><div id="sv_wrap" class="sv-wrap"></div>
+   <p><small>Bagian berlatar kuning hanyalah contoh data. Pada tahap berikutnya diisi otomatis dari data siswa.</small></p></div></div>`;
+  svGbrInfo('logo');svGbrInfo('ttd');svPrev();
+  if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
+async function svSimpan(){const b=$('#sv_sv'),t=b.textContent;b.disabled=true;b.textContent='Menyimpan...';
+  try{const d=await api('surat.sekolah.save',{id:SV.id,profil:SV.p,logo:SV.logoBaru,hapusLogo:SV.hapusLogo,ttd:SV.ttdBaru,hapusTtd:SV.hapusTtd});
+    SV.daftar=d.daftar;svPakai(d.sekolah);svForm();toast('Sekolah tersimpan');return}
+  catch(e){fail(e)}
+  b.disabled=false;b.textContent=t}
+
+Object.assign(VIEWS,{surat:vSurat});
+</script>
+<script>
+
+
 const SC={tab:'buat',img:{},ed:null,q:'',tpl:'',busy:0,v:{prestasi:'',kegiatan:'',narasi:'',tanggal:'',sh:{}}};
 const SR_FIELDS=[['nama','Nama penerima','Nama Penerima'],['prestasi','Nama prestasi','Juara 1 Lomba Pidato'],['kegiatan','Nama kegiatan','Nama Kegiatan'],['narasi','Narasi','Telah berhasil meraih prestasi pada kegiatan ini. Sertifikat diberikan sebagai penghargaan atas dedikasi, kerja keras, dan semangat yang ditunjukkan.'],['tanggal','Tanggal','12 Oktober 2026'],['nomor','Nomor sertifikat','0001/SERT/X/2026']];
 const SR_BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -2921,164 +3079,6 @@ async function srTplSave(){const ed=SC.ed,b=$('#te_sv');
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
 
 Object.assign(VIEWS,{sert:vSert,'g-sert':vSert});
-</script>
-<script>
-
-
-const SV={id:'',daftar:[],p:null,logo:'',logoBaru:'',hapusLogo:false,ttd:'',ttdBaru:'',hapusTtd:false,ada:false,kotor:false,rz:0};
-const SV_LOGO_MAX=46000;   
-const SV_F=[
- ['Kop surat',[
-  ['nama','Nama sekolah (judul kop)','in','SMP IT Al Biruni Mandiri',100],
-  ['slogan','Slogan (boleh kosong)','in','Leadership - Entrepreneurship - Qur\'anic',100],
-  ['alamat','Alamat (Enter = baris baru)','ta','Jl. Jipang No. 11 Kel. Karunrung\nKec. Rappocini, Kota Makassar',250],
-  ['kontak','Telepon / email (boleh kosong)','in','+62 411 8205500 - 0821 8855 2038',150],
-  ['web','Situs web (boleh kosong)','in','www.sitalbirunimakassar.sch.id',100]]],
- ['Isi surat',[
-  ['nama_lengkap','Nama lengkap sekolah di dalam isi surat','in','Sekolah Menengah Pertama Islam Terpadu (SMP IT) Al Biruni Mandiri',200],
-  ['kota','Kota tempat surat dibuat','in','Makassar',60]]],
- ['Penandatangan',[
-  ['kepala_nama','Nama kepala sekolah (beserta gelar)','in','Muhammad Irham, S.Pd.I',100],
-  ['kepala_jabatan','Jabatan (bagian "Yang bertanda tangan di bawah ini")','in','Kepala Sekolah',60],
-  ['ttd_jabatan','Jabatan di blok tanda tangan','in','Kepala SMP IT Al Biruni Mandiri',100],
-  ['kepala_idlabel','Label nomor induk','in','NIY',10],
-  ['kepala_id','Nomor induk kepala sekolah','in','13 14 003',40]]]];
-
- 
-const SV_CSS=`.sv-paper{background:#fff;color:#000;font-family:"Times New Roman",Times,serif;font-size:12pt;line-height:1.4;padding:14mm 18mm;box-sizing:border-box;width:210mm;min-height:297mm}
-.sv-paper *{box-sizing:border-box}
-.sv-kop{display:flex;align-items:center;gap:5mm;padding-bottom:3mm;border-bottom:3px double var(--w,#0b3a5b);margin-bottom:6mm}
-.sv-kop img{height:22mm;width:auto;max-width:30mm;object-fit:contain}
-.sv-kop .sp{width:22mm;flex:none}
-.sv-kop .t{flex:1;text-align:center;font-family:Arial,Helvetica,sans-serif}
-.sv-kop .n{font-weight:bold;font-size:17pt;letter-spacing:.4px;text-transform:uppercase;color:var(--w,#0b3a5b);line-height:1.15}
-.sv-kop .s{font-size:9.5pt;font-style:italic;margin-top:.5mm}
-.sv-kop .a{font-size:9.5pt;white-space:pre-line;margin-top:1mm}
-.sv-paper .jd{text-align:center;font-weight:bold;text-decoration:underline;margin-top:2mm}
-.sv-paper .no{text-align:center;font-weight:bold;margin-bottom:5mm}
-.sv-paper p{margin:0 0 3mm;text-align:justify}
-.sv-paper table.f{border-collapse:collapse;margin:0 0 3mm 10mm}
-.sv-paper table.f td{padding:.6mm 0;vertical-align:top}
-.sv-paper table.f td:first-child{width:46mm}
-.sv-paper table.f td:nth-child(2){width:4mm}
-.sv-paper .tt{margin:8mm 0 0 auto;width:78mm}
-.sv-paper .tt .sp{height:24mm}
-.sv-paper .tt b.n{text-decoration:underline}
-.sv-contoh{background:#fff8d6;padding:0 1mm}`;
-function svCssPasang(){if(document.getElementById('sv_css'))return;const s=document.createElement('style');s.id='sv_css';
-  s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:22px;align-items:start}
-.sv-wrap{border:1px solid var(--line);border-radius:10px;background:var(--mist);overflow:hidden;position:relative}
-.sv-wrap .sv-paper{position:absolute;left:0;top:0;transform-origin:0 0;box-shadow:0 1px 8px rgba(0,0,0,.18)}
-.sv-h{margin:18px 0 2px;font-size:1rem}
-@media(max-width:900px){.sv-g{grid-template-columns:minmax(0,1fr)}}`;
-  document.head.appendChild(s)}
-
- 
-
-function svKop(p,logo){
-  const ln=(c,t)=>t?`<div class="${c}">${esc(t)}</div>`:'';
-  const alamat=[p.alamat,[p.kontak,p.web].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
-  return `<div class="sv-kop" style="--w:${esc(p.warna||'#0b3a5b')}">${logo?`<img src="${esc(logo)}" alt="">`:''}<div class="t">${ln('n',p.nama||'NAMA SEKOLAH')}${ln('s',p.slogan)}${ln('a',alamat)}</div>${logo?'<div class="sp"></div>':''}</div>`}
-// blok tanda tangan kepala sekolah. ttdGambar (opsional, dipakai di tahap berikutnya) = data URL tanda tangan/stempel.
-function svTtd(p,tanggal,ttdGambar){
-  return `<div class="tt">${esc(p.kota||'')}, ${esc(tanggal)}<br>${esc(p.ttd_jabatan||'')}<div class="sp">${ttdGambar?`<img src="${esc(ttdGambar)}" alt="" style="height:24mm;max-width:70mm;object-fit:contain">`:''}</div><b class="n">${esc(p.kepala_nama||'')}</b><br>${esc(p.kepala_idlabel||'NIY')}. ${esc(p.kepala_id||'')}</div>`}
-const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
-const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
-// contoh isi: Surat Keterangan Aktif Belajar. Bagian kuning = contoh data siswa (belum diambil dari database).
-function svContoh(p,logo,ttd){
-  const c=t=>`<span class="sv-contoh">${esc(t)}</span>`;
-  return `<div class="sv-paper">${svKop(p,logo)}
-  <div class="jd">SURAT KETERANGAN</div><div class="no">Nomor: ${c('(diisi otomatis, tahap S3)')}</div>
-  <p>Yang bertanda tangan di bawah ini:</p>
-  <table class="f">${svRow('Nama',`<b>${esc(p.kepala_nama||'')}</b>`)}${svRow(esc(p.kepala_idlabel||'NIY'),esc(p.kepala_id||''))}${svRow('Jabatan',esc(p.kepala_jabatan||''))}</table>
-  <p>Menerangkan dengan benar bahwa:</p>
-  <table class="f">${svRow('Nama',c('Muhammad Kenzie Amadeuz'))}${svRow('Tempat/Tanggal Lahir',c('Makassar, 2 Maret 2012'))}${svRow('NIS / NISN',c('7 AB 24 022 / 0122540766'))}${svRow('Kelas',c('IX (Sembilan)'))}${svRow('Semester',c('I (Ganjil)'))}</table>
-  <p>Yang bersangkutan benar sebagai siswa aktif di <b>${esc(p.nama_lengkap||p.nama||'')}</b> Tahun Ajaran ${c('2026-2027')}.</p>
-  <p>Demikian surat ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
-  ${svTtd(p,svTgl(new Date()),ttd)}</div>`}
-
-/* ---------- pratinjau dan cetak ---------- */
-// mengecilkan kertas 210 mm agar muat di lebar kolom pratinjau
-function svFit(){const w=$('#sv_wrap'),k0=w&&w.firstElementChild;if(!w||!k0||!w.clientWidth)return;const k=Math.min(1,w.clientWidth/k0.offsetWidth);k0.style.transform='scale('+k+')';w.style.height=Math.ceil(k0.offsetHeight*k)+'px'}
-function svPrev(){const w=$('#sv_wrap');if(!w)return;w.innerHTML=svContoh(SV.p,svNow('logo'),svNow('ttd'));svFit()}
-// cetak lewat iframe tersembunyi: pengguna memilih "Simpan sebagai PDF" di dialog cetak. Margin diatur @page, bukan padding kertas.
-function svCetak(html,judul){
-  const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-  f.srcdoc='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(judul||'Surat')+'</title><style>'+SV_CSS+
-    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0}.sv-contoh{background:none}</style></head><body>'+html+'</body></html>';
-  f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},250)};
-  document.body.appendChild(f)}
-function svCetakContoh(){svCetak(svContoh(SV.p,svNow('logo'),svNow('ttd')),'Contoh surat')}
-
-/* ---------- logo: perkecil di peramban ---------- */
-function svShrink(file,s0,smin){return new Promise((ok,no)=>{
-  if(!/^image\
-  const fr=new FileReader();fr.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
-  fr.onload=()=>{const im=new Image();im.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
-    im.onload=()=>{
-      if(!im.naturalWidth||!im.naturalHeight)return no(new Error('Gambar tidak bisa dibaca'));
-      for(let side=s0;side>=smin;side-=40){   
-        const k=Math.min(1,side/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k));
-        const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);
-        let u=cv.toDataURL('image/png');if(u.length<=SV_LOGO_MAX)return ok(u);
-        c.globalCompositeOperation='destination-over';c.fillStyle='#fff';c.fillRect(0,0,w,h);
-        for(const q of [.9,.75,.6]){u=cv.toDataURL('image/jpeg',q);if(u.length<=SV_LOGO_MAX)return ok(u)}}
-      no(new Error('Gambar terlalu rumit. Pakai gambar yang lebih sederhana.'))};
-    im.src=fr.result};fr.readAsDataURL(file)})}
-
-const svJ={logo:{baru:'logoBaru',hapus:'hapusLogo',s0:300,min:80,nama:'logo'},ttd:{baru:'ttdBaru',hapus:'hapusTtd',s0:400,min:120,nama:'tanda tangan'}};
-const svNow=j=>SV[svJ[j].hapus]?'':(SV[svJ[j].baru]||SV[j]);
-function svGbrFile(i,j){const f=i.files[0];if(!f)return;const c=svJ[j];
-  svShrink(f,c.s0,c.min).then(u=>{SV[c.baru]=u;SV[c.hapus]=false;SV.kotor=true;svGbrInfo(j);svPrev()}).catch(e=>{i.value='';fail(e)})}
-function svGbrHapus(j){const c=svJ[j];SV[c.baru]='';SV[c.hapus]=true;SV.kotor=true;const i=$('#sv_f'+j);if(i)i.value='';svGbrInfo(j);svPrev()}
-function svGbrInfo(j){const e=$('#sv_i'+j);if(!e)return;const u=svNow(j),c=svJ[j];
-  e.innerHTML=u?`<img src="${esc(u)}" alt="" style="height:56px;max-width:140px;object-fit:contain;border:1px solid var(--line);border-radius:6px;background:#fff;padding:3px"> <button type="button" class="btn bad sm" onclick="svGbrHapus('${j}')">Hapus ${c.nama}</button>${SV[c.baru]?' <small>Belum disimpan</small>':''}`:`<small>Belum ada ${c.nama}.</small>`}
-const svGbrBlok=(j,judul,info)=>`<label for="sv_f${j}">${judul}</label><input id="sv_f${j}" type="file" accept="image/png,image/jpeg,image/webp" onchange="svGbrFile(this,'${j}')"><small>${info}</small><div id="sv_i${j}" class="row" style="margin-top:6px"></div>`;
-
-/* ---------- tampilan ---------- */
-// kotor = ada perubahan yang belum disimpan (ditanyakan dulu sebelum pindah sekolah)
-function svSet(k,v){if(!SV.p)return;SV.p[k]=v;SV.kotor=true;svPrev()}
-const svPakai=d=>{SV.id=d.id;SV.p=d.profil;SV.logo=d.logo||'';SV.logoBaru='';SV.hapusLogo=false;SV.ttd=d.ttd||'';SV.ttdBaru='';SV.hapusTtd=false;SV.ada=d.tersimpan;SV.kotor=false};
-async function vSurat(){svCssPasang();
-  M(`<h2>Surat</h2><div id="svb"><div class="skel"></div></div>`);
-  try{SV.daftar=await api('surat.sekolah.list',{});
-    const id=SV.daftar.some(x=>x.id===SV.id)?SV.id:(SV.daftar[0]?SV.daftar[0].id:'');
-    const d=await api('surat.sekolah.get',{id});if(!$('#svb'))return;svPakai(d);svForm()}
-  catch(e){fail(e)}}
-async function svLepas(){return !SV.kotor||await ask('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan itu?',{title:'Perubahan belum disimpan',ok:'Buang perubahan',bad:true})}
-async function svPilih(id){if(id===SV.id)return;
-  if(!await svLepas()){svForm();return}
-  try{svPakai(await api('surat.sekolah.get',{id}));svForm()}catch(e){fail(e);svForm()}}
-async function svBaru(){if(!await svLepas())return;
-  try{svPakai(await api('surat.sekolah.get',{id:''}));svForm()}catch(e){fail(e)}}
-async function svHapus(){const x=SV.daftar.find(y=>y.id===SV.id);if(!x)return;
-  if(!await ask('Hapus sekolah "'+x.nama+'" beserta logonya? Surat yang sudah dibuat tidak terpengaruh, tetapi sekolah ini tidak bisa dipilih lagi.',{title:'Hapus sekolah',ok:'Hapus',bad:true}))return;
-  try{SV.daftar=await api('surat.sekolah.hapus',{id:SV.id});SV.id='';SV.kotor=false;toast('Sekolah dihapus');vSurat()}catch(e){fail(e)}}
-function svForm(){const p=SV.p;
-  const fld=([k,l,ty,ph,mx])=>`<label for="sv_${k}">${l}</label>`+(ty==='ta'
-    ?`<textarea id="sv_${k}" maxlength="${mx}" style="min-height:70px" placeholder="${esc(ph)}" oninput="svSet('${k}',this.value)">${esc(p[k])}</textarea>`
-    :`<input id="sv_${k}" maxlength="${mx}" autocomplete="off" placeholder="${esc(ph)}" value="${esc(p[k])}" oninput="svSet('${k}',this.value)">`);
-  const opt=SV.daftar.map(x=>`<option value="${esc(x.id)}" ${x.id===SV.id?'selected':''}>${esc(x.nama)}</option>`).join('')+(SV.id===''?'<option value="" selected>(sekolah baru, belum disimpan)</option>':'');
-  $('#svb').innerHTML=`<div style="max-width:560px"><label for="sv_pilih">Sekolah</label>
-   <select id="sv_pilih" onchange="svPilih(this.value)">${opt}</select>
-   <p class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="svBaru()">+ Tambah sekolah</button>${SV.id?'<button class="btn bad sm" id="sv_hs" onclick="svHapus()">Hapus sekolah ini</button>':''}</p>
-   <small>${SV.daftar.length?'Pilih sekolah yang profilnya ingin dilihat atau diubah. Setiap sekolah punya kop, logo, dan kepala sekolah sendiri.':'<b>Belum ada sekolah.</b> Isi data sekolah pertama di bawah, lalu klik Simpan.'}</small></div>
-  <div class="sv-g" style="margin-top:6px"><div>
-   ${SV_F.map(([judul,fs],i)=>`<h3 class="sv-h">${judul}</h3>`+(i===0?svGbrBlok('logo','Logo (PNG atau JPG, otomatis diperkecil)','Logo tampil di kiri kop.'):'')+fs.map(fld).join('')+(i===2?svGbrBlok('ttd','Tanda tangan (gambar, boleh kosong)','Foto atau pindai tanda tangan di kertas putih. Cap boleh ikut dalam gambar yang sama. Otomatis diperkecil.'):'')).join('')}
-   <label for="sv_warna">Warna kop</label><input id="sv_warna" type="color" value="${esc(p.warna)}" style="width:64px;padding:2px" oninput="svSet('warna',this.value)">
-   <p class="row" style="margin-top:18px"><button class="btn" id="sv_sv" onclick="svSimpan()">${SV.id?'Simpan perubahan':'Simpan sekolah'}</button><button class="btn ghost" onclick="svCetakContoh()">Cetak contoh</button></p>
-  </div>
-  <div><h3 class="sv-h" style="margin-top:0">Pratinjau (contoh Surat Keterangan Aktif)</h3><div id="sv_wrap" class="sv-wrap"></div>
-   <p><small>Bagian berlatar kuning hanyalah contoh data. Pada tahap berikutnya diisi otomatis dari data siswa.</small></p></div></div>`;
-  svGbrInfo('logo');svGbrInfo('ttd');svPrev();
-  if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
-async function svSimpan(){const b=$('#sv_sv'),t=b.textContent;b.disabled=true;b.textContent='Menyimpan...';
-  try{const d=await api('surat.sekolah.save',{id:SV.id,profil:SV.p,logo:SV.logoBaru,hapusLogo:SV.hapusLogo,ttd:SV.ttdBaru,hapusTtd:SV.hapusTtd});
-    SV.daftar=d.daftar;svPakai(d.sekolah);svForm();toast('Sekolah tersimpan');return}
-  catch(e){fail(e)}
-  b.disabled=false;b.textContent=t}
-
-Object.assign(VIEWS,{surat:vSurat});
 </script>
 <script>
 
