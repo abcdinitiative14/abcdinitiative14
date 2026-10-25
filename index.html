@@ -4848,6 +4848,156 @@ async function aluPeriksa(nid,simpan){const t=$('#alc_t').value,h=$('#alc_h'),p=
   catch(e){h.className='alhasil bad';h.innerHTML=esc(e.message)}
   p.disabled=false;s.disabled=false}
 </script>
+<style id="mnu-css">
+.nvx{display:none!important}
+.mnu-wrap{max-width:760px}
+.mnu-prev{display:flex;gap:6px;flex-wrap:wrap;padding:10px;background:#fff;border:1px solid var(--line,#d5e4e8);border-radius:14px;margin:8px 0 14px}
+.mnu-prev span{padding:6px 12px;border-radius:99px;background:#eaf5f6;font-weight:600;font-size:14px;color:#0a2540}
+.mnu-prev span.off{opacity:.4;text-decoration:line-through}
+.mnu-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.mnu-it{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1px solid var(--line,#d5e4e8);border-radius:12px;user-select:none;-webkit-user-select:none}
+.mnu-it.drag{box-shadow:0 8px 24px #0a254033;border-color:var(--teal,#0a8f9d);background:#f2fafb;position:relative;z-index:2}
+.mnu-h{cursor:grab;touch-action:none;padding:6px 9px;border-radius:8px;color:#5d7686;font-size:18px;line-height:1;letter-spacing:-2px}
+.mnu-h:hover{background:#eaf5f6}.mnu-it.drag .mnu-h{cursor:grabbing}
+.mnu-n{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere;color:#0a2540}
+.mnu-n small{display:block;font-weight:400;color:#6b8190}
+.mnu-b{all:unset;box-sizing:border-box;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line,#d5e4e8);cursor:pointer;color:#0a2540;font-size:15px}
+.mnu-b:hover{background:#eaf5f6}.mnu-b:focus-visible{outline:2px solid var(--teal,#0a8f9d)}
+.mnu-grp{flex-direction:column;align-items:stretch;gap:10px;background:#f7fbfb}
+.mnu-gh{display:flex;align-items:center;gap:8px}
+.mnu-sub{padding-left:14px;border-left:3px solid #cfe0e3;margin-left:10px}
+.mnu-v{display:flex;align-items:center;gap:6px;font-size:13px;color:#4d6677;margin:0;white-space:nowrap}
+.mnu-v input{width:auto;margin:0}
+</style>
+<script id="mnu-js">
+/* ---------- urutan menu: menu atas web publik dan menu samping Dashboard ---------- */
+let MNU={};const MNU_ROLE=['Admin','Guru','Wali Kelas','Murid'];
+let ORIG_TOP=[],ORIG_MENU=null;
+(function(){if(typeof MENU==='object'&&MENU.Admin&&!MENU.Admin.some(x=>x[0]==='urutmenu'))MENU.Admin.push(['urutmenu','Urutan Menu']);
+  ORIG_MENU=JSON.parse(JSON.stringify(MENU));
+  ORIG_TOP=[...document.querySelectorAll('#nav > a')].map(a=>[a.getAttribute('href'),a.textContent.trim()])})();
+function mnuTop(){const as=[...document.querySelectorAll('#nav > a')];return as}
+function mnuUrut(arr,order,key){const o=Array.isArray(order)?order:[];const idx=x=>{const i=o.indexOf(key(x));return i<0?1e6:i};
+  return arr.map((x,i)=>[x,i]).sort((a,b)=>idx(a[0])-idx(b[0])||a[1]-b[1]).map(x=>x[0])}
+function mnuTerapkan(){const nav=document.getElementById('nav'),ref=document.getElementById('navAuth');
+  if(nav&&ref){const as=mnuTop(),oi=a=>{const i=ORIG_TOP.findIndex(x=>x[0]===a.getAttribute('href'));return i<0?1e6:i};
+    const dasar=as.map((a,i)=>[a,i]).sort((x,y)=>oi(x[0])-oi(y[0])||x[1]-y[1]).map(x=>x[0]);
+    mnuUrut(dasar,MNU.top,a=>a.getAttribute('href')).forEach(a=>nav.insertBefore(a,ref));
+    const h=MNU.hide||[];as.forEach(a=>a.classList.toggle('nvx',h.indexOf(a.getAttribute('href'))>=0))}}
+/* Dashboard: menu dikelompokkan oleh TemaDashboard (dsGroups). Urutan kelompok (ikon di rel) dan urutan item dalam kelompok diatur di sini. */
+if(typeof dsGroups==='function'){const o=dsGroups;dsGroups=function(role,menus){let g=o.apply(this,arguments);
+  try{if(role==='Admin'){const lain=g.find(x=>x.id==='lain'),mt=g.find(x=>x.id==='maint');
+      if(lain&&mt){const i=lain.items.findIndex(x=>x[0]==='urutmenu');if(i>=0){mt.items.push(lain.items.splice(i,1)[0]);if(!lain.items.length)g=g.filter(x=>x!==lain)}}}
+    const gi=(MNU.grp||{})[role],it=(MNU.dash||{})[role];
+    if(it)g.forEach(x=>{x.items=mnuUrut(x.items,it,y=>y[0])});
+    if(gi)g=mnuUrut(g,gi,x=>x.id)}catch(e){console.warn(e)}
+  return g}}
+function mnuSimpanLokal(m){MNU=m&&typeof m==='object'?m:{};try{if(Object.keys(MNU).length)localStorage.setItem('mnu',JSON.stringify(MNU));else localStorage.removeItem('mnu')}catch(e){}}
+function mnuRedash(){try{if(typeof S!=='undefined'&&S.user&&typeof openDash==='function'&&document.getElementById('v-dash').classList.contains('on')){const k=((location.hash.match(/dashboard\/([^/?#]+)/)||[])[1]);openDash(k?decodeURIComponent(k):undefined)}}catch(e){}}
+(function(){let c=null;try{c=JSON.parse(localStorage.getItem('mnu'))}catch(e){}if(c&&typeof c==='object'){MNU=c;mnuTerapkan();mnuRedash()}
+  api('public.menu').then(m=>{const a=JSON.stringify(MNU||{}),b=JSON.stringify(m||{});if(a===b)return;mnuSimpanLokal(m);mnuTerapkan();mnuRedash()}).catch(()=>{})})();
+
+/* ---------- halaman admin: Dashboard > Urutan Menu ---------- */
+const MS={role:'Admin',tree:{}};
+function mnuRow(id,label,o){o=o||{};const li=document.createElement('li');li.className='mnu-it';li.dataset.id=id;
+  li.innerHTML=`<span class="mnu-h" title="Tarik untuk memindahkan" aria-hidden="true">&#8942;&#8942;</span><span class="mnu-n">${esc(label)}${o.sub?`<small>${esc(o.sub)}</small>`:''}</span>
+  ${o.toggle?`<label class="mnu-v"><input type="checkbox" ${o.on!==false?'checked':''}> Tampil</label>`:''}
+  <button type="button" class="mnu-b" data-d="-1" aria-label="Naikkan ${esc(label)}">&uarr;</button><button type="button" class="mnu-b" data-d="1" aria-label="Turunkan ${esc(label)}">&darr;</button>`;
+  return li}
+function mnuSortable(list,onChange){
+  list.addEventListener('pointerdown',e=>{const h=e.target.closest('.mnu-h');if(!h)return;const it=h.closest('.mnu-it');if(!it||it.parentElement!==list)return;e.preventDefault();it.classList.add('drag');const pid=e.pointerId;
+    /* pendengar dipasang di window: memindahkan elemen di DOM melepas "tangkapan" pointer, jadi pendengar di elemen akan terputus */
+    const move=ev=>{if(ev.pointerId!==pid)return;const items=[...list.children].filter(x=>x!==it);let before=null;for(const x of items){const r=x.getBoundingClientRect();if(ev.clientY<r.top+Math.min(r.height/2,40)){before=x;break}}
+      if(before!==it.nextElementSibling)list.insertBefore(it,before);
+      if(ev.clientY<70)window.scrollBy(0,-14);else if(ev.clientY>innerHeight-70)window.scrollBy(0,14)};
+    const up=ev=>{if(ev.pointerId!==pid)return;it.classList.remove('drag');window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);onChange()};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up)});
+  list.addEventListener('click',e=>{const b=e.target.closest('.mnu-b');if(!b)return;const it=b.closest('.mnu-it');if(!it||it.parentElement!==list)return;const d=+b.dataset.d;
+    if(d<0&&it.previousElementSibling)list.insertBefore(it,it.previousElementSibling);else if(d>0&&it.nextElementSibling)list.insertBefore(it.nextElementSibling,it);
+    b.focus();onChange()});
+  list.addEventListener('change',e=>{const it=e.target.closest('.mnu-it');if(it&&it.parentElement===list)onChange()})}
+function mnuBacaTop(){return [...document.querySelectorAll('#mnu_top > .mnu-it')].map(li=>({id:li.dataset.id,on:li.querySelector('input').checked,label:li.querySelector('.mnu-n').firstChild.textContent}))}
+function mnuPrev(){const p=document.getElementById('mnu_pv');if(!p)return;p.innerHTML=mnuBacaTop().map(x=>`<span class="${x.on?'':'off'}">${esc(x.label)}</span>`).join('')+'<span style="background:#0a2540;color:#fff">Dashboard</span>'}
+/* pohon menu dashboard satu peran: [{id,l,items:[[kunci,label]]}] diambil dari urutan yang sedang berlaku */
+function mnuPohon(r){const g=typeof dsGroups==='function'?dsGroups(r,MENU[r]||[]):[{id:'menu',l:r,items:MENU[r]||[]}];return g.map(x=>({id:x.id,l:x.l,items:x.items.map(y=>[y[0],y[1]])}))}
+function mnuBacaDash(){const t=[];document.querySelectorAll('#mnu_dash > .mnu-grp').forEach(li=>{const orig=(MS.tree[MS.role]||[]).find(x=>x.id===li.dataset.id)||{l:li.dataset.id};
+  t.push({id:li.dataset.id,l:orig.l,items:[...li.querySelectorAll(':scope > ul > .mnu-it')].map(x=>[x.dataset.id,x.querySelector('.mnu-n').firstChild.textContent])})});return t}
+function mnuIsiDash(){const l=document.getElementById('mnu_dash');l.innerHTML='';const ada=(MS.tree[MS.role]||[]);
+  const keep=()=>{MS.tree[MS.role]=mnuBacaDash()};
+  ada.forEach(g=>{const li=document.createElement('li');li.className='mnu-it mnu-grp';li.dataset.id=g.id;
+    li.innerHTML=`<div class="mnu-gh"><span class="mnu-h" title="Tarik untuk memindahkan kelompok" aria-hidden="true">&#8942;&#8942;</span><span class="mnu-n">${esc(g.l)}<small>${g.items.length>1?'Ikon di rel kiri, berisi '+g.items.length+' menu':'Ikon di rel kiri'}</small></span><button type="button" class="mnu-b" data-d="-1" aria-label="Naikkan ${esc(g.l)}">&uarr;</button><button type="button" class="mnu-b" data-d="1" aria-label="Turunkan ${esc(g.l)}">&darr;</button></div><ul class="mnu-list mnu-sub"></ul>`;
+    const sub=li.querySelector('ul');g.items.forEach(x=>sub.appendChild(mnuRow(x[0],x[1],{sub:x[0]==='urutmenu'?'Halaman ini':''})));
+    mnuSortable(sub,keep);l.appendChild(li)});
+  mnuSortable(l,keep)}
+function vUrutMenu(){
+  const top=mnuTop().map(a=>({id:a.getAttribute('href'),label:a.textContent.trim(),on:!a.classList.contains('nvx')}));
+  MS.tree={};MNU_ROLE.forEach(r=>{MS.tree[r]=mnuPohon(r)});MS.role='Admin';
+  M(`<div class="mnu-wrap"><h2>Urutan menu</h2><p><small>Tarik ikon <b>&#8942;&#8942;</b> untuk memindahkan menu. Di HP, tekan dan geser ikon itu, atau pakai tombol &uarr; &darr;. Klik <b>Simpan urutan</b> agar berlaku untuk semua pengunjung.</small></p>
+  <h3>Menu atas (halaman publik)</h3><p><small>Pratinjau urutan menu atas:</small></p><div class="mnu-prev" id="mnu_pv"></div><ul class="mnu-list" id="mnu_top"></ul>
+  <h3 style="margin-top:28px">Menu Dashboard</h3><p><small>Kelompok menu adalah ikon di rel kiri; di dalamnya ada menu yang tampil di panel. Anda bisa mengurutkan kelompok dan menu di dalam tiap kelompok.</small></p>
+  <label for="mnu_r">Atur menu untuk peran</label><select id="mnu_r">${MNU_ROLE.map(r=>`<option>${esc(r)}</option>`).join('')}</select><ul class="mnu-list" id="mnu_dash" style="margin-top:12px"></ul>
+  <p class="row" style="margin-top:20px"><button class="btn" id="mnu_sv" type="button" onclick="mnuSimpan()">Simpan urutan</button><button class="btn ghost" type="button" onclick="mnuReset()">Kembalikan urutan awal</button></p></div>`);
+  const lt=document.getElementById('mnu_top');top.forEach(x=>lt.appendChild(mnuRow(x.id,x.label,{toggle:true,on:x.on,sub:x.id})));
+  mnuSortable(lt,mnuPrev);mnuPrev();mnuIsiDash();
+  document.getElementById('mnu_r').onchange=e=>{MS.tree[MS.role]=mnuBacaDash();MS.role=e.target.value;mnuIsiDash()}}
+if(typeof VIEWS==='object')VIEWS.urutmenu=vUrutMenu;
+function mnuMuatUlang(){if(typeof openDash==='function'&&typeof S!=='undefined'&&S.user)openDash('urutmenu');else vUrutMenu()}
+async function mnuSimpan(){const b=document.getElementById('mnu_sv');b.disabled=true;b.textContent='Menyimpan...';
+  try{MS.tree[MS.role]=mnuBacaDash();const t=mnuBacaTop(),p={top:t.map(x=>x.id),hide:t.filter(x=>!x.on).map(x=>x.id),dash:{},grp:{}};
+    MNU_ROLE.forEach(r=>{const g=MS.tree[r]||[];p.grp[r]=g.map(x=>x.id);p.dash[r]=g.flatMap(x=>x.items.map(y=>y[0]))});
+    const r=await api('menu.simpan',p);mnuSimpanLokal(r);mnuTerapkan();toast('Urutan menu tersimpan');mnuMuatUlang();return}
+  catch(e){fail(e)}
+  b.disabled=false;b.textContent='Simpan urutan'}
+async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?'))return;
+  try{await api('menu.simpan',{});mnuSimpanLokal({});mnuTerapkan();toast('Urutan menu dikembalikan');mnuMuatUlang()}catch(e){fail(e)}}
+</script>
+<script>
+ 
+(function () {
+  'use strict';
+  if (MENU.Admin && !MENU.Admin.some(function (m) { return m[0] === 'sa-paket'; })) MENU.Admin.push(['sa-paket', 'Paket Akses']);
+
+  var _open = window.openDash, ASLI = { Guru: MENU.Guru, WK: MENU['Wali Kelas'] };
+  window.openDash = function () {
+    var p = S && S.user && S.user.paket === 'PromptGen', only = [['g-prompt', 'Generator Prompt']];
+    MENU.Guru = p ? only : ASLI.Guru; MENU['Wali Kelas'] = p ? only : ASLI.WK;
+    return _open.apply(this, arguments);
+  };
+
+  var sel = {};
+  window.paketToggle = function (id, on) { if (on) sel[id] = 1; else delete sel[id]; };
+  window.paketSet = async function (paket) {
+    var ids = Object.keys(sel);
+    if (!ids.length) { toast('Centang dulu akun yang ingin diubah'); return; }
+    try { await api('paket.set', { ids: ids, paket: paket }); sel = {}; toast('Paket diperbarui. Akun terkait harus masuk ulang.'); vPaket(); } catch (e) { fail(e); }
+  };
+
+  async function vPaket() {
+    M('<h2>Paket Akses</h2><div class="empty">Memuat...</div>');
+    try {
+      var d = await api('paket.list');
+      var rows = d.daftar.map(function (u) {
+        return '<tr><td><input type="checkbox" aria-label="Pilih ' + esc(u.Nama) + '"' + (sel[u.User_ID] ? ' checked' : '') + ' onchange="paketToggle(\'' + esc(u.User_ID) + '\',this.checked)"></td><td>' + esc(u.Nama) +
+          '</td><td>' + esc(u.Username) + '</td><td>' + esc(u.Role) + '</td><td>' + esc(u.Kelas.join(', ')) + '</td><td>' + (u.Paket === 'PromptGen' ? '<b>Generator Prompt</b>' : 'Penuh') + '</td></tr>';
+      }).join('');
+      M('<h2>Paket Akses</h2><p>Paket <b>Generator Prompt</b> hanya membuka Generator Prompt (untuk guru TK). Paket <b>Penuh</b> membuka semua fitur guru. Akun yang diubah harus masuk ulang.</p>' +
+        (d.siap ? '' : '<p class="bad"><b>Kolom Paket belum ada.</b> Jalankan dulu Migrasi &amp; Impor, lalu Jalankan migrasi.</p>') +
+        '<p><button class="btn" onclick="paketSet(\'PromptGen\')">Jadikan Generator Prompt</button> <button class="btn ghost" onclick="paketSet(\'Penuh\')">Jadikan Penuh</button></p>' +
+        '<div class="tw"><table><thead><tr><th></th><th>Nama</th><th>Username</th><th>Peran</th><th>Kelas diampu</th><th>Paket</th></tr></thead><tbody>' + rows + '</tbody></table></div>');
+    } catch (e) { fail(e); }
+  }
+  VIEWS['sa-paket'] = vPaket;
+
+  
+  var rc = document.getElementById('rc');
+  if (rc) rc.addEventListener('change', async function () {
+    var n = document.getElementById('rcnote');
+    if (!n) { n = document.createElement('small'); n.id = 'rcnote'; n.setAttribute('role', 'status'); rc.parentNode.insertBefore(n, rc.nextSibling); }
+    n.textContent = '';
+    try { var r = await api('public.daftar', { cabang: rc.value }); if (r && r.buka === false) n.textContent = 'Pendaftaran mandiri di cabang ini sedang ditutup.'; } catch (e) { }
+  });
+})();
+</script>
 <script>
 
 
