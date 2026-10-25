@@ -869,85 +869,6 @@ async function ytHapus(e) {
 }
 </script>
 <script>
-
-
-(function () {
-  var SUPERMODE = false, CABS = null;
-  var ADMIN_BASE = MENU.Admin.slice(), GLOBAL_MENU = ['artikel', 'kampus'];
-
-   
-  var _cv = cabVal;
-  cabVal = function (id) { return id === 'lc' && SUPERMODE ? 'pusat' : _cv(id); };
-  function supUi() {
-    var a = $('#lsup'), w = $('#lcw');
-    if (a) a.textContent = SUPERMODE ? 'Kembali ke masuk biasa' : 'Masuk sebagai Superadmin';
-    if (w && SUPERMODE) w.style.display = 'none';
-    var t = $('#authT'); if (t && $('#fLogin').style.display !== 'none') t.textContent = SUPERMODE ? 'Masuk Superadmin' : 'Masuk';
-  }
-  window.superMode = function () { SUPERMODE = !SUPERMODE; if (!SUPERMODE) cabInit(); supUi(); };
-  function supInject() {
-    if ($('#lsup')) return;
-    var b = $('#bLogin'); if (!b || !b.parentElement) return;
-    b.parentElement.insertAdjacentHTML('afterend', '<p style="margin:0"><a id="lsup" href="javascript:void 0" onclick="superMode()" style="color:var(--teal);font-size:.85rem"></a></p>');
-  }
-  var _sw = swAuth;
-  swAuth = function (w) {
-    SUPERMODE = false; _sw(w); supInject();
-    var a = $('#lsup'); if (a) a.parentElement.style.display = BOOT.superOn ? '' : 'none';
-    supUi();
-  };
-
-   
-  var _od = openDash;
-  openDash = function (m) {
-    var u = S.user || {};
-    MENU.Admin = u.super ? ADMIN_BASE.concat([['sa-cabang', 'Cabang']])
-      : (BOOT.superOn ? ADMIN_BASE.filter(function (x) { return GLOBAL_MENU.indexOf(x[0]) < 0; }) : ADMIN_BASE);
-    _od(m);
-    if (u.super) supBar();
-  };
-  (window.LOGOUT_HOOKS = window.LOGOUT_HOOKS || []).push(function () { CABS = null; });
-
-  async function supBar() {
-    try { if (!CABS) CABS = await api('super.cabang.list'); } catch (e) { return; }
-    var aktif = (S.user && S.user.cab) || CABS.aktif;
-    var opt = CABS.cabang.filter(function (c) { return c.status; }).map(function (c) {
-      return '<option value="' + esc(c.kode) + '"' + (c.kode === aktif ? ' selected' : '') + '>' + esc(c.nama) + '</option>'; }).join('');
-    var side = $('#side'); if (!side) return;
-    var old = $('#supbar'); if (old) old.remove();
-    side.insertAdjacentHTML('afterbegin', '<div id="supbar" style="padding:8px 12px"><small>Cabang aktif (Superadmin)</small>' +
-      '<select onchange="superPilih(this.value)" style="width:100%" aria-label="Cabang aktif">' + opt + '</select></div>');
-  }
-
-  window.superPilih = async function (kode) {
-    try {
-      await api('super.cabang.pilih', { kode: kode });
-      S.user.cab = kode; localStorage.setItem('us', JSON.stringify(S.user));
-      for (var k in MEM) delete MEM[k];
-      if (typeof mrReset === 'function') mrReset();
-      CABS = null; toast('Cabang aktif diganti');
-      if (location.hash === '#/dashboard/ringkasan') openDash('ringkasan'); else go('#/dashboard/ringkasan');
-    } catch (e) { fail(e); }
-  };
-
-  async function vCabang() {
-    M('<h2>Cabang</h2><div class="empty">Memuat...</div>');
-    try {
-      var d = await api('super.cabang.list'); CABS = d;
-      var aktif = (S.user && S.user.cab) || d.aktif, nama = aktif;
-      d.cabang.forEach(function (c) { if (c.kode === aktif) nama = c.nama; });
-      var rows = d.cabang.map(function (c) {
-        return '<tr><td>' + esc(c.kode) + '</td><td>' + esc(c.nama) + '</td><td>' + (c.status ? 'Aktif' : 'Nonaktif') + '</td><td>' +
-          (c.status && c.kode !== aktif ? '<button class="btn ghost sm" onclick="superPilih(\'' + esc(c.kode) + '\')">Pakai cabang ini</button>' : (c.kode === aktif ? '<b>Sedang dipakai</b>' : '')) + '</td></tr>'; }).join('');
-      M('<h2>Cabang</h2><p>Cabang aktif: <b>' + esc(nama) + '</b>. Semua menu (siswa, guru, nilai, dst.) menampilkan data cabang ini.</p>' +
-        '<div class="tw"><table><thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-        '<p><small>Menu Artikel, Kampus Tujuan, dan Mata Pelajaran adalah data bersama untuk semua cabang; hanya Superadmin yang bisa mengubahnya. Menambah cabang baru disiapkan pada tahap berikutnya.</small></p>');
-    } catch (e) { fail(e); }
-  }
-  VIEWS['sa-cabang'] = vCabang;
-})();
-</script>
-<script>
  
 const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
@@ -4926,6 +4847,85 @@ async function aluPeriksa(nid,simpan){const t=$('#alc_t').value,h=$('#alc_h'),p=
       s.style.display=r.siap?'':'none';s.textContent='Simpan '+r.siap+' alumni'}}
   catch(e){h.className='alhasil bad';h.innerHTML=esc(e.message)}
   p.disabled=false;s.disabled=false}
+</script>
+<script>
+
+
+(function () {
+  var SUPERMODE = false, CABS = null;
+  var ADMIN_BASE = MENU.Admin.slice(), GLOBAL_MENU = ['artikel', 'kampus'];
+
+   
+  var _cv = cabVal;
+  cabVal = function (id) { return id === 'lc' && SUPERMODE ? 'pusat' : _cv(id); };
+  function supUi() {
+    var a = $('#lsup'), w = $('#lcw');
+    if (a) a.textContent = SUPERMODE ? 'Kembali ke masuk biasa' : 'Masuk sebagai Superadmin';
+    if (w && SUPERMODE) w.style.display = 'none';
+    var t = $('#authT'); if (t && $('#fLogin').style.display !== 'none') t.textContent = SUPERMODE ? 'Masuk Superadmin' : 'Masuk';
+  }
+  window.superMode = function () { SUPERMODE = !SUPERMODE; if (!SUPERMODE) cabInit(); supUi(); };
+  function supInject() {
+    if ($('#lsup')) return;
+    var b = $('#bLogin'); if (!b || !b.parentElement) return;
+    b.parentElement.insertAdjacentHTML('afterend', '<p style="margin:0"><a id="lsup" href="javascript:void 0" onclick="superMode()" style="color:var(--teal);font-size:.85rem"></a></p>');
+  }
+  var _sw = swAuth;
+  swAuth = function (w) {
+    SUPERMODE = false; _sw(w); supInject();
+    var a = $('#lsup'); if (a) a.parentElement.style.display = BOOT.superOn ? '' : 'none';
+    supUi();
+  };
+
+   
+  var _od = openDash;
+  openDash = function (m) {
+    var u = S.user || {};
+    MENU.Admin = u.super ? ADMIN_BASE.concat([['sa-cabang', 'Cabang']])
+      : (BOOT.superOn ? ADMIN_BASE.filter(function (x) { return GLOBAL_MENU.indexOf(x[0]) < 0; }) : ADMIN_BASE);
+    _od(m);
+    if (u.super) supBar();
+  };
+  (window.LOGOUT_HOOKS = window.LOGOUT_HOOKS || []).push(function () { CABS = null; });
+
+  async function supBar() {
+    try { if (!CABS) CABS = await api('super.cabang.list'); } catch (e) { return; }
+    var aktif = (S.user && S.user.cab) || CABS.aktif;
+    var opt = CABS.cabang.filter(function (c) { return c.status; }).map(function (c) {
+      return '<option value="' + esc(c.kode) + '"' + (c.kode === aktif ? ' selected' : '') + '>' + esc(c.nama) + '</option>'; }).join('');
+    var side = $('#side'); if (!side) return;
+    var old = $('#supbar'); if (old) old.remove();
+    side.insertAdjacentHTML('afterbegin', '<div id="supbar" style="padding:8px 12px"><small>Cabang aktif (Superadmin)</small>' +
+      '<select onchange="superPilih(this.value)" style="width:100%" aria-label="Cabang aktif">' + opt + '</select></div>');
+  }
+
+  window.superPilih = async function (kode) {
+    try {
+      await api('super.cabang.pilih', { kode: kode });
+      S.user.cab = kode; localStorage.setItem('us', JSON.stringify(S.user));
+      for (var k in MEM) delete MEM[k];
+      if (typeof mrReset === 'function') mrReset();
+      CABS = null; toast('Cabang aktif diganti');
+      if (location.hash === '#/dashboard/ringkasan') openDash('ringkasan'); else go('#/dashboard/ringkasan');
+    } catch (e) { fail(e); }
+  };
+
+  async function vCabang() {
+    M('<h2>Cabang</h2><div class="empty">Memuat...</div>');
+    try {
+      var d = await api('super.cabang.list'); CABS = d;
+      var aktif = (S.user && S.user.cab) || d.aktif, nama = aktif;
+      d.cabang.forEach(function (c) { if (c.kode === aktif) nama = c.nama; });
+      var rows = d.cabang.map(function (c) {
+        return '<tr><td>' + esc(c.kode) + '</td><td>' + esc(c.nama) + '</td><td>' + (c.status ? 'Aktif' : 'Nonaktif') + '</td><td>' +
+          (c.status && c.kode !== aktif ? '<button class="btn ghost sm" onclick="superPilih(\'' + esc(c.kode) + '\')">Pakai cabang ini</button>' : (c.kode === aktif ? '<b>Sedang dipakai</b>' : '')) + '</td></tr>'; }).join('');
+      M('<h2>Cabang</h2><p>Cabang aktif: <b>' + esc(nama) + '</b>. Semua menu (siswa, guru, nilai, dst.) menampilkan data cabang ini.</p>' +
+        '<div class="tw"><table><thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        '<p><small>Menu Artikel, Kampus Tujuan, dan Mata Pelajaran adalah data bersama untuk semua cabang; hanya Superadmin yang bisa mengubahnya. Menambah cabang baru disiapkan pada tahap berikutnya.</small></p>');
+    } catch (e) { fail(e); }
+  }
+  VIEWS['sa-cabang'] = vCabang;
+})();
 </script>
 </body>
 </html>
