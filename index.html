@@ -4890,7 +4890,11 @@ function mnuBeranda(){try{const home=document.getElementById('v-home');if(!home)
   const kam=document.getElementById('kampus'),pro=document.getElementById('profil'),gr=document.getElementById('homeGrid'),ber=gr?gr.closest('.sec'):null;
   const urut=[];mnuTop().forEach(a=>{const h=String(a.getAttribute('href')||'');const s=h==='#/kampus'?kam:h==='#/profil'?pro:/^#\/kategori\//.test(h)?ber:null;if(s&&urut.indexOf(s)<0)urut.push(s)});
   [kam,ber,pro].forEach(s=>{if(s&&urut.indexOf(s)<0)urut.push(s)});
-  urut.forEach(s=>{if(s.parentNode===home)home.appendChild(s)})}catch(e){console.warn(e)}}
+  urut.forEach(s=>{if(s.parentNode===home)home.appendChild(s)});
+  /* menu disembunyikan = bagian di Beranda ikut hilang (bagian Kabar terbaru hilang bila ketiga menu beritanya disembunyikan) */
+  const h=MNU.hide||[],kat=mnuTop().map(a=>String(a.getAttribute('href')||'')).filter(x=>/^#\/kategori\//.test(x));
+  const set=(s,l)=>{if(s)s.classList.toggle('nvx',l.length>0&&l.every(x=>h.indexOf(x)>=0))};
+  set(kam,['#/kampus']);set(pro,['#/profil']);set(ber,kat)}catch(e){console.warn(e)}}
 /* Dashboard: menu dikelompokkan oleh TemaDashboard (dsGroups). Urutan kelompok (ikon di rel) dan urutan item dalam kelompok diatur di sini. */
 if(typeof dsGroups==='function'){const o=dsGroups;dsGroups=function(role,menus){let g=o.apply(this,arguments);
   try{if(role==='Admin'){const lain=g.find(x=>x.id==='lain'),mt=g.find(x=>x.id==='maint');
@@ -4940,7 +4944,7 @@ function vUrutMenu(){
   const top=mnuTop().map(a=>({id:a.getAttribute('href'),label:a.textContent.trim(),on:!a.classList.contains('nvx')}));
   MS.tree={};MNU_ROLE.forEach(r=>{MS.tree[r]=mnuPohon(r)});MS.role='Admin';
   M(`<div class="mnu-wrap"><h2>Urutan menu</h2><p><small>Tarik ikon <b>&#8942;&#8942;</b> untuk memindahkan menu. Di HP, tekan dan geser ikon itu, atau pakai tombol &uarr; &darr;. Klik <b>Simpan urutan</b> agar berlaku untuk semua pengunjung.</small></p>
-  <h3>Menu atas (halaman publik)</h3><p><small>Pratinjau urutan menu atas:</small></p><div class="mnu-prev" id="mnu_pv"></div><ul class="mnu-list" id="mnu_top"></ul>
+  <h3>Menu atas (halaman publik)</h3><p><small>Pratinjau urutan menu atas. Menu yang tidak ditampilkan juga menyembunyikan bagiannya di Beranda.</small></p><div class="mnu-prev" id="mnu_pv"></div><ul class="mnu-list" id="mnu_top"></ul>
   <h3 style="margin-top:28px">Menu Dashboard</h3><p><small>Kelompok menu adalah ikon di rel kiri; di dalamnya ada menu yang tampil di panel. Anda bisa mengurutkan kelompok dan menu di dalam tiap kelompok.</small></p>
   <label for="mnu_r">Atur menu untuk peran</label><select id="mnu_r">${MNU_ROLE.map(r=>`<option>${esc(r)}</option>`).join('')}</select><ul class="mnu-list" id="mnu_dash" style="margin-top:12px"></ul>
   <p class="row" style="margin-top:20px"><button class="btn" id="mnu_sv" type="button" onclick="mnuSimpan()">Simpan urutan</button><button class="btn ghost" type="button" onclick="mnuReset()">Kembalikan urutan awal</button></p></div>`);
