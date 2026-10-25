@@ -868,6 +868,16 @@ async function ytHapus(e) {
   } catch (x) { fail(x); }
 }
 </script>
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    
+  </body>
+</html>
+
 <script>
  
 const GS={pair:'',tab:'materi',cur:null};
@@ -3444,50 +3454,54 @@ Object.assign(VIEWS,{'g-mapel':vGMapel,'g-kelas':gmKe(''),'g-tugas':gmKe('*'),'g
 <script>
 
 
-const GPR={tab:'media',opsi:null,form:{media:null,game:null},hasil:{media:null,game:null},sentuh:{style:false,jumlah:false},busy:false};
+const GPR={tab:'media',opsi:null,form:{media:null,game:null,rpp:null},hasil:{media:null,game:null,rpp:null},sentuh:{style:false,jumlah:false,durasi:false},busy:false};
+const GPR_LABEL={media:'Media',game:'Game',rpp:'Rencana'};   
 const gprOk=()=>!!(S&&S.user&&(S.user.role==='Guru'||S.user.role==='Wali Kelas'));
 const gprOpts=(arr)=>arr.map(x=>`<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('');
+/* bagian unggah PDF (dipakai semua tab yang punya bahan materi) */
+function gprBlokPdf(){return `<label for="gpr-pdf">Atau ambil teks dari berkas PDF (maks. 5 MB)</label>
+       <div class="row" style="gap:8px;align-items:center"><input type="file" id="gpr-pdf" accept="application/pdf,.pdf" style="flex:1 1 220px"><button class="btn ghost" id="gpr-pdfbtn" type="button" onclick="gprPdf()">Ambil teks dari PDF</button></div>
+       <label class="gpr-ck"><input type="checkbox" id="gpr-bag" checked> Ambil hanya bagian "Bahan Ajar Ringkas" (bila ada)</label>
+       <p class="gpr-hint" id="gpr-pdfnote">Teks hasilnya masuk ke kotak di atas dan bisa Anda sunting. PDF hasil scan mungkin kurang terbaca.</p>
+       <div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost sm" id="gpr-arabbtn" type="button" style="display:none" onclick="gprPdf(GPR._arabTerbalik?'normal':'balik')">Teks Arab terlihat salah? Coba urutan sebaliknya</button></div>`}
 
 function vGPrompt(){
   if(!gprOk()){M('<h2>Generator Prompt</h2><div class="empty">Menu ini hanya untuk guru dan wali kelas.</div>');return}
-  M('<h2 style="margin:0 0 4px">Generator Prompt</h2><p style="margin:0 0 14px;color:#5b7083">Susun prompt siap salin untuk membuat media atau game pembelajaran interaktif di AI pilihan Anda (Claude, ChatGPT, Gemini, dan lainnya).</p><div class="tabs" id="gpr-t" role="tablist"></div><div id="gpr-b"></div>');
+  M('<h2 style="margin:0 0 4px">Generator Prompt</h2><p style="margin:0 0 14px;color:#5b7083">Susun prompt siap salin untuk membuat media interaktif, game edukasi, atau rencana pembelajaran di AI pilihan Anda (Claude, ChatGPT, Gemini, dan lainnya). Jangan memasukkan nama siswa, nilai, atau data pribadi lain: prompt akan ditempel ke AI di luar sekolah.</p><div class="tabs" id="gpr-t" role="tablist"></div><div id="gpr-b"></div>');
   gprTabs();gprBody(true);
   if(!GPR.opsi)api('prompt.opsi').then(o=>{GPR.opsi=o;gprBody()}).catch(fail);
   swr('gd','g.data',{},()=>gprBody());
 }
 function gprTabs(){const e=$('#gpr-t');if(!e)return;
-  e.innerHTML=[['media','Media interaktif'],['game','Game edukasi'],['riwayat','Riwayat']].map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===GPR.tab}" class="${k===GPR.tab?'on':''}" onclick="gprTab('${k}')">${l}</a>`).join('')}
+  e.innerHTML=[['media','Media interaktif'],['game','Game edukasi'],['rpp','Rencana'],['riwayat','Riwayat']].map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===GPR.tab}" class="${k===GPR.tab?'on':''}" onclick="gprTab('${k}')">${l}</a>`).join('')}
 function gprTab(t){gprSimpan();GPR.tab=t;gprTabs();gprBody(true)}
 function gprBody(force){
   const b=$('#gpr-b');if(!b||!gprOk())return;
   if(GPR.tab==='riwayat'){if(force||!$('#gpr-rw'))gprRiwayat();return}
   if(!GPR.opsi||!MEM.gd){if(!$('#gpr-form'))b.innerHTML='<div class="skel"></div><br><div class="skel"></div>';return}
   if(!MEM.gd.ampu.length){b.innerHTML='<div class="empty">Anda belum tercatat sebagai pengampu mata pelajaran di kelas mana pun, sehingga generator belum bisa dipakai. Minta admin menambahkan Anda di menu Pengampu Mapel.</div>';return}
-  if(force||!$('#gpr-form'))gprForm();   
+  if(force||!$('#gpr-form'))gprForm();   // data segar tiba saat form sedang diisi: jangan digambar ulang
 }
 
- 
+/* ---------- Form ---------- */
 function gprForm(){
   const j=GPR.tab,o=GPR.opsi,d=MEM.gd,b=$('#gpr-b');if(!b)return;
   const pairs=d.ampu.map(a=>`<option value="${esc(a.Kelas_ID+'|'+a.Mapel_ID)}">${esc(a.Mapel)} - ${esc(a.Kelas)}</option>`).join('');
-  const khusus=j==='media'
+  const khusus=j==='rpp'?'':j==='media'
     ?`<div class="gpr-grid"><div><label for="gpr-jm">Jenis media</label><select id="gpr-jm">${gprOpts(o.jenisMedia)}</select></div>
        <div><label for="gpr-in">Tingkat interaktivitas</label><select id="gpr-in">${gprOpts(o.interaktivitas)}</select></div></div>`
     :`<div class="gpr-grid"><div><label for="gpr-gn">Genre game</label><select id="gpr-gn">${gprOpts(o.genre)}</select></div>
        <div><label for="gpr-tm">Tema visual</label><select id="gpr-tm">${gprOpts(o.temaVisual)}</select></div>
        <div><label for="gpr-jml">Jumlah level/soal (3-20)</label><input id="gpr-jml" type="number" min="3" max="20" inputmode="numeric" oninput="GPR.sentuh.jumlah=true"></div></div>
        <label>Mekanik permainan</label><div class="gpr-cks" id="gpr-mk">${o.mekanik.map(x=>`<label class="gpr-ck"><input type="checkbox" value="${esc(x.id)}">${esc(x.label)}</label>`).join('')}</div>`;
-  b.innerHTML=`<div id="gpr-form">
+  b.innerHTML=j==='rpp'?gprFormRpp(o,pairs):`<div id="gpr-form">
    <div class="gpr-sec"><h3>1. Kelas dan materi</h3>
      <label for="gpr-pair">Mata pelajaran dan kelas</label><select id="gpr-pair" onchange="gprPair()">${pairs}</select>
      <p class="gpr-hint" id="gpr-hint"></p>
      <label for="gpr-mat">Sumber materi</label><select id="gpr-mat" onchange="gprMatUbah()"></select>
      <p class="gpr-hint" id="gpr-matnote"></p>
      <div id="gpr-matbox"><label for="gpr-materi">Tempel materi di sini</label><textarea id="gpr-materi" dir="auto" maxlength="12000" oninput="gprHitung()" placeholder="Tempel teks materi (minimal sekitar 80 karakter, maksimal 12.000)."></textarea><p class="gpr-hint" id="gpr-mc"></p>
-       <label for="gpr-pdf">Atau ambil teks dari berkas PDF (maks. 5 MB)</label>
-       <div class="row" style="gap:8px;align-items:center"><input type="file" id="gpr-pdf" accept="application/pdf,.pdf" style="flex:1 1 220px"><button class="btn ghost" id="gpr-pdfbtn" type="button" onclick="gprPdf()">Ambil teks dari PDF</button></div>
-       <p class="gpr-hint" id="gpr-pdfnote">Teks hasilnya masuk ke kotak di atas dan bisa Anda sunting. PDF hasil scan mungkin kurang terbaca.</p>
-       <div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost sm" id="gpr-arabbtn" type="button" style="display:none" onclick="gprPdf(GPR._arabTerbalik?'normal':'balik')">Teks Arab terlihat salah? Coba urutan sebaliknya</button></div></div>
+       ${gprBlokPdf()}</div>
      <label for="gpr-topik">Topik <span id="gpr-topikopt" style="font-weight:400;color:#5b7083"></span></label><input id="gpr-topik" maxlength="120" placeholder="Contoh: Fotosintesis">
    </div>
    <div class="gpr-sec"><h3>2. ${j==='media'?'Jenis media':'Jenis game'}</h3>${khusus}</div>
@@ -3500,46 +3514,105 @@ function gprForm(){
    <p><button class="btn" id="gpr-btn" onclick="gprBuat()">Buat prompt</button></p>
    <div id="gpr-hasil"></div>
   </div>`;
-  gprIsi(GPR.form[j]||{});gprPair();gprHitung();
-  if(GPR.hasil[j])gprHasil(GPR.hasil[j],'#gpr-hasil',{ulang:true,noscroll:true});
+  gprIsi(GPR.form[j]||{});gprPair();gprHitung();if(j==='rpp')gprDplBatas();
+  if(GPR.hasil[j])gprHasil(GPR.hasil[j],'#gpr-hasil',{ulang:true,noscroll:true,jenis:j});
+}
+/* ---------- Formulir Rencana Pembelajaran (id lama dipakai ulang agar gprPair, gprMatUbah, gprHitung, gprPdf tetap bekerja) ---------- */
+function gprFormRpp(o,pairs){
+  const bawaan=o.opsionalBawaan||[],mxDpl=(o.batas&&o.batas.dplMaks)||3;
+  const cks=(arr,aksi,cek)=>arr.map(x=>`<label class="gpr-ck"><input type="checkbox" value="${esc(x.id)}"${cek(x.id)?' checked':''}${aksi?' onchange="'+aksi+'"':''}>${esc(x.label)}</label>`).join('');
+  return `<div id="gpr-form">
+   <div class="gpr-sec"><h3>1. Kelas, semester, dan alokasi waktu</h3>
+     <label for="gpr-pair">Mata pelajaran dan kelas</label><select id="gpr-pair" onchange="gprPair()">${pairs}</select>
+     <p class="gpr-hint" id="gpr-hint"></p>
+     <div class="gpr-grid">
+       <div><label for="gpr-sem">Semester</label><select id="gpr-sem">${gprOpts(o.semester)}</select></div>
+       <div><label for="gpr-sek">Nama sekolah (opsional)</label><input id="gpr-sek" maxlength="${(o.batas&&o.batas.sekolah)||80}" placeholder="Nama sekolah" value="${esc(o.sekolah||'')}"></div>
+       <div><label for="gpr-pt">Jumlah pertemuan (1-6)</label><input id="gpr-pt" type="number" min="1" max="6" value="1" inputmode="numeric"></div>
+       <div><label for="gpr-dr">Durasi per pertemuan (menit)</label><input id="gpr-dr" type="number" min="30" max="240" value="80" inputmode="numeric" oninput="GPR.sentuh.durasi=true"></div>
+     </div>
+   </div>
+   <div class="gpr-sec"><h3>2. Topik, capaian, dan bahan acuan</h3>
+     <label for="gpr-topik">Topik / materi ajar <span id="gpr-topikopt" style="font-weight:400;color:#5b7083">(wajib diisi)</span></label><input id="gpr-topik" maxlength="120" placeholder="Contoh: Pergerakan Nasional">
+     <label for="gpr-cp">Capaian Pembelajaran (opsional)</label><textarea id="gpr-cp" maxlength="600" style="min-height:90px" oninput="gprHitung()" placeholder="Tempel Capaian Pembelajaran dari dokumen resmi. Jika dikosongkan, AI hanya memberi tanda untuk disesuaikan."></textarea><p class="gpr-hint" id="gpr-cpc"></p>
+     <label for="gpr-mat">Bahan acuan materi (opsional)</label><select id="gpr-mat" onchange="gprMatUbah()"></select>
+     <p class="gpr-hint" id="gpr-matnote"></p>
+     <div id="gpr-matbox"><label for="gpr-materi">Atau tempel bahan acuan di sini</label><textarea id="gpr-materi" dir="auto" maxlength="12000" oninput="gprHitung()" placeholder="Boleh dikosongkan. Bila diisi, minimal sekitar 80 karakter, maksimal 12.000."></textarea><p class="gpr-hint" id="gpr-mc"></p>
+       ${gprBlokPdf()}</div>
+   </div>
+   <div class="gpr-sec"><h3>3. Dimensi Profil Lulusan, praktik pedagogis, dan prinsip</h3>
+     <label>Dimensi Profil Lulusan (pilih 1 sampai ${mxDpl})</label>
+     <div class="gpr-cks" id="gpr-dpl">${cks(o.dpl,'gprDplBatas()',()=>false)}</div><p class="gpr-hint" id="gpr-dplc"></p>
+     <label for="gpr-pk">Praktik pedagogis</label><select id="gpr-pk">${gprOpts(o.praktik)}</select>
+     <label>Prinsip pembelajaran</label><div class="gpr-cks" id="gpr-pr">${cks(o.prinsip,'',()=>true)}</div>
+   </div>
+   <div class="gpr-sec"><h3>4. Bagian dokumen (opsional)</h3>
+     <p class="gpr-hint" style="margin:0 0 4px">Centang bagian opsional yang ingin disertakan. Bagian wajib (Dimensi Profil Lulusan, Tujuan Pembelajaran, IKTP, Praktik Pedagogis, Lingkungan Pembelajaran, Kegiatan Inti, dan Asesmen) selalu ada.</p>
+     <div class="gpr-cks" id="gpr-op">${cks(o.opsionalRpp,'',id=>bawaan.indexOf(id)>=0)}</div>
+   </div>
+   <div class="gpr-sec"><h3>5. Pengaturan lain</h3>
+     <div class="gpr-grid"><div><label for="gpr-dt">Tingkat kedetailan</label><select id="gpr-dt">${gprOpts(o.detail)}</select></div>
+       <div><label for="gpr-bh">Bahasa</label><select id="gpr-bh">${gprOpts(o.bahasa)}</select></div>
+       <div><label for="gpr-ai">AI tujuan (opsional)</label><select id="gpr-ai"><option value="">Tidak ditentukan</option>${gprOpts(o.aiTujuan)}</select></div></div>
+     <label class="gpr-ck"><input type="checkbox" id="gpr-lp" checked> Sertakan lampiran "Bahan Ajar Ringkas untuk Media Interaktif" (dipakai saat PDF rencana ini diunggah ke generator Media atau Game)</label>
+     <label for="gpr-rq">Permintaan khusus (opsional)</label><textarea id="gpr-rq" maxlength="500" style="min-height:90px" oninput="gprHitung()" placeholder="Contoh: sertakan kegiatan diskusi kelompok, dan gunakan contoh dari daerah sekitar."></textarea><p class="gpr-hint" id="gpr-rc"></p>
+   </div>
+   <p><button class="btn" id="gpr-btn" onclick="gprBuat()">Buat prompt</button></p>
+   <div id="gpr-hasil"></div>
+  </div>`;
+}
+// batasi jumlah DPL yang dicentang (kotak lain dinonaktifkan bila sudah penuh)
+function gprDplBatas(){
+  const mx=(GPR.opsi&&GPR.opsi.batas&&GPR.opsi.batas.dplMaks)||3,bs=[...document.querySelectorAll('#gpr-dpl input')],n=bs.filter(x=>x.checked).length;
+  bs.forEach(x=>{x.disabled=!x.checked&&n>=mx});
+  const c=$('#gpr-dplc');if(c)c.textContent='Dipilih '+n+' dari maksimal '+mx+(n===0?'. Dikosongkan: AI memilih yang paling sesuai.':'.')
 }
 function gprPair(){
   const sel=$('#gpr-pair');if(!sel||!GPR.opsi||!MEM.gd)return;
   const [k,m]=String(sel.value).split('|'),jk=(GPR.opsi.jenjangKelas||{})[k];
   const semua=(MEM.gd.materi||[]).filter(x=>x.Kelas_ID===k&&x.Mapel_ID===m),ms=semua.filter(x=>x.Ada_Isi);
   const ms_=$('#gpr-mat'),cur=ms_.value;
-  ms_.innerHTML='<option value="">- Tempel teks sendiri -</option>'+ms.map(x=>`<option value="${esc(x.Materi_ID)}">${esc(x.Judul)}</option>`).join('');
+  ms_.innerHTML='<option value="">'+(GPR.tab==='rpp'?'- Tanpa bahan acuan, atau tempel sendiri -':'- Tempel teks sendiri -')+'</option>'+ms.map(x=>`<option value="${esc(x.Materi_ID)}">${esc(x.Judul)}</option>`).join('');
   if(ms.some(x=>x.Materi_ID===cur))ms_.value=cur;
   const tanpa=semua.length-ms.length;
   $('#gpr-matnote').textContent=tanpa>0?tanpa+' materi hanya berisi tautan (tanpa teks) sehingga tidak ada di daftar. Tempel teksnya secara manual.':'';
-  $('#gpr-hint').innerHTML=jk?'Jenjang terdeteksi: <b>'+esc(jk.label)+'</b>'+(jk.dikenal?'.':' (tidak dikenali, memakai aturan umum).'):'';
+  $('#gpr-hint').innerHTML=jk?'Jenjang terdeteksi: <b>'+esc(jk.label)+'</b>'+(GPR.tab==='rpp'&&jk.fase?' (Fase '+esc(jk.fase)+')':'')+(jk.dikenal?'.':' (tidak dikenali, memakai aturan umum).'):'';
   if(jk){
     if(!GPR.sentuh.style){const r=document.querySelector('input[name=gpr-style][value="'+jk.styleDefault+'"]');if(r)r.checked=true}
     if(GPR.tab==='game'&&!GPR.sentuh.jumlah&&$('#gpr-jml'))$('#gpr-jml').value=jk.jumlah;
+    if(GPR.tab==='rpp'&&!GPR.sentuh.durasi&&$('#gpr-dr')&&jk.durasi)$('#gpr-dr').value=jk.durasi;
   }
   if(!document.querySelector('input[name=gpr-style]:checked')){const r=document.querySelector('input[name=gpr-style]');if(r)r.checked=true}
   gprMatUbah();
 }
 function gprMatUbah(){const v=($('#gpr-mat')||{}).value;if($('#gpr-matbox'))$('#gpr-matbox').style.display=v?'none':'';
-  if($('#gpr-topikopt'))$('#gpr-topikopt').textContent=v?'(kosongkan untuk memakai judul materi)':'';}
-function gprHitung(){const m=$('#gpr-materi'),r=$('#gpr-rq');
+  if($('#gpr-topikopt'))$('#gpr-topikopt').textContent=GPR.tab==='rpp'?'(wajib diisi)':(v?'(kosongkan untuk memakai judul materi)':'');}
+function gprHitung(){const m=$('#gpr-materi'),r=$('#gpr-rq'),cp=$('#gpr-cp');
+  if(cp&&$('#gpr-cpc'))$('#gpr-cpc').textContent=cp.value.length+' / 600 karakter';
   if(m&&$('#gpr-mc'))$('#gpr-mc').textContent=m.value.length+' / 12.000 karakter';
   if(r&&$('#gpr-rc'))$('#gpr-rc').textContent=r.value.length+' / 500 karakter'}
 
-/* baca / isi kembali nilai form (agar tidak hilang saat pindah tab) */
+ 
 function gprBaca(){const v=id=>{const e=$('#'+id);return e?e.value:''},st=document.querySelector('input[name=gpr-style]:checked');
   return {pair:v('gpr-pair'),mat:v('gpr-mat'),materi:v('gpr-materi'),topik:v('gpr-topik'),jenisMedia:v('gpr-jm'),interaktivitas:v('gpr-in'),genre:v('gpr-gn'),temaVisual:v('gpr-tm'),jumlah:v('gpr-jml'),
-    mekanik:[...document.querySelectorAll('#gpr-mk input:checked')].map(x=>x.value),style:st?st.value:'',bahasa:v('gpr-bh'),aiTujuan:v('gpr-ai'),request:v('gpr-rq')}}
+    mekanik:[...document.querySelectorAll('#gpr-mk input:checked')].map(x=>x.value),style:st?st.value:'',bahasa:v('gpr-bh'),aiTujuan:v('gpr-ai'),request:v('gpr-rq'),
+    sekolah:v('gpr-sek'),semester:v('gpr-sem'),cp:v('gpr-cp'),pertemuan:v('gpr-pt'),durasi:v('gpr-dr'),praktik:v('gpr-pk'),detail:v('gpr-dt'),
+    dpl:[...document.querySelectorAll('#gpr-dpl input:checked')].map(x=>x.value),prinsip:[...document.querySelectorAll('#gpr-pr input:checked')].map(x=>x.value),
+    opsional:[...document.querySelectorAll('#gpr-op input:checked')].map(x=>x.value),lampiran:!!($('#gpr-lp')&&$('#gpr-lp').checked)}}
 function gprIsi(f){const s=(id,val)=>{const e=$('#'+id);if(e&&val!==undefined&&val!==null&&val!=='')e.value=val};
   s('gpr-pair',f.pair);s('gpr-topik',f.topik);s('gpr-materi',f.materi);s('gpr-jm',f.jenisMedia);s('gpr-in',f.interaktivitas);s('gpr-gn',f.genre);s('gpr-tm',f.temaVisual);s('gpr-jml',f.jumlah);s('gpr-bh',f.bahasa);s('gpr-ai',f.aiTujuan);s('gpr-rq',f.request);
   if(f.mekanik)document.querySelectorAll('#gpr-mk input').forEach(x=>x.checked=f.mekanik.indexOf(x.value)>=0);
+  s('gpr-sek',f.sekolah);s('gpr-sem',f.semester);s('gpr-cp',f.cp);s('gpr-pt',f.pertemuan);s('gpr-dr',f.durasi);s('gpr-pk',f.praktik);s('gpr-dt',f.detail);
+  const cb=(sel,arr)=>{if(Array.isArray(arr))document.querySelectorAll(sel).forEach(x=>x.checked=arr.indexOf(x.value)>=0)};
+  cb('#gpr-dpl input',f.dpl);cb('#gpr-pr input',f.prinsip);cb('#gpr-op input',f.opsional);
+  if(typeof f.lampiran==='boolean'&&$('#gpr-lp'))$('#gpr-lp').checked=f.lampiran;
   if(f.style){const r=document.querySelector('input[name=gpr-style][value="'+f.style+'"]');if(r)r.checked=true}
-  // sumber materi diisi setelah daftar materi dibuat oleh gprPair(); simpan sementara
+  
   GPR._mat=f.mat||'';setTimeout(()=>{const m=$('#gpr-mat');if(m&&GPR._mat&&[...m.options].some(o=>o.value===GPR._mat)){m.value=GPR._mat;gprMatUbah()}},0)}
-function gprSimpan(){if(!$('#gpr-form'))return;const j=GPR.tab;if(j!=='media'&&j!=='game')return;GPR.form[j]=gprBaca();
+function gprSimpan(){if(!$('#gpr-form'))return;const j=GPR.tab;if(!GPR_LABEL[j])return;GPR.form[j]=gprBaca();
   const ta=$('#gpr-out');if(ta&&GPR.hasil[j])GPR.hasil[j].prompt=ta.value}
 
-/* ---------- Ambil teks dari PDF ---------- */
+ 
 async function gprPdf(modeArab){
   if(GPR.busy||!gprOk())return;
   const inp=$('#gpr-pdf'),f=inp&&inp.files&&inp.files[0];
@@ -3551,42 +3624,50 @@ async function gprPdf(modeArab){
   GPR.busy=true;const btn=$('#gpr-pdfbtn');if(btn){btn.disabled=true;btn.textContent='Membaca PDF... (bisa sampai 1 menit)'}
   try{
     const b64=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=()=>no(new Error('Berkas tidak bisa dibaca'));r.readAsDataURL(f)});
-    const r=await api('prompt.pdf',{file:{data:b64,name:f.name},arab:modeArab||'otomatis'});
+    const r=await api('prompt.pdf',{file:{data:b64,name:f.name},arab:modeArab||'otomatis',bagian:($('#gpr-bag')&&!$('#gpr-bag').checked)?'semua':'otomatis'});
     const t2=$('#gpr-materi');if(t2){t2.value=r.teks;GPR._pdfTeks=r.teks;gprHitung()}
     const tp=$('#gpr-topik');if(tp&&!tp.value.trim())tp.value=f.name.replace(/\.pdf$/i,'').replace(/[_\-]+/g,' ').trim().slice(0,120);
     const n=$('#gpr-pdfnote');
-    if(n)n.textContent=r.potong?'Teks PDF berisi '+r.total.toLocaleString('id-ID')+' karakter; yang diambil hanya '+r.batas.toLocaleString('id-ID')+' karakter pertama. Hapus bagian yang tidak perlu, atau unggah PDF per bab.':'Teks PDF berhasil diambil ('+r.total.toLocaleString('id-ID')+' karakter). Periksa dan sunting bila perlu.';
-    toast(r.potong?'Teks PDF dipotong sesuai batas. Periksa hasilnya.':'Teks PDF berhasil diambil');
+    let msg=r.bagian==='bahan-ajar'
+      ?'Bagian "Bahan Ajar Ringkas" diambil otomatis ('+r.total.toLocaleString('id-ID')+' karakter dari '+r.totalPdf.toLocaleString('id-ID')+' karakter di PDF).'+(r.potong?' Teks dipotong sesuai batas.':'')+' Periksa dan sunting bila perlu.'
+      :(r.potong?'Teks PDF berisi '+r.total.toLocaleString('id-ID')+' karakter; yang diambil hanya '+r.batas.toLocaleString('id-ID')+' karakter pertama. Hapus bagian yang tidak perlu, atau unggah PDF per bab.':'Teks PDF berhasil diambil ('+r.total.toLocaleString('id-ID')+' karakter). Periksa dan sunting bila perlu.');
+    if(r.peringatan&&r.peringatan.length)msg+=' '+r.peringatan.join(' ');
+    if(n)n.textContent=msg;
+    toast(r.bagian==='bahan-ajar'?'Bagian Bahan Ajar Ringkas diambil dari PDF':(r.potong?'Teks PDF dipotong sesuai batas. Periksa hasilnya.':'Teks PDF berhasil diambil'));
     GPR._arabTerbalik=!!(r.arab&&r.arab.terbalik);const ab=$('#gpr-arabbtn');if(ab)ab.style.display=r.arab&&r.arab.ada?'':'none';
     if(r.arab&&r.arab.ada&&n){const d=r.arab.diperbaiki||[];n.textContent+=' '+(d.length?'Teks Arab diperbaiki otomatis ('+d.map(x=>x==='bentuk-huruf'?'huruf disambungkan':'urutan dibalik').join(', ')+').':'Teks Arab terdeteksi.')+' Jika huruf masih tampak salah, klik "Teks Arab terlihat salah?" (PDF dibaca ulang dengan urutan sebaliknya).'}
   }catch(e){fail(e)}
   finally{GPR.busy=false;const b2=$('#gpr-pdfbtn');if(b2){b2.disabled=false;b2.textContent='Ambil teks dari PDF'}}
 }
 
-/* ---------- Membuat prompt ---------- */
+ 
 async function gprBuat(){
   if(GPR.busy||!gprOk())return;
   const j=GPR.tab,f=gprBaca(),[k,m]=String(f.pair||'').split('|');
   if(!k||!m){toast('Pilih mata pelajaran dan kelas',1);return}
-  if(!f.mat&&f.materi.trim().length<80){toast('Materi terlalu pendek. Pilih materi atau tempel teks yang lebih lengkap.',1);return}
-  if(!f.mat&&!f.topik.trim()){toast('Isi topik terlebih dahulu',1);return}
+  if(j==='rpp'){if(!f.topik.trim()){toast('Isi topik terlebih dahulu',1);return}}   
+  else{
+    if(!f.mat&&f.materi.trim().length<80){toast('Materi terlalu pendek. Pilih materi atau tempel teks yang lebih lengkap.',1);return}
+    if(!f.mat&&!f.topik.trim()){toast('Isi topik terlebih dahulu',1);return}
+  }
   const p={jenis:j,Kelas_ID:k,Mapel_ID:m,Materi_ID:f.mat,materi:f.mat?'':f.materi,topik:f.topik,style:f.style,bahasa:f.bahasa,aiTujuan:f.aiTujuan,request:f.request};
   if(j==='media'){p.jenisMedia=f.jenisMedia;p.interaktivitas=f.interaktivitas}
-  else{p.genre=f.genre;p.mekanik=f.mekanik;p.temaVisual=f.temaVisual;p.jumlah=f.jumlah}
+  else if(j==='game'){p.genre=f.genre;p.mekanik=f.mekanik;p.temaVisual=f.temaVisual;p.jumlah=f.jumlah}
+  else{delete p.style;Object.assign(p,{sekolah:f.sekolah,semester:f.semester,cp:f.cp,pertemuan:f.pertemuan,durasi:f.durasi,dpl:f.dpl,praktik:f.praktik,prinsip:f.prinsip,opsional:f.opsional,detail:f.detail,lampiran:f.lampiran})}
   GPR.busy=true;const btn=$('#gpr-btn');if(btn){btn.disabled=true;btn.textContent='Menyusun prompt...'}
-  try{const r=await api('prompt.buat',p);r.fav=false;GPR.hasil[j]=r;GPR.form[j]=f;if(GPR.tab===j&&$('#gpr-hasil'))gprHasil(r,'#gpr-hasil',{ulang:true})}
+  try{const r=await api('prompt.buat',p);r.fav=false;GPR.hasil[j]=r;GPR.form[j]=f;if(GPR.tab===j&&$('#gpr-hasil'))gprHasil(r,'#gpr-hasil',{ulang:true,jenis:j})}
   catch(e){fail(e)}
   finally{GPR.busy=false;const b2=$('#gpr-btn');if(b2){b2.disabled=false;b2.textContent='Buat prompt'}}
 }
 
-/* kotak hasil: dipakai di tab Media/Game dan di Riwayat. r = {prompt, riwayatId, peringatan[], panjang, jenjang, fav} */
+ 
 function gprHasil(r,target,o){o=o||{};const t=$(target);if(!t)return;
   const w=(r.peringatan||[]).length?`<div class="gpr-warn"><b>Perhatian</b><ul>${r.peringatan.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:'';
   t.innerHTML=`<div class="gpr-sec" id="gpr-res"><h3>Prompt Anda</h3>${w}
     <label for="gpr-out">Anda boleh menyunting teks ini sebelum disalin</label><textarea id="gpr-out" spellcheck="false"></textarea>
     <p class="gpr-hint" id="gpr-info"></p>
     <div class="gpr-act"><button class="btn" onclick="gprSalin()">Salin prompt</button>${o.ulang?'<button class="btn ghost" onclick="gprBuat()">Buat ulang</button>':''}<button class="btn ghost" id="gpr-fav" onclick="gprFav('${esc(r.riwayatId)}')">${r.fav?'Favorit (hapus)':'Simpan favorit'}</button>${o.tutup?'<button class="btn ghost" onclick="gprTutup()">Tutup</button>':''}</div>
-    <p class="gpr-hint">Langkah berikutnya: tempel prompt ke Claude, ChatGPT, atau Gemini. Simpan kode HTML yang dihasilkan sebagai file berakhiran .html, lalu buka di browser.</p></div>`;
+    ${o.jenis==='rpp'?'<p class="gpr-hint">Langkah berikutnya: tempel prompt ke Claude, ChatGPT, atau Gemini. Salin hasilnya ke Word atau Google Docs dan simpan sebagai PDF (Unduh atau Cetak &gt; PDF). PDF itu bisa diunggah di tab Media atau Game untuk dijadikan bahan.</p>':'<p class="gpr-hint">Langkah berikutnya: tempel prompt ke Claude, ChatGPT, atau Gemini. Simpan kode HTML yang dihasilkan sebagai file berakhiran .html, lalu buka di browser.</p>'}</div>`;
   const ta=$('#gpr-out');ta.value=r.prompt||'';
   $('#gpr-info').textContent=(r.jenjang?'Jenjang: '+r.jenjang+'. ':'')+ta.value.length.toLocaleString('id-ID')+' karakter.';
   if(!o.noscroll){try{$('#gpr-res').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}}
@@ -3601,35 +3682,35 @@ async function gprSalin(){
 }
 async function gprFav(id){
   try{const r=await api('prompt.favorit',{id});const b=$('#gpr-fav');if(b)b.textContent=r.Favorit?'Favorit (hapus)':'Simpan favorit';
-    ['media','game'].forEach(k=>{if(GPR.hasil[k]&&GPR.hasil[k].riwayatId===id)GPR.hasil[k].fav=r.Favorit});
+    Object.keys(GPR_LABEL).forEach(k=>{if(GPR.hasil[k]&&GPR.hasil[k].riwayatId===id)GPR.hasil[k].fav=r.Favorit});
     toast(r.Favorit?'Ditandai favorit':'Favorit dihapus');if(GPR.tab==='riwayat')gprRiwayat()}
   catch(e){fail(e)}
 }
 
-/* ---------- Riwayat ---------- */
+ 
 async function gprRiwayat(){
   const b=$('#gpr-b');if(!b)return;
   b.innerHTML='<div id="gpr-rw"><div class="skel"></div></div><div id="gpr-buka"></div>';
   try{const l=await api('prompt.riwayat');const e=$('#gpr-rw');if(!e||GPR.tab!=='riwayat')return;
     if(!l.length){e.innerHTML='<div class="empty">Belum ada riwayat. Prompt yang Anda buat akan tersimpan di sini.</div>';return}
     e.innerHTML='<div class="tw"><table><tr><th>Tanggal</th><th>Jenis</th><th>Mapel / Kelas</th><th>Style</th><th></th></tr>'+l.map(r=>
-      `<tr><td>${esc(r.Tanggal_Teks)}</td><td><span class="gpr-tag">${r.Jenis==='game'?'Game':'Media'}</span>${r.Favorit?' <span class="gpr-tag" title="Favorit">Favorit</span>':''}</td><td>${esc(r.Mapel)}<br><small>${esc(r.Kelas)}</small></td><td>${esc(r.Style)}</td>
+      `<tr><td>${esc(r.Tanggal_Teks)}</td><td><span class="gpr-tag">${esc(GPR_LABEL[r.Jenis]||r.Jenis)}</span>${r.Favorit?' <span class="gpr-tag" title="Favorit">Favorit</span>':''}</td><td>${esc(r.Mapel)}<br><small>${esc(r.Kelas)}</small></td><td>${esc(r.Style)}</td>
        <td><div class="row"><button class="btn sm" onclick="gprBuka('${esc(r.Riwayat_ID)}')">Buka</button><button class="btn ghost sm" onclick="gprFav('${esc(r.Riwayat_ID)}')">${r.Favorit?'Batal favorit':'Favorit'}</button><button class="btn ghost sm" onclick="gprHapus('${esc(r.Riwayat_ID)}')">Hapus</button></div></td></tr>`).join('')+'</table></div>'}
   catch(e){const x=$('#gpr-rw');if(x)x.innerHTML='';fail(e)}
 }
 async function gprBuka(id){
-  try{const r=await api('prompt.ambil',{id});if(!$('#gpr-buka'))return;gprHasil({prompt:r.Prompt,riwayatId:r.Riwayat_ID,peringatan:[],fav:r.Favorit},'#gpr-buka',{tutup:true})}
+  try{const r=await api('prompt.ambil',{id});if(!$('#gpr-buka'))return;gprHasil({prompt:r.Prompt,riwayatId:r.Riwayat_ID,peringatan:[],fav:r.Favorit},'#gpr-buka',{tutup:true,jenis:r.Jenis})}
   catch(e){fail(e)}
 }
 function gprTutup(){const e=$('#gpr-buka');if(e)e.innerHTML=''}
 async function gprHapus(id){
   if(!await ask('Prompt ini akan dihapus dari riwayat Anda.',{title:'Hapus riwayat',ok:'Hapus',bad:true}))return;
-  try{await api('prompt.hapus',{id});['media','game'].forEach(k=>{if(GPR.hasil[k]&&GPR.hasil[k].riwayatId===id)GPR.hasil[k]=null});toast('Riwayat dihapus');gprRiwayat()}
+  try{await api('prompt.hapus',{id});Object.keys(GPR_LABEL).forEach(k=>{if(GPR.hasil[k]&&GPR.hasil[k].riwayatId===id)GPR.hasil[k]=null});toast('Riwayat dihapus');gprRiwayat()}
   catch(e){fail(e)}
 }
 
-/* dipanggil Index.html saat keluar/ganti akun: kosongkan semua data di memori */
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR.tab='media';GPR.opsi=null;GPR.form={media:null,game:null};GPR.hasil={media:null,game:null};GPR.sentuh={style:false,jumlah:false};GPR.busy=false;GPR._mat='';GPR._pdfTeks='';GPR._arabTerbalik=false});
+ 
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR.tab='media';GPR.opsi=null;GPR.form={media:null,game:null,rpp:null};GPR.hasil={media:null,game:null,rpp:null};GPR.sentuh={style:false,jumlah:false,durasi:false};GPR.busy=false;GPR._mat='';GPR._pdfTeks='';GPR._arabTerbalik=false});
 Object.assign(VIEWS,{'g-prompt':vGPrompt});
 </script>
 <style>
@@ -4632,5 +4713,150 @@ document.addEventListener('selectionchange',()=>{const a=document.activeElement;
 #dmain .wr-list::-webkit-scrollbar-thumb,#dmain .mr-list::-webkit-scrollbar-thumb{background:#b5cbd2;border-radius:99px}
 @media(max-width:700px){:root{--tw-maks:clamp(300px,calc(100vh - 150px),700px)}}
 </style>
+<style id="alu-css">
+/* ===== Alumni per negara (halaman depan) ===== */
+.alu{margin:34px 0 8px;clear:both}
+.alu h4{margin:0 0 6px;font-size:1.3rem;color:#0a2540}
+.alu .alsub{margin:0;color:#4d6677;max-width:70ch;line-height:1.6}
+.alhead{display:flex;gap:16px;justify-content:space-between;align-items:flex-end;flex-wrap:wrap}
+.alnav{display:flex;gap:8px;flex:none}
+.alnav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line,#d5e4e8);background:#fff;color:#0a2540;font-size:22px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.alnav button:hover:not(:disabled){background:#eaf5f6}.alnav button:disabled{opacity:.35;cursor:default}
+.alnav[hidden]{display:none}
+.alugrid{display:flex;gap:16px;margin-top:16px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-left:2px;padding:2px 2px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.alugrid .alc{flex:0 0 min(290px,84%);scroll-snap-align:start}
+.alc{background:#fff;border:1px solid var(--line,#d5e4e8);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.alh{display:flex;gap:12px;align-items:center;min-width:0}
+.ala{flex:none;width:64px;height:64px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#0a8f9d,#1b6fa8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;letter-spacing:.02em}
+.ala img{width:100%;height:100%;object-fit:cover;display:block}
+.alt{min-width:0}
+.alt b{display:block;color:#0a2540;overflow-wrap:anywhere;line-height:1.25}
+.alt small{display:block;color:#5d7686;line-height:1.4;overflow-wrap:anywhere}
+.alc p{margin:0;color:#4d6677;font-size:.95em;line-height:1.55;overflow-wrap:anywhere}
+.alc .alk{margin-top:auto}
+.alth{display:inline-block;padding:2px 10px;border-radius:99px;background:#eaf5f6;color:#0a6f7a;font-size:12px;font-weight:700;width:max-content}
+/* admin */
+#aluAdm .ath{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#dfeaec;display:block}
+#aluAdm .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#aluAdm td small{color:#5d7686}
+.alimp textarea{min-height:170px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.alimp .alhasil{margin-top:12px;padding:12px 14px;border-radius:12px;background:#eef7f7;border:1px solid #cfe0e3;line-height:1.55}
+.alimp .alhasil.bad{background:#fff2f0;border-color:#f1c4bd}
+.alimp .alhasil ul{margin:6px 0 0;padding-left:1.2em}
+.alfoto{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.alfoto img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#dfeaec}
+</style>
+<script id="alu-js">
+/* ---------- tampilan publik ---------- */
+let ALU=[];const ALS={semua:{}};
+const aluInisial=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x.charAt(0).toUpperCase()).join('')||'?';
+function aluKartu(a){const okU=/^https:\/\//i.test(a.f||'');
+  return `<article class="alc"><div class="alh"><div class="ala">${okU?`<img src="${esc(a.f)}" alt="Foto ${esc(a.a)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<span aria-hidden="true">${esc(aluInisial(a.a))}</span></div>
+  <div class="alt"><b>${esc(a.a)}</b>${a.k?`<small>${esc(a.k)}</small>`:''}${a.j?`<small>${esc(a.j)}</small>`:''}</div></div>
+  ${a.t?`<span class="alth">Masuk ${esc(a.t)}</span>`:''}${a.p?`<p>${esc(a.p)}</p>`:''}
+  ${a.h?`<div class="alk"><button class="btn sm" type="button" onclick="aluHubungi('${esc(a.i)}',this)">Hubungi</button></div>`:''}</article>`}
+function aluDraw(){const b=document.getElementById('negBox');if(!b)return;const old=document.getElementById('aluBox');if(old)old.remove();
+  if(typeof NEG==='undefined'||!NEG.length)return;const n=NEG[NG];if(!n)return;
+  const l=ALU.filter(a=>a.n===n.n);if(!l.length)return;
+  const s=document.createElement('section');s.className='alu';s.id='aluBox';
+  s.innerHTML=`<div class="alhead"><div><h4>Alumni yang kuliah di ${esc(n.n)}</h4><p class="alsub">Kenali kakak alumni yang sudah kuliah di sini. Geser ke samping untuk melihat semuanya, lalu tekan <b>Hubungi</b> untuk bertanya soal kampus, beasiswa, dan kehidupan di sana. Mohon sopan dan jelaskan keperluan Anda.</p></div>
+  <div class="alnav" id="alnav" hidden><button type="button" id="alprev" aria-label="Geser ke kiri" onclick="aluGeser(-1)">&#8249;</button><button type="button" id="alnext" aria-label="Geser ke kanan" onclick="aluGeser(1)">&#8250;</button></div></div>
+  <div class="alugrid" id="alugrid" tabindex="0" role="region" aria-label="Daftar alumni, geser ke samping">${l.map(aluKartu).join('')}</div>`;
+  const note=b.querySelector('p.note');if(note)b.insertBefore(s,note);else b.appendChild(s);
+  const g=document.getElementById('alugrid');g.addEventListener('scroll',aluNav,{passive:true});aluNav();setTimeout(aluNav,350)}
+function aluNav(){const g=document.getElementById('alugrid'),nv=document.getElementById('alnav');if(!g||!nv)return;
+  const lebih=g.scrollWidth>g.clientWidth+4;nv.hidden=!lebih;if(!lebih)return;
+  document.getElementById('alprev').disabled=g.scrollLeft<=4;document.getElementById('alnext').disabled=g.scrollLeft+g.clientWidth>=g.scrollWidth-4}
+function aluGeser(d){const g=document.getElementById('alugrid');if(!g)return;const c=g.querySelector('.alc'),w=c?c.getBoundingClientRect().width+16:300;g.scrollBy({left:d*w*(g.clientWidth>700?2:1),behavior:'smooth'})}
+window.addEventListener('resize',()=>{try{aluNav()}catch(e){}});
+async function aluHubungi(id,btn){const lama=btn.textContent;btn.disabled=true;btn.textContent='Membuka...';
+  let w=null;try{w=window.open('about:blank','_blank');if(w)w.opener=null}catch(e){}
+  try{const k=await api('alumni.kontak',{id});let url='';
+    if(k.tipe==='wa')url='https://wa.me/'+String(k.nilai).replace(/\D/g,'')+'?text='+encodeURIComponent('Halo Kak '+k.nama+', saya dari '+((typeof BOOT!=='undefined'&&BOOT.school)||'sekolah')+'. Boleh bertanya tentang kuliah di sana?');
+    else if(k.tipe==='email')url='mailto:'+k.nilai+'?subject='+encodeURIComponent('Bertanya tentang kuliah');
+    else if(k.tipe==='url'&&/^https:\/\//i.test(k.nilai))url=k.nilai;
+    if(!url)throw new Error('Kontak tidak tersedia');
+    if(k.tipe==='email'){if(w)w.close();location.href=url}
+    else if(w)w.location.href=url;
+    else btn.outerHTML=`<a class="btn sm" href="${esc(url)}" target="_blank" rel="noopener">Buka kontak</a>`}
+  catch(e){if(w)w.close();fail(e)}
+  if(btn.isConnected){btn.disabled=false;btn.textContent=lama}}
+if(typeof negRender==='function'){const o=negRender;negRender=function(){const r=o.apply(this,arguments);try{aluDraw()}catch(e){}return r}}
+function aluLoad(){let c=null;try{c=JSON.parse(localStorage.getItem('alu'))}catch(e){}
+  if(Array.isArray(c)){ALU=c;try{if(typeof NEG!=='undefined'&&NEG.length)negRender()}catch(e){}}
+  api('public.alumni').then(l=>{l=Array.isArray(l)?l:[];const j=JSON.stringify(l);if(j===JSON.stringify(ALU))return;ALU=l;try{localStorage.setItem('alu',j)}catch(e){}try{if(typeof NEG!=='undefined'&&NEG.length)negRender()}catch(e){}}).catch(()=>{})}
+aluLoad();
+
+/* ---------- admin: di dalam Kampus Tujuan > (pilih negara) ---------- */
+if(typeof kDrawKampus==='function'){const o=kDrawKampus;kDrawKampus=function(n,d){const r=o.apply(this,arguments);try{aluAdmin(n)}catch(e){console.warn(e)}return r}}
+function aluAdmin(n){const kt=document.getElementById('kt');if(!kt)return;const box=document.createElement('div');box.id='aluAdm';box.style.marginTop='30px';
+  box.innerHTML=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">Alumni yang kuliah di ${esc(n.Nama_Negara)}</h3><span class="row"><button class="btn ghost" type="button" onclick="aluImpor('${esc(n.Negara_ID)}')">Impor CSV</button><button class="btn" type="button" onclick="formAlumni('','${esc(n.Negara_ID)}')">Tambah alumni</button></span></div>
+  <p><small>Kartu alumni tampil di halaman depan di bawah kampus negara ini. Kontak tidak tertulis di halaman; hanya terbuka saat pengunjung menekan "Hubungi".</small></p><div id="aluList"><div class="skel"></div></div>`;
+  kt.appendChild(box);aluMuat(n.Negara_ID)}
+async function aluMuat(nid){try{const l=await api('alumni.list',{negara:nid});MEM.alumni=MEM.alumni||{};MEM.alumni[nid]=l;aluTabel(nid)}
+  catch(e){const b=document.getElementById('aluList');if(b)b.innerHTML=`<div class="empty">Fitur alumni belum aktif (${esc(e.message)}). Pasang berkas Alumni.gs dan Rich.gs terbaru, lalu deploy versi baru.</div>`}}
+function aluTabel(nid){const b=document.getElementById('aluList');if(!b)return;const l=(MEM.alumni||{})[nid]||[];
+  if(!l.length){b.innerHTML='<div class="empty">Belum ada alumni untuk negara ini. Klik "Tambah alumni" atau "Impor CSV".</div>';return}
+  b.innerHTML=`<div class="tw"><table><tr><th></th><th>Nama</th><th>Kampus / jurusan</th><th>Tahun</th><th>Kontak</th><th>Status</th><th></th></tr>`+l.map(a=>`<tr><td>${/^https:\/\//.test(a.Foto_URL||'')?`<img class="ath" src="${esc(a.Foto_URL)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:'<span class="ath"></span>'}</td>
+  <td><b>${esc(a.Nama)}</b>${a.Profil?`<br><small>${esc(String(a.Profil).slice(0,70))}${String(a.Profil).length>70?'...':''}</small>`:''}</td><td>${esc(a.Kampus)}<br><small>${esc(a.Jurusan)}</small></td><td>${esc(a.Tahun)}</td><td><small>${esc(a.Kontak||'-')}</small></td><td>${a.Status===false?'Disembunyikan':'Tampil'}</td>
+  <td class="row"><button class="btn ghost sm" type="button" onclick="formAlumni('${esc(a.Alumni_ID)}','${esc(nid)}')">Edit</button><button class="btn bad sm" type="button" onclick="delAlumni('${esc(a.Alumni_ID)}','${esc(nid)}')">Hapus</button></td></tr>`).join('')+'</table></div>'}
+function aluResize(file,max){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{URL.revokeObjectURL(u);const k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));
+    const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.85).split(',')[1])};
+  im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('Berkas foto tidak bisa dibuka. Pakai JPG atau PNG.'))};im.src=u})}
+function formAlumni(id,nid){const r=id?(((MEM.alumni||{})[nid])||[]).find(x=>x.Alumni_ID===id)||{}:{};
+  const ks=((MEM.kampus&&MEM.kampus.kampus)||[]).filter(k=>k.Negara_ID===nid),cnt=(((MEM.alumni||{})[nid])||[]).length;
+  const n=((MEM.kampus&&MEM.kampus.negara)||[]).find(x=>x.Negara_ID===nid);
+  const kIn2=(i,l,v,ph,t,extra)=>`<label for="${i}">${l}</label><input id="${i}" type="${t||'text'}" value="${esc(v)}" placeholder="${esc(ph||'')}" ${extra||''}>`;
+  M(`<h2>${id?'Edit':'Tambah'} alumni</h2><div style="max-width:560px"><p><small>Negara: <b>${esc(n?n.Nama_Negara:'')}</b></small></p>
+  ${kIn2('al_n','Nama',r.Nama,'contoh: Andi Pratama','text','maxlength="80"')}
+  <label for="al_k">Kampus</label><input id="al_k" list="al_kl" value="${esc(r.Kampus)}" placeholder="contoh: Istanbul Technical University" maxlength="120"><datalist id="al_kl">${ks.map(k=>`<option value="${esc(k.Nama_Kampus)}">`).join('')}</datalist>
+  ${kIn2('al_j','Jurusan',r.Jurusan,'contoh: Teknik Informatika','text','maxlength="120"')}${kIn2('al_t','Tahun masuk',r.Tahun,'contoh: 2021','text','maxlength="4" inputmode="numeric"')}
+  <label for="al_p">Profil singkat (maks 400 huruf)</label><textarea id="al_p" maxlength="400" style="min-height:90px">${esc(r.Profil)}</textarea>
+  ${kIn2('al_c','Kontak yang bisa dihubungi',r.Kontak,'WhatsApp: 0812... atau +90..., email, atau tautan https','text','maxlength="300"')}
+  <small>Tidak tampil di halaman. Hanya terbuka saat pengunjung menekan "Hubungi". Pastikan alumni sudah setuju.</small>
+  <label>Foto</label><div class="alfoto"><img id="al_pv" alt="" ${/^https:\/\//.test(r.Foto_URL||'')?`src="${esc(r.Foto_URL)}"`:'style="visibility:hidden"'}><input id="al_f" type="file" accept="image/jpeg,image/png,image/webp"></div>
+  ${kIn2('al_g','Atau alamat foto (https://...)',r.Foto_URL,'kosongkan bila memakai unggahan','text','maxlength="500"')}
+  ${kIn2('al_u','Urutan tampil (angka kecil lebih dulu)',r.Urutan===undefined?cnt+1:r.Urutan,'','number')}<label>Status</label>${kSel('al_s',r.Status)}
+  <p class="row"><button class="btn" id="alsv" type="button" onclick="saveAlumni('${esc(id||'')}','${esc(nid)}')">Simpan</button><button class="btn ghost" type="button" onclick="vKampus()">Batal</button></p></div>`);
+  const f=document.getElementById('al_f');if(f)f.onchange=()=>{const x=f.files[0];if(x){const p=document.getElementById('al_pv');p.src=URL.createObjectURL(x);p.style.visibility='visible'}}}
+async function saveAlumni(id,nid){const b=$('#alsv');b.disabled=true;b.textContent='Menyimpan...';
+  try{let foto=kV('al_g').trim();const f=$('#al_f').files[0];
+    if(f){b.textContent='Mengunggah foto...';const d=await aluResize(f,600);const r=await api('alumni.foto',{data:d});foto=r.url}
+    await api('alumni.save',{id,Negara_ID:nid,Nama:kV('al_n'),Kampus:kV('al_k'),Jurusan:kV('al_j'),Tahun:kV('al_t'),Profil:kV('al_p'),Kontak:kV('al_c'),Foto_URL:foto,Urutan:kV('al_u'),Status:kV('al_s')==='1'});
+    toast('Alumni tersimpan');aluSegar();vKampus()}
+  catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
+async function delAlumni(id,nid){const a=(((MEM.alumni||{})[nid])||[]).find(x=>x.Alumni_ID===id);if(!await ask('Hapus alumni "'+(a?a.Nama:'')+'"?'))return;
+  try{await api('alumni.delete',{id});toast('Alumni dihapus');aluSegar();aluMuat(nid)}catch(e){fail(e)}}
+function aluSegar(){api('public.alumni').then(l=>{ALU=Array.isArray(l)?l:[];try{localStorage.setItem('alu',JSON.stringify(ALU))}catch(e){}}).catch(()=>{})}
+/* ---------- impor CSV ---------- */
+const AL_CONTOH=['nama,kampus,jurusan,tahun,profil,kontak,foto,urutan,status',
+ '"Andi Pratama","Istanbul Technical University","Teknik Informatika",2021,"Alumni angkatan 2020. Aktif di PPI Turki.",081234567890,,1,aktif',
+ '"Siti Nurhaliza","Middle East Technical University","Kimia",2022,"Suka riset laboratorium.",siti@contoh.com,,2,aktif'].join('\r\n');
+function aluContoh(){const bom=String.fromCharCode(65279),bl=new Blob([bom+AL_CONTOH+'\r\n'],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(bl);a.download='contoh_alumni.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function aluImpor(nid){const n=((MEM.kampus&&MEM.kampus.negara)||[]).find(x=>x.Negara_ID===nid);
+  M(`<div class="alimp"><h2>Impor alumni dari CSV</h2><div style="max-width:760px"><p>Negara tujuan: <b>${esc(n?n.Nama_Negara:'')}</b>. Baris tanpa kolom "negara" masuk ke negara ini.</p>
+  <ol><li>Unduh contoh, isi di Excel atau Google Sheets, lalu simpan sebagai <b>CSV</b>.</li><li>Pilih berkas CSV di bawah (atau tempel isinya).</li><li>Klik <b>Periksa dulu</b>. Data baru disimpan setelah Anda klik <b>Simpan</b>.</li></ol>
+  <p><small>Kolom: nama (wajib), kampus, jurusan, tahun, profil, kontak, foto (alamat https), urutan, status (aktif/tidak). Foto manual diunggah lewat tombol Edit pada alumni. Maksimal 500 baris.</small></p>
+  <p class="row"><button class="btn ghost" type="button" onclick="aluContoh()">Unduh contoh CSV</button><input id="alc_f" type="file" accept=".csv,.txt,text/csv"></p>
+  <textarea id="alc_t" placeholder="Atau tempel isi CSV di sini"></textarea>
+  <p class="row"><button class="btn" id="alc_p" type="button" onclick="aluPeriksa('${esc(nid)}',false)">Periksa dulu</button><button class="btn" id="alc_s" type="button" style="display:none" onclick="aluPeriksa('${esc(nid)}',true)">Simpan</button><button class="btn ghost" type="button" onclick="vKampus()">Batal</button></p>
+  <div id="alc_h"></div></div></div>`);
+  const f=document.getElementById('alc_f');f.onchange=()=>{const x=f.files[0];if(!x)return;const r=new FileReader();r.onload=()=>{document.getElementById('alc_t').value=String(r.result||'');document.getElementById('alc_s').style.display='none';document.getElementById('alc_h').innerHTML=''};r.readAsText(x,'UTF-8')};
+  document.getElementById('alc_t').oninput=()=>{document.getElementById('alc_s').style.display='none'}}
+async function aluPeriksa(nid,simpan){const t=$('#alc_t').value,h=$('#alc_h'),p=$('#alc_p'),s=$('#alc_s');
+  if(!t.trim()){toast('Pilih berkas CSV atau tempel isinya dulu',1);return}
+  p.disabled=true;s.disabled=true;
+  try{const r=await api('alumni.impor',{negara:nid,csv:t,simpan});
+    const ul=r.galat.length?`<ul>${r.galat.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${r.ditolak>r.galat.length?`<small>dan ${r.ditolak-r.galat.length} lagi.</small>`:''}`:'';
+    h.className='alhasil'+(r.ditolak?' bad':'');
+    if(simpan){h.innerHTML=`<b>Selesai.</b> ${r.siap} alumni disimpan. ${r.dilewati} dilewati (sudah ada). ${r.ditolak} ditolak.${ul}`;aluSegar();toast(r.siap+' alumni disimpan');s.style.display='none';
+      setTimeout(()=>{if(document.getElementById('alc_h'))vKampus()},r.ditolak?4000:900)}
+    else{h.innerHTML=`<b>Hasil pemeriksaan:</b> siap disimpan <b>${r.siap}</b>, dilewati karena sudah ada <b>${r.dilewati}</b>, ditolak <b>${r.ditolak}</b>.${r.contoh.length?`<br><small>Contoh: ${esc(r.contoh.join(', '))}</small>`:''}${ul}${r.ditolak?'<br><small>Baris yang ditolak tidak ikut disimpan. Perbaiki CSV lalu periksa lagi, atau simpan yang sudah benar.</small>':''}`;
+      s.style.display=r.siap?'':'none';s.textContent='Simpan '+r.siap+' alumni'}}
+  catch(e){h.className='alhasil bad';h.innerHTML=esc(e.message)}
+  p.disabled=false;s.disabled=false}
+</script>
 </body>
 </html>
