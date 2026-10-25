@@ -5009,6 +5009,13 @@ async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?')
   });
 })();
 </script>
+<style id="sup-css">
+.supbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 14px;padding:10px 14px;background:#fff;border:1px solid var(--line,#d5e4e8);border-radius:14px}
+.supbar label{margin:0;font-weight:700;font-size:.9rem;color:#0a2540}
+.supbar select{width:auto;min-width:200px;max-width:100%;margin:0;flex:0 1 320px}
+.supbar a{margin-left:auto;font-size:.88rem;color:var(--teal,#0a8f9d);text-decoration:underline;text-underline-offset:2px}
+@media(max-width:600px){.supbar select{flex:1 1 100%}.supbar a{margin-left:0}}
+</style>
 <script>
 
 
@@ -5045,19 +5052,25 @@ async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?')
     MENU.Admin = u.super ? ADMIN_BASE.concat([['sa-cabang', 'Cabang']])
       : (BOOT.superOn ? ADMIN_BASE.filter(function (x) { return GLOBAL_MENU.indexOf(x[0]) < 0; }) : ADMIN_BASE);
     _od(m);
-    if (u.super) supBar();
+    if (u.super) supBar(m);
   };
   (window.LOGOUT_HOOKS = window.LOGOUT_HOOKS || []).push(function () { CABS = null; });
 
-  async function supBar() {
+   
+  async function supBar(m) {
+    var cur = m || (typeof DS === 'object' && DS && DS.cur) || '';
+    var side = $('#side'); if (side) { var lama = side.querySelector('#supbar'); if (lama) lama.remove(); }   
+    var old = $('#supbar'); if (old) old.remove();
+    if (cur && cur !== 'ringkasan') return;
     try { if (!CABS) CABS = await api('super.cabang.list'); } catch (e) { return; }
+    var dm = $('#dmain'); if (!dm || !$('#rs')) return;                                    
+    old = $('#supbar'); if (old) old.remove();
     var aktif = (S.user && S.user.cab) || CABS.aktif;
     var opt = CABS.cabang.filter(function (c) { return c.status; }).map(function (c) {
       return '<option value="' + esc(c.kode) + '"' + (c.kode === aktif ? ' selected' : '') + '>' + esc(c.nama) + '</option>'; }).join('');
-    var side = $('#side'); if (!side) return;
-    var old = $('#supbar'); if (old) old.remove();
-    side.insertAdjacentHTML('afterbegin', '<div id="supbar" style="padding:8px 12px"><small>Cabang aktif (Superadmin)</small>' +
-      '<select onchange="superPilih(this.value)" style="width:100%" aria-label="Cabang aktif">' + opt + '</select></div>');
+    dm.insertAdjacentHTML('afterbegin', '<div id="supbar" class="supbar"><label for="supsel">Cabang aktif (Superadmin)</label>' +
+      '<select id="supsel" onchange="superPilih(this.value)" aria-label="Cabang aktif">' + opt + '</select>' +
+      '<a href="#/dashboard/sa-cabang">Kelola cabang</a></div>');
   }
 
   window.superPilih = async function (kode) {
