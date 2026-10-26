@@ -5261,6 +5261,30 @@ async function mnuSimpan(){const b=document.getElementById('mnu_sv');b.disabled=
   b.disabled=false;b.textContent='Simpan urutan'}
 async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?'))return;
   try{await api('menu.simpan',{});mnuSimpanLokal({});mnuTerapkan();toast('Urutan menu dikembalikan');mnuMuatUlang()}catch(e){fail(e)}}
+
+/* ===== Ikon menu Dashboard: Urutan Menu, Surat, Career Bank =====
+   Memakai: DS_P, DS_K, dsGroups (TemaDashboard). Include SETELAH TemaDashboard dan UrutMenuUI.
+   Mengenali menu lewat KUNCI atau LABEL, jadi tidak perlu tahu nama kunci aslinya. Hanya ikon yang berubah; letak menu tidak diubah.
+   Mau menambah ikon lain? Tambahkan satu baris di IKON_BARU (nama ikon + gambar) dan satu baris di COCOK (menu mana yang memakainya). */
+(function(){
+  if(typeof DS_P!=='object'||typeof DS_K!=='object'||typeof dsGroups!=='function')return;
+  const IKON_BARU={
+    urutmenu:'<path d="M7 20V4"/><path d="M3 8l4-4 4 4"/><path d="M17 4v16"/><path d="M13 16l4 4 4-4"/>',
+    surat:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    career:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/>'};
+  Object.keys(IKON_BARU).forEach(k=>{DS_P['m_'+k]=IKON_BARU[k]});
+  const COCOK=[   // [nama ikon, fungsi pengenal menu [kunci, label]]
+    ['m_urutmenu',x=>x[0]==='urutmenu'||/^urutan\s*menu/i.test(String(x[1]))],
+    ['m_surat',x=>x[0]==='surat'||/^(buat\s+)?surat\b/i.test(String(x[1]))],
+    ['m_career',x=>/career/i.test(String(x[0]))||/career\s*bank/i.test(String(x[1]))]];
+  const pasang=menus=>(menus||[]).forEach(x=>COCOK.forEach(c=>{if(c[1](x))DS_K[x[0]]=c[0]}));
+  const asli=dsGroups;
+  dsGroups=function(role,menus){
+    pasang(menus);
+    const g=asli.apply(this,arguments);
+    (g||[]).forEach(gr=>{if(gr.items&&gr.items.length===1){const n=DS_K[gr.items[0][0]];if(/^m_/.test(n||''))gr.i=n}});   // kelompok berisi satu menu: ikon di rel ikut ikon menunya
+    return g};
+})();
 </script>
 <style id="sr-rich-css">
 /* editor teks untuk kolom Narasi sertifikat: toolbar disederhanakan (tanpa gambar, tabel, tautan, daftar) */
