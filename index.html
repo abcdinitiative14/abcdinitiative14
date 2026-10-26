@@ -4505,6 +4505,12 @@ function dcHeroWali(){const m=$('#dmain');if(!m)return;const h=m.querySelector('
 .rich section.bl-langkah h3{font-family:Georgia,"Times New Roman",serif;font-size:1.6em;color:#0a2540;line-height:1.2}
 .rich section.bl-langkah::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:linear-gradient(180deg,var(--teal,#0a8f9d),#c9d6df)}
 .rich section.bl-langkah::after{content:"";position:absolute;left:50%;top:0;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#fff;border:2px solid var(--teal,#0a8f9d)}
+.rich section.bl-kartu{clear:both;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:26px;margin:1.6em 0}
+.rich section.bl-kartu>figure{width:auto!important;float:none!important;margin:0;display:flex;flex-direction:column;gap:10px}
+.rich section.bl-kartu>figure img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block}
+.rich section.bl-kartu>figure figcaption{display:block;margin:0;text-align:left;font-size:.95em;line-height:1.55;color:#4d6677}
+.rich section.bl-kartu>figure figcaption strong{display:block;margin-bottom:4px;font-family:Georgia,"Times New Roman",serif;font-size:1.3em;line-height:1.25;font-weight:400;color:#0a2540}
+.rich section.bl-kartu a.bl-tombol{background:#0a2540;font-size:.9em;margin-top:8px}
 @container (max-width:560px){
  .rich section.bl-banner{min-height:300px;padding:22px 18px}
  .rich section.bl-banner h2{font-size:1.5em}
@@ -4542,7 +4548,7 @@ const RT_OKTAG_ = { p: 1, br: 1, strong: 1, em: 1, u: 1, s: 1, h2: 1, h3: 1, h4:
 const RT_ALIAS_ = { b: 'strong', i: 'em', strike: 's', del: 's', div: 'p', h1: 'h2', h5: 'h4', h6: 'h4', font: 'span' };
 const RT_BUANG_ = { script: 1, style: 1, iframe: 1, object: 1, embed: 1, svg: 1, math: 1, noscript: 1, xml: 1, textarea: 1, title: 1, template: 1, head: 1, select: 1, button: 1, form: 1, applet: 1, frameset: 1 };
 const RT_BLOK_ = { p: 1, h2: 1, h3: 1, h4: 1, ul: 1, ol: 1, li: 1, blockquote: 1, hr: 1, table: 1, figure: 1, section: 1 };
-const RT_KELAS_ = { figure: [['mg-kiri', 'mg-kanan', 'mg-tengah', 'mg-penuh'], ['mh-kiri', 'mh-kanan', 'mh-tengah', 'mh-penuh', 'mh-sembunyi'], ['mw-25', 'mw-33', 'mw-40', 'mw-50', 'mw-66', 'mw-75', 'mw-100']], section: [['mg-kol2', 'mg-kol3', 'mg-galeri', 'bl-banner', 'bl-langkah'], ['mk-2', 'bl-balik']], blockquote: [['mg-kutip']], a: [['bl-tombol']] };   // satu kelas per kelompok: web (mg-), HP (mh-, mw-, mk-)
+const RT_KELAS_ = { figure: [['mg-kiri', 'mg-kanan', 'mg-tengah', 'mg-penuh'], ['mh-kiri', 'mh-kanan', 'mh-tengah', 'mh-penuh', 'mh-sembunyi'], ['mw-25', 'mw-33', 'mw-40', 'mw-50', 'mw-66', 'mw-75', 'mw-100']], section: [['mg-kol2', 'mg-kol3', 'mg-galeri', 'bl-banner', 'bl-langkah', 'bl-kartu'], ['mk-2', 'bl-balik']], blockquote: [['mg-kutip']], a: [['bl-tombol']] };   // satu kelas per kelompok: web (mg-), HP (mh-, mw-, mk-)
 const RT_TBL_ = { table: 1, thead: 1, tbody: 1, tfoot: 1, tr: 1, td: 1, th: 1 };
 
 function rtEsc_(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -4670,7 +4676,7 @@ const RT_BTN=[
  ['undo','Urungkan (Ctrl+Z)',rtI('<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>')],['redo','Ulangi (Ctrl+Y)',rtI('<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>')],['removeFormat','Hapus format',rtI('<path d="M5 5h14M12 5v14M8 19h8"/><path d="M4 4l16 16"/>')]];
 function rtBarHtml(){
   const sel=(c,a,l)=>`<select class="rts" data-s="${c}" aria-label="${l}">${a.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select>`;
-  return `<div class="rtbar" role="toolbar" aria-label="Pengaturan teks">${sel('block',RT_BLOCKS,'Gaya paragraf')}${sel('font',RT_FONTS,'Jenis huruf')}${sel('size',RT_SIZES,'Ukuran huruf')}${sel('kol',[['','Kolom'],['2','2 kolom'],['3','3 kolom'],['0','1 kolom (lepas)']],'Kolom teks')}${sel('blok',[['','+ Blok tampilan'],['banner','Banner foto penuh'],['langkah','Langkah garis waktu']],'Sisipkan blok tampilan')}<span class="rtsep"></span>`+
+  return `<div class="rtbar" role="toolbar" aria-label="Pengaturan teks">${sel('block',RT_BLOCKS,'Gaya paragraf')}${sel('font',RT_FONTS,'Jenis huruf')}${sel('size',RT_SIZES,'Ukuran huruf')}${sel('kol',[['','Kolom'],['2','2 kolom'],['3','3 kolom'],['0','1 kolom (lepas)']],'Kolom teks')}${sel('blok',[['','+ Blok tampilan'],['banner','Banner foto penuh'],['langkah','Langkah garis waktu'],['kartu','Kartu 3 kolom (foto + judul + teks)']],'Sisipkan blok tampilan')}<span class="rtsep"></span>`+
    RT_BTN.map(b=>b==='|'?'<span class="rtsep"></span>':`<button type="button" class="rtb" data-c="${b[0]}" title="${b[1]}" aria-label="${b[1]}">${b[2]}</button>`).join('')+
    `<span class="rtsep"></span><label class="rtc" title="Warna huruf"><span style="border-bottom:3px solid #0a2540">A</span><input type="color" data-k="foreColor" value="#0a2540" aria-label="Warna huruf"></label><label class="rtc" title="Sorot teks"><span style="background:#fff3a3;padding:0 4px;border-radius:3px">ab</span><input type="color" data-k="hiliteColor" value="#fff3a3" aria-label="Warna sorot"></label></div>`+
    `<div class="rtbar rttb" hidden role="toolbar" aria-label="Pengaturan tabel"><b>Tabel:</b><button type="button" class="rtb txt" data-t="addRow">+ Baris</button><button type="button" class="rtb txt" data-t="addCol">+ Kolom</button><button type="button" class="rtb txt" data-t="delRow">&minus; Baris</button><button type="button" class="rtb txt" data-t="delCol">&minus; Kolom</button><button type="button" class="rtb txt bad" data-t="delTbl">Hapus tabel</button></div>`}
@@ -4758,10 +4764,12 @@ function rtTaruh(w,el){const ed=w.querySelector('.rte'),b=rtBlokKursor(w);
   if(b)b.before(el);else ed.appendChild(el);
   if(!el.nextElementSibling&&el.parentElement===ed){const p=document.createElement('p');p.innerHTML='<br>';ed.appendChild(p)}}
 /* blok tampilan: banner foto penuh dan langkah garis waktu (foto + judul + teks + tombol) */
-async function rtBlokBaru(w,jenis){rtPilih(w);const us=await rtDialogGambar(false);if(!us.length)return;
+async function rtBlokBaru(w,jenis){rtPilih(w);const us=await rtDialogGambar(jenis==='kartu');if(!us.length)return;
   const ed=w.querySelector('.rte'),s=document.createElement('section');
   if(jenis==='banner'){s.className='bl-banner';s.appendChild(rtFig(us[0],''));
     s.insertAdjacentHTML('beforeend','<h2>Judul banner</h2><p>Tulis penjelasan singkat di sini.</p><p><a class="bl-tombol" href="https://contoh.com">Pelajari</a></p>')}
+  else if(jenis==='kartu'){s.className='bl-kartu';us.slice(0,6).forEach(u=>{const f=rtFig(u,'');const c=document.createElement('figcaption');
+    c.innerHTML='<strong>Judul kartu</strong>Tulis ringkasan singkat di sini.<br><a class="bl-tombol" href="https://contoh.com">Baca Lebih Lanjut</a>';f.appendChild(c);s.appendChild(f)})}
   else{const n=ed.querySelectorAll('section.bl-langkah').length;s.className='bl-langkah'+(n%2?' bl-balik':'');s.appendChild(rtFig(us[0],''));
     s.insertAdjacentHTML('beforeend','<h3>Judul langkah</h3><p>Tulis penjelasan singkat di sini.</p><p><a class="bl-tombol" href="https://contoh.com">Pelajari</a></p>')}
   rtTaruh(w,s);rtSync(w);
@@ -5721,6 +5729,48 @@ function srrGambar(cv,f,html){
     try { await api('super.cabang.ubah', { kode: kode, status: aktifkan }); CABS = null; toast(aktifkan ? 'Cabang diaktifkan' : 'Cabang dinonaktifkan'); supBar(); vCabang(); } catch (x) { fail(x); }
   };
   VIEWS['sa-cabang'] = vCabang;
+})();
+</script>
+<style id="tp-css">
+/* ===== TEMA PUBLIK: judul bergaya serif + footer berkolom. Biru tua + tosca. ===== */
+.tp-serif h1,.tp-serif h2,.tp-serif h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:-.01em}
+.tp-serif #dmain h1,.tp-serif #dmain h2,.tp-serif #dmain h3,.tp-serif #side h1,.tp-serif #side h2,.tp-serif #side h3,.tp-serif #dhi b,.tp-serif .modal h2,.tp-serif .modal h3{font-family:inherit;font-weight:700;letter-spacing:-.02em}
+footer.tp-ft{position:relative;margin-top:38px;padding:46px 0 0;background:var(--ink,#0a2540);color:#c4d6df;font-size:14px;border-radius:30px 30px 0 0;border-top:4px solid var(--teal,#0a8f9d)}
+footer.tp-ft a{color:#c4d6df;text-decoration:none}footer.tp-ft a:hover{color:#fff;text-decoration:underline}
+.tp-fg{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.3fr;gap:34px 40px;padding-bottom:34px}
+.tp-fg h4{margin:0 0 12px;color:#fff;font:700 12px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.tp-fg ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.tp-fn{font-family:Georgia,"Times New Roman",serif;font-size:1.35em;line-height:1.3;color:#fff;margin:0 0 10px}
+.tp-fg p{margin:0 0 8px;line-height:1.6;white-space:pre-line}
+.tp-fb{border-top:1px solid #ffffff22;padding:16px 0;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:13px;color:#9fb8c4}
+@media(max-width:900px){.tp-fg{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.tp-fg{grid-template-columns:1fr;gap:26px}footer.tp-ft{border-radius:22px 22px 0 0;padding-top:34px}}
+</style>
+<script id="tp-js">
+/* Saklar: ubah true menjadi false untuk mematikan bagian ini. Menghapus baris include_('TemaPublikUI') di Index.html juga mengembalikan tampilan lama sepenuhnya. */
+const TEMA_SERIF=true,TEMA_FOOTER=true;
+(function(){
+  if(TEMA_SERIF)document.body.classList.add('tp-serif');
+  if(!TEMA_FOOTER)return;
+  const ft=document.querySelector('footer');if(!ft||ft.classList.contains('tp-ft'))return;
+  const E=typeof esc==='function'?esc:(s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])));
+  ft.classList.add('tp-ft');
+  ft.innerHTML=`<div class="wrap"><div class="tp-fg">
+    <div><div class="tp-fn" id="tpNama"></div><p id="tpTag"></p></div>
+    <div><h4>Jelajahi</h4><ul><li><a href="#/">Beranda</a></li><li><a href="#/kategori/Berita">Berita</a></li><li><a href="#/kategori/Beasiswa">Beasiswa</a></li><li><a href="#/kategori/Jalur Kampus">Jalur Kampus</a></li></ul></div>
+    <div><h4>Akses</h4><ul><li><a href="#/login">Masuk LMS</a></li><li><a href="#/dashboard">Dashboard</a></li></ul></div>
+    <div><h4>Hubungi kami</h4><div id="tpKontak"></div></div></div>
+    <div class="tp-fb"><div>&copy; <span id="yr"></span> <span id="footName"></span>. Hak cipta dilindungi.</div></div></div>`;
+  function isi(){const B=window.BOOT||{},p=B.profil||{};
+    const n=document.getElementById('tpNama'),t=document.getElementById('tpTag'),k=document.getElementById('tpKontak');
+    if(n)n.textContent=B.school||'';
+    const prof=String(p.profil_sekolah||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    if(t)t.textContent=prof?(prof.length>150?prof.slice(0,147).replace(/\s+\S*$/,'')+'...':prof):'';
+    if(k)k.innerHTML=(p.alamat?`<p>${E(p.alamat)}</p>`:'')+(p.kontak?`<p>${E(p.kontak)}</p>`:'')||'<p>Informasi kontak belum diisi.</p>';
+    const f=document.getElementById('footName');if(f&&B.school)f.textContent=B.school;
+    const y=document.getElementById('yr');if(y&&!y.textContent)y.textContent=new Date().getFullYear()}
+  isi();
+  if(typeof renderProfil==='function'){const o=renderProfil;renderProfil=function(){const r=o.apply(this,arguments);try{isi()}catch(e){}return r}}
 })();
 </script>
 </body>
