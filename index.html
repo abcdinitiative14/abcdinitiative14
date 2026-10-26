@@ -2926,32 +2926,28 @@ Object.assign(VIEWS,{sert:vSert,'g-sert':vSert});
 <script>
 
 
-const SV={id:'',daftar:[],p:null,logo:'',logoBaru:'',hapusLogo:false,ttd:'',ttdBaru:'',hapusTtd:false,ada:false,kotor:false,rz:0};
-const SV_LOGO_MAX=46000;   
-const SV_F=[
- ['Kop surat',[
-  ['nama','Nama sekolah (judul kop)','in','SMP IT Al Biruni Mandiri',100],
-  ['slogan','Slogan (boleh kosong)','in','Leadership - Entrepreneurship - Qur\'anic',100],
-  ['alamat','Alamat (Enter = baris baru)','ta','Jl. Jipang No. 11 Kel. Karunrung\nKec. Rappocini, Kota Makassar',250],
-  ['kontak','Telepon / email (boleh kosong)','in','+62 411 8205500 - 0821 8855 2038',150],
-  ['web','Situs web (boleh kosong)','in','www.sitalbirunimakassar.sch.id',100]]],
- ['Isi surat',[
-  ['nama_lengkap','Nama lengkap sekolah di dalam isi surat','in','Sekolah Menengah Pertama Islam Terpadu (SMP IT) Al Biruni Mandiri',200],
-  ['kota','Kota tempat surat dibuat','in','Makassar',60]]],
- ['Penandatangan',[
-  ['kepala_nama','Nama kepala sekolah (beserta gelar)','in','Muhammad Irham, S.Pd.I',100],
-  ['kepala_jabatan','Jabatan (bagian "Yang bertanda tangan di bawah ini")','in','Kepala Sekolah',60],
-  ['ttd_jabatan','Jabatan di blok tanda tangan','in','Kepala SMP IT Al Biruni Mandiri',100],
-  ['kepala_idlabel','Label nomor induk','in','NIY',10],
-  ['kepala_id','Nomor induk kepala sekolah','in','13 14 003',40]]]];
+const SV={sek:[],tpl:[],sid:'',tid:'',sekEdit:null,p:null,lapis:[],pilih:-1,ada:false,kotor:false,rz:0};
+const SV_GBR_MAX=46000;   
+const SV_PRESET={
+ logo:{label:'Logo',jangkar:'kop',x:9,y:50,w:14,o:100,z:'depan',s0:300,min:80},
+ ttd:{label:'Tanda tangan',jangkar:'ttd',x:50,y:52,w:60,o:100,z:'depan',s0:400,min:120},
+ cap:{label:'Cap / stempel',jangkar:'ttd',x:32,y:50,w:45,o:80,z:'depan',s0:400,min:120},
+ watermark:{label:'Watermark',jangkar:'halaman',x:50,y:50,w:60,o:15,z:'belakang',s0:700,min:200},
+ lain:{label:'Gambar lain',jangkar:'halaman',x:50,y:50,w:30,o:100,z:'depan',s0:500,min:120}};
+const SV_JNS=[['logo','Logo (di kop)'],['ttd','Tanda tangan'],['cap','Cap / stempel'],['watermark','Watermark (seluruh halaman)'],['lain','Gambar lain (halaman)']];
+const SV_JANGKAR={kop:'di kop',ttd:'di tanda tangan',halaman:'di halaman'};
+const SV_MAXL=8;
 
  
-const SV_CSS=`.sv-paper{background:#fff;color:#000;font-family:"Times New Roman",Times,serif;font-size:12pt;line-height:1.4;padding:14mm 18mm;box-sizing:border-box;width:210mm;min-height:297mm}
+const SV_CSS=`.sv-paper{position:relative;z-index:0;background:#fff;color:#000;font-family:"Times New Roman",Times,serif;font-size:12pt;line-height:1.4;padding:14mm 18mm;box-sizing:border-box;width:210mm;min-height:297mm}
 .sv-paper *{box-sizing:border-box}
-.sv-kop{display:flex;align-items:center;gap:5mm;padding-bottom:3mm;border-bottom:3px double var(--w,#0b3a5b);margin-bottom:6mm}
-.sv-kop img{height:22mm;width:auto;max-width:30mm;object-fit:contain}
-.sv-kop .sp{width:22mm;flex:none}
-.sv-kop .t{flex:1;text-align:center;font-family:Arial,Helvetica,sans-serif}
+.sv-body{position:relative;z-index:1}
+.sv-lay{position:absolute;left:18mm;right:18mm;top:14mm;bottom:14mm;pointer-events:none}
+.sv-lay.bg{z-index:0}.sv-lay.fg{z-index:2}
+.sv-l{position:absolute;transform:translate(-50%,-50%);height:auto;max-width:none;user-select:none;-webkit-user-drag:none;touch-action:none}
+.sv-kop{position:relative;z-index:0;display:flex;align-items:center;justify-content:center;min-height:var(--kh,26mm);padding-bottom:3mm;margin-bottom:6mm;font-family:Arial,Helvetica,sans-serif}
+.sv-kop.g{border-bottom:3px double var(--w,#0b3a5b)}
+.sv-kop .t{text-align:center;width:100%}
 .sv-kop .n{font-weight:bold;font-size:17pt;letter-spacing:.4px;text-transform:uppercase;color:var(--w,#0b3a5b);line-height:1.15}
 .sv-kop .s{font-size:9.5pt;font-style:italic;margin-top:.5mm}
 .sv-kop .a{font-size:9.5pt;white-space:pre-line;margin-top:1mm}
@@ -2962,56 +2958,69 @@ const SV_CSS=`.sv-paper{background:#fff;color:#000;font-family:"Times New Roman"
 .sv-paper table.f td{padding:.6mm 0;vertical-align:top}
 .sv-paper table.f td:first-child{width:46mm}
 .sv-paper table.f td:nth-child(2){width:4mm}
-.sv-paper .tt{margin:8mm 0 0 auto;width:78mm}
+.sv-paper .tt{position:relative;z-index:0;margin:8mm 0 0 auto;width:78mm}
 .sv-paper .tt .sp{height:24mm}
 .sv-paper .tt b.n{text-decoration:underline}
 .sv-contoh{background:#fff8d6;padding:0 1mm}`;
 function svCssPasang(){if(document.getElementById('sv_css'))return;const s=document.createElement('style');s.id='sv_css';
-  s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:22px;align-items:start}
+  s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;align-items:start}
 .sv-wrap{border:1px solid var(--line);border-radius:10px;background:var(--mist);overflow:hidden;position:relative}
 .sv-wrap .sv-paper{position:absolute;left:0;top:0;transform-origin:0 0;box-shadow:0 1px 8px rgba(0,0,0,.18)}
+.sv-wrap .sv-body,.sv-wrap .sv-body *{pointer-events:none}
+.sv-wrap .sv-l{pointer-events:auto;cursor:move}
+.sv-wrap .sv-l.on{outline:2px dashed #e11d48;outline-offset:3px}
 .sv-h{margin:18px 0 2px;font-size:1rem}
+.sv-box{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:#fff}
+.sv-it{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;cursor:pointer;font:inherit}
+.sv-it.on{background:#0b6b78;color:#fff;border-color:#0b6b78}
+.sv-sl{display:grid;grid-template-columns:110px minmax(0,1fr) 46px;gap:8px;align-items:center;margin-top:6px}
+.sv-sl input[type=range]{width:100%;padding:0}
 @media(max-width:900px){.sv-g{grid-template-columns:minmax(0,1fr)}}`;
   document.head.appendChild(s)}
 
  
 
-function svKop(p,logo){
-  const ln=(c,t)=>t?`<div class="${c}">${esc(t)}</div>`:'';
-  const alamat=[p.alamat,[p.kontak,p.web].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
-  return `<div class="sv-kop" style="--w:${esc(p.warna||'#0b3a5b')}">${logo?`<img src="${esc(logo)}" alt="">`:''}<div class="t">${ln('n',p.nama||'NAMA SEKOLAH')}${ln('s',p.slogan)}${ln('a',alamat)}</div>${logo?'<div class="sp"></div>':''}</div>`}
-// blok tanda tangan kepala sekolah. ttdGambar (opsional, dipakai di tahap berikutnya) = data URL tanda tangan/stempel.
-function svTtd(p,tanggal,ttdGambar){
-  return `<div class="tt">${esc(p.kota||'')}, ${esc(tanggal)}<br>${esc(p.ttd_jabatan||'')}<div class="sp">${ttdGambar?`<img src="${esc(ttdGambar)}" alt="" style="height:24mm;max-width:70mm;object-fit:contain">`:''}</div><b class="n">${esc(p.kepala_nama||'')}</b><br>${esc(p.kepala_idlabel||'NIY')}. ${esc(p.kepala_id||'')}</div>`}
+function svLayers(lapis,jangkar,edit,z){return (lapis||[]).map((l,i)=>({l:l,i:i})).filter(x=>x.l.jangkar===jangkar&&x.l.img&&(!z||x.l.z===z))
+  .map(x=>`<img class="sv-l${edit&&x.i===SV.pilih?' on':''}" data-i="${x.i}" src="${esc(x.l.img)}" alt="" draggable="false" style="left:${+x.l.x}%;top:${+x.l.y}%;width:${+x.l.w}%;opacity:${(+x.l.o)/100};z-index:${x.l.z==='belakang'?-1:1}">`).join('')}
+function svKop(t,lapis,edit){
+  const ln=(c,v)=>v?`<div class="${c}">${esc(v)}</div>`:'';
+  const alamat=[t.alamat,[t.kontak,t.web].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
+  return `<div class="sv-kop${t.garis===false?'':' g'}" style="--kh:${+t.kop_tinggi||26}mm"><div class="t" style="padding:0 ${+t.kop_pad||0}mm">${ln('n',t.judul)}${ln('s',t.slogan)}${ln('a',alamat)}</div>${svLayers(lapis,'kop',edit)}</div>`}
+function svTtd(t,tanggal,lapis,edit){
+  return `<div class="tt">${esc(t.kota||'')}, ${esc(tanggal)}<br>${esc(t.ttd_jabatan||'')}<div class="sp"></div><b class="n">${esc(t.kepala_nama||'')}</b>${t.kepala_id?`<br>${esc(t.kepala_idlabel||'NIY')}. ${esc(t.kepala_id)}`:''}${svLayers(lapis,'ttd',edit)}</div>`}
+
+function svHalaman(t,lapis,isi,edit){
+  return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">${svKop(t,lapis,edit)}${isi}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
 const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
 const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
-// contoh isi: Surat Keterangan Aktif Belajar. Bagian kuning = contoh data siswa (belum diambil dari database).
-function svContoh(p,logo,ttd){
-  const c=t=>`<span class="sv-contoh">${esc(t)}</span>`;
-  return `<div class="sv-paper">${svKop(p,logo)}
-  <div class="jd">SURAT KETERANGAN</div><div class="no">Nomor: ${c('(diisi otomatis, tahap S3)')}</div>
+
+function svContoh(t,lapis,sk,edit){
+  const c=v=>`<span class="sv-contoh">${esc(v)}</span>`, nm=(sk&&(sk.nama_lengkap||sk.nama))||t.judul||'';
+  return svHalaman(t,lapis,`<div class="jd">SURAT KETERANGAN</div><div class="no">Nomor: ${c('(diisi otomatis, tahap S3)')}</div>
   <p>Yang bertanda tangan di bawah ini:</p>
-  <table class="f">${svRow('Nama',`<b>${esc(p.kepala_nama||'')}</b>`)}${svRow(esc(p.kepala_idlabel||'NIY'),esc(p.kepala_id||''))}${svRow('Jabatan',esc(p.kepala_jabatan||''))}</table>
+  <table class="f">${svRow('Nama',`<b>${esc(t.kepala_nama||'')}</b>`)}${svRow(esc(t.kepala_idlabel||'NIY'),esc(t.kepala_id||''))}${svRow('Jabatan',esc(t.kepala_jabatan||''))}</table>
   <p>Menerangkan dengan benar bahwa:</p>
   <table class="f">${svRow('Nama',c('Muhammad Kenzie Amadeuz'))}${svRow('Tempat/Tanggal Lahir',c('Makassar, 2 Maret 2012'))}${svRow('NIS / NISN',c('7 AB 24 022 / 0122540766'))}${svRow('Kelas',c('IX (Sembilan)'))}${svRow('Semester',c('I (Ganjil)'))}</table>
-  <p>Yang bersangkutan benar sebagai siswa aktif di <b>${esc(p.nama_lengkap||p.nama||'')}</b> Tahun Ajaran ${c('2026-2027')}.</p>
+  <p>Yang bersangkutan benar sebagai siswa aktif di <b>${esc(nm)}</b> Tahun Ajaran ${c('2026-2027')}.</p>
   <p>Demikian surat ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
-  ${svTtd(p,svTgl(new Date()),ttd)}</div>`}
+  ${svTtd(t,svTgl(new Date()),lapis,edit)}`,lapis,edit)}
 
 /* ---------- pratinjau dan cetak ---------- */
+const svSek=()=>SV.sek.find(x=>x.id===SV.sid)||null;
 // mengecilkan kertas 210 mm agar muat di lebar kolom pratinjau
 function svFit(){const w=$('#sv_wrap'),k0=w&&w.firstElementChild;if(!w||!k0||!w.clientWidth)return;const k=Math.min(1,w.clientWidth/k0.offsetWidth);k0.style.transform='scale('+k+')';w.style.height=Math.ceil(k0.offsetHeight*k)+'px'}
-function svPrev(){const w=$('#sv_wrap');if(!w)return;w.innerHTML=svContoh(SV.p,svNow('logo'),svNow('ttd'));svFit()}
-// cetak lewat iframe tersembunyi: pengguna memilih "Simpan sebagai PDF" di dialog cetak. Margin diatur @page, bukan padding kertas.
+function svPrev(){const w=$('#sv_wrap');if(!w||!SV.p)return;w.innerHTML=svContoh(SV.p,SV.lapis,svSek(),true);svFit()}
+// cetak lewat iframe tersembunyi: pengguna memilih "Simpan sebagai PDF" di dialog cetak. Margin diatur @page.
+// Gambar 'halaman' memakai position:fixed sehingga ikut tercetak di SETIAP halaman (watermark).
 function svCetak(html,judul){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   f.srcdoc='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(judul||'Surat')+'</title><style>'+SV_CSS+
-    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0}.sv-contoh{background:none}</style></head><body>'+html+'</body></html>';
-  f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},250)};
+    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0;background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sv-lay{position:fixed;left:0;top:0;right:0;bottom:0}.sv-contoh{background:none}</style></head><body>'+html+'</body></html>';
+  f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},300)};
   document.body.appendChild(f)}
-function svCetakContoh(){svCetak(svContoh(SV.p,svNow('logo'),svNow('ttd')),'Contoh surat')}
+function svCetakContoh(){svCetak(svContoh(SV.p,SV.lapis,svSek(),false),'Contoh surat')}
 
-/* ---------- logo: perkecil di peramban ---------- */
+/* ---------- gambar: perkecil di peramban ---------- */
 function svShrink(file,s0,smin){return new Promise((ok,no)=>{
   if(String(file.type).indexOf('image/')!==0)return no(new Error('File harus berupa gambar'));
   const fr=new FileReader();fr.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
@@ -3021,61 +3030,134 @@ function svShrink(file,s0,smin){return new Promise((ok,no)=>{
       for(let side=s0;side>=smin;side-=40){   // coba PNG (tembus pandang) dulu, lalu JPEG makin kecil sampai muat
         const k=Math.min(1,side/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k));
         const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);
-        let u=cv.toDataURL('image/png');if(u.length<=SV_LOGO_MAX)return ok(u);
+        let u=cv.toDataURL('image/png');if(u.length<=SV_GBR_MAX)return ok(u);
         c.globalCompositeOperation='destination-over';c.fillStyle='#fff';c.fillRect(0,0,w,h);
-        for(const q of [.9,.75,.6]){u=cv.toDataURL('image/jpeg',q);if(u.length<=SV_LOGO_MAX)return ok(u)}}
+        for(const q of [.9,.75,.6]){u=cv.toDataURL('image/jpeg',q);if(u.length<=SV_GBR_MAX)return ok(u)}}
       no(new Error('Gambar terlalu rumit. Pakai gambar yang lebih sederhana.'))};
     im.src=fr.result};fr.readAsDataURL(file)})}
-// gambar sekolah: j = 'logo' atau 'ttd'. Status tiap gambar: SV[j] (tersimpan), SV[j+'Baru'] (baru dipilih), SV.hapusLogo / SV.hapusTtd.
-const svJ={logo:{baru:'logoBaru',hapus:'hapusLogo',s0:300,min:80,nama:'logo'},ttd:{baru:'ttdBaru',hapus:'hapusTtd',s0:400,min:120,nama:'tanda tangan'}};
-const svNow=j=>SV[svJ[j].hapus]?'':(SV[svJ[j].baru]||SV[j]);
-function svGbrFile(i,j){const f=i.files[0];if(!f)return;const c=svJ[j];
-  svShrink(f,c.s0,c.min).then(u=>{SV[c.baru]=u;SV[c.hapus]=false;SV.kotor=true;svGbrInfo(j);svPrev()}).catch(e=>{i.value='';fail(e)})}
-function svGbrHapus(j){const c=svJ[j];SV[c.baru]='';SV[c.hapus]=true;SV.kotor=true;const i=$('#sv_f'+j);if(i)i.value='';svGbrInfo(j);svPrev()}
-function svGbrInfo(j){const e=$('#sv_i'+j);if(!e)return;const u=svNow(j),c=svJ[j];
-  e.innerHTML=u?`<img src="${esc(u)}" alt="" style="height:56px;max-width:140px;object-fit:contain;border:1px solid var(--line);border-radius:6px;background:#fff;padding:3px"> <button type="button" class="btn bad sm" onclick="svGbrHapus('${j}')">Hapus ${c.nama}</button>${SV[c.baru]?' <small>Belum disimpan</small>':''}`:`<small>Belum ada ${c.nama}.</small>`}
-const svGbrBlok=(j,judul,info)=>`<label for="sv_f${j}">${judul}</label><input id="sv_f${j}" type="file" accept="image/png,image/jpeg,image/webp" onchange="svGbrFile(this,'${j}')"><small>${info}</small><div id="sv_i${j}" class="row" style="margin-top:6px"></div>`;
 
-/* ---------- tampilan ---------- */
-// kotor = ada perubahan yang belum disimpan (ditanyakan dulu sebelum pindah sekolah)
+/* ---------- editor gambar (lapisan) ---------- */
+const svBulat=v=>Math.round(v*10)/10;
+function svTambahGbr(inp){const f=inp.files[0];if(!f)return;
+  if(SV.lapis.length>=SV_MAXL){inp.value='';toast('Maksimal '+SV_MAXL+' gambar per template',1);return}
+  const pr=SV_PRESET[$('#sv_jn').value]||SV_PRESET.lain;
+  svShrink(f,pr.s0,pr.min).then(u=>{SV.lapis.push({label:pr.label,jangkar:pr.jangkar,x:pr.x,y:pr.y,w:pr.w,o:pr.o,z:pr.z,img:u,_baru:true});SV.pilih=SV.lapis.length-1;SV.kotor=true;inp.value='';svLapisPanel();svPrev()})
+    .catch(e=>{inp.value='';fail(e)})}
+function svGantiGbr(inp){const f=inp.files[0],l=SV.lapis[SV.pilih];if(!f||!l)return;const pr=SV_PRESET[l.jangkar==='kop'?'logo':l.jangkar==='ttd'?'ttd':'lain'];
+  svShrink(f,pr.s0,pr.min).then(u=>{l.img=u;l._baru=true;SV.kotor=true;inp.value='';svLapisPanel();svPrev()}).catch(e=>{inp.value='';fail(e)})}
+function svPilihL(i){SV.pilih=i;svLapisPanel();svPrev()}
+function svHapusL(){if(SV.pilih<0)return;SV.lapis.splice(SV.pilih,1);SV.pilih=-1;SV.kotor=true;svLapisPanel();svPrev()}
+function svL(k,v){const l=SV.lapis[SV.pilih];if(!l)return;l[k]=(k==='label'||k==='z')?v:Number(v);SV.kotor=true;const o=$('#sv_ov_'+k);if(o)o.textContent=l[k];svPrev()}
+function svLapisPanel(){const el=$('#sv_lp');if(!el)return;const L=SV.lapis,l=L[SV.pilih];
+  const sl=(k,nama,min,max,st)=>`<div class="sv-sl"><label for="sv_r_${k}" style="margin:0">${nama}</label><input id="sv_r_${k}" type="range" min="${min}" max="${max}" step="${st}" value="${l?l[k]:0}" oninput="svL('${k}',this.value)"><output id="sv_ov_${k}">${l?l[k]:''}</output></div>`;
+  el.innerHTML=`<div class="row" style="margin-top:6px">${L.length?L.map((x,i)=>`<button type="button" class="sv-it${i===SV.pilih?' on':''}" onclick="svPilihL(${i})">${esc(x.label)} <small>(${SV_JANGKAR[x.jangkar]})</small></button>`).join(''):'<small>Belum ada gambar.</small>'}</div>`
+   +(l?`<div class="sv-box"><label for="sv_gl" style="margin-top:0">Nama gambar</label><input id="sv_gl" maxlength="40" autocomplete="off" value="${esc(l.label)}" oninput="svL('label',this.value)">
+     ${sl('w','Ukuran (lebar %)',2,100,1)}${sl('x','Posisi kiri-kanan %',-20,120,0.5)}${sl('y','Posisi atas-bawah %',-20,120,0.5)}${sl('o','Opacity %',0,100,1)}
+     <div class="sv-sl"><label for="sv_gz" style="margin:0">Letak</label><select id="sv_gz" onchange="svL('z',this.value)"><option value="depan" ${l.z==='depan'?'selected':''}>Di depan teks</option><option value="belakang" ${l.z==='belakang'?'selected':''}>Di belakang teks</option></select><span></span></div>
+     <p class="row" style="margin-top:10px"><label class="btn ghost sm" style="margin:0;cursor:pointer">Ganti gambar<input id="sv_gg" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="svGantiGbr(this)"></label><button type="button" class="btn bad sm" id="sv_hl" onclick="svHapusL()">Hapus gambar ini</button></p>
+     <small>Tip: seret gambarnya langsung di pratinjau untuk memindahkan.</small></div>`:'')
+   +`<div class="row" style="margin-top:10px;align-items:flex-end"><div style="flex:1;min-width:150px"><label for="sv_jn" style="margin:0">Tambah gambar</label><select id="sv_jn">${SV_JNS.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></div><div style="flex:1;min-width:150px"><input id="sv_nf" type="file" accept="image/png,image/jpeg,image/webp" onchange="svTambahGbr(this)"></div></div>
+   <small>Maksimal ${SV_MAXL} gambar. Gambar otomatis diperkecil. Watermark dicetak di setiap halaman.</small>`}
+// seret gambar di pratinjau: posisi dihitung terhadap jangkarnya (kop, blok tanda tangan, atau halaman)
+function svSeret(e){const el=e.target.closest&&e.target.closest('.sv-l');if(!el)return;const i=+el.dataset.i,l=SV.lapis[i];if(!l)return;
+  e.preventDefault();SV.pilih=i;const box=el.parentElement.getBoundingClientRect(),x0=e.clientX,y0=e.clientY,lx=+l.x,ly=+l.y;
+  if(!box.width||!box.height)return;
+  try{el.setPointerCapture(e.pointerId)}catch(x){}
+  document.querySelectorAll('.sv-wrap .sv-l.on').forEach(n=>n.classList.remove('on'));el.classList.add('on');
+  const mv=ev=>{l.x=svBulat(lx+(ev.clientX-x0)/box.width*100);l.y=svBulat(ly+(ev.clientY-y0)/box.height*100);el.style.left=l.x+'%';el.style.top=l.y+'%';SV.kotor=true};
+  const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);svLapisPanel();svPrev()};
+  el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)}
+
+/* ---------- data dan pilihan ---------- */
 function svSet(k,v){if(!SV.p)return;SV.p[k]=v;SV.kotor=true;svPrev()}
-const svPakai=d=>{SV.id=d.id;SV.p=d.profil;SV.logo=d.logo||'';SV.logoBaru='';SV.hapusLogo=false;SV.ttd=d.ttd||'';SV.ttdBaru='';SV.hapusTtd=false;SV.ada=d.tersimpan;SV.kotor=false};
+const svApply=(d,salin)=>{SV.tid=d.id;SV.p=d.profil;SV.lapis=(d.lapis||[]).map(l=>Object.assign({},l,salin?{_baru:true}:{}));SV.pilih=-1;SV.ada=d.tersimpan;SV.kotor=!!salin};
+const svTplDi=sid=>SV.tpl.filter(t=>t.sekolah===sid);
+async function svLepas(){return !SV.kotor||await ask('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan itu?',{title:'Perubahan belum disimpan',ok:'Buang perubahan',bad:true})}
 async function vSurat(){svCssPasang();
   M(`<h2>Surat</h2><div id="svb"><div class="skel"></div></div>`);
-  try{SV.daftar=await api('surat.sekolah.list',{});
-    const id=SV.daftar.some(x=>x.id===SV.id)?SV.id:(SV.daftar[0]?SV.daftar[0].id:'');
-    const d=await api('surat.sekolah.get',{id});if(!$('#svb'))return;svPakai(d);svForm()}
+  try{const d=await api('surat.data',{});SV.sek=d.sekolah;SV.tpl=d.template;
+    if(!SV.sek.some(x=>x.id===SV.sid))SV.sid=SV.sek[0]?SV.sek[0].id:'';
+    SV.sekEdit=SV.sek.length?null:{id:'',nama:'',nama_lengkap:''};
+    if(SV.sid){const ada=svTplDi(SV.sid),id=ada.some(t=>t.id===SV.tid)?SV.tid:(ada[0]?ada[0].id:'');
+      const t=await api('surat.tpl.get',{id:id,sekolah:SV.sid});if(!$('#svb'))return;svApply(t)}
+    else{SV.p=null;SV.lapis=[];SV.tid='';SV.kotor=false}
+    svForm()}
   catch(e){fail(e)}}
-async function svLepas(){return !SV.kotor||await ask('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan itu?',{title:'Perubahan belum disimpan',ok:'Buang perubahan',bad:true})}
-async function svPilih(id){if(id===SV.id)return;
+async function svPilihSek(id){if(id===SV.sid)return;
   if(!await svLepas()){svForm();return}
-  try{svPakai(await api('surat.sekolah.get',{id}));svForm()}catch(e){fail(e);svForm()}}
-async function svBaru(){if(!await svLepas())return;
-  try{svPakai(await api('surat.sekolah.get',{id:''}));svForm()}catch(e){fail(e)}}
-async function svHapus(){const x=SV.daftar.find(y=>y.id===SV.id);if(!x)return;
-  if(!await ask('Hapus sekolah "'+x.nama+'" beserta logonya? Surat yang sudah dibuat tidak terpengaruh, tetapi sekolah ini tidak bisa dipilih lagi.',{title:'Hapus sekolah',ok:'Hapus',bad:true}))return;
-  try{SV.daftar=await api('surat.sekolah.hapus',{id:SV.id});SV.id='';SV.kotor=false;toast('Sekolah dihapus');vSurat()}catch(e){fail(e)}}
-function svForm(){const p=SV.p;
-  const fld=([k,l,ty,ph,mx])=>`<label for="sv_${k}">${l}</label>`+(ty==='ta'
+  try{const ada=svTplDi(id);SV.sid=id;svApply(await api('surat.tpl.get',{id:ada[0]?ada[0].id:'',sekolah:id}));svForm()}catch(e){fail(e);svForm()}}
+async function svPilihTpl(id){if(id===SV.tid)return;
+  if(!await svLepas()){svForm();return}
+  try{svApply(await api('surat.tpl.get',{id:id,sekolah:SV.sid}));svForm()}catch(e){fail(e);svForm()}}
+async function svBaruTpl(){if(!await svLepas())return;
+  try{svApply(await api('surat.tpl.get',{id:'',sekolah:SV.sid}));svForm()}catch(e){fail(e)}}
+async function svSalinTpl(){if(!SV.tid||!await svLepas())return;
+  try{svApply(await api('surat.tpl.get',{id:'',sekolah:SV.sid,salin:SV.tid}),true);svForm();toast('Salinan dibuat. Ubah namanya lalu klik Simpan.')}catch(e){fail(e)}}
+async function svHapusTpl(){const t=SV.tpl.find(x=>x.id===SV.tid);if(!t)return;
+  if(!await ask('Hapus template "'+t.nama+'" beserta gambar-gambarnya?',{title:'Hapus template',ok:'Hapus',bad:true}))return;
+  try{const d=await api('surat.tpl.hapus',{id:SV.tid});SV.tpl=d.template;SV.sek=d.sekolah;SV.tid='';SV.kotor=false;toast('Template dihapus');vSurat()}catch(e){fail(e)}}
+
+/* ---------- sekolah ---------- */
+function svSekForm(mode){SV.sekEdit=mode==='baru'?{id:'',nama:'',nama_lengkap:''}:mode==='ubah'&&svSek()?Object.assign({},svSek()):null;svSekRender();if(SV.sekEdit){const e=$('#sv_sn');if(e)e.focus()}}
+function svSekRender(){const el=$('#sv_sekf');if(!el)return;const s=SV.sekEdit;
+  el.innerHTML=s?`<div class="sv-box" style="max-width:560px"><b>${s.id?'Ubah sekolah':'Tambah sekolah'}</b>
+   <label for="sv_sn">Nama sekolah (contoh: SMP IT Al Biruni Mandiri)</label><input id="sv_sn" maxlength="100" autocomplete="off" value="${esc(s.nama)}">
+   <label for="sv_sl">Nama lengkap di dalam isi surat (boleh kosong)</label><input id="sv_sl" maxlength="200" autocomplete="off" placeholder="Sekolah Menengah Pertama Islam Terpadu (SMP IT) Al Biruni Mandiri" value="${esc(s.nama_lengkap)}">
+   <p class="row" style="margin-top:10px"><button class="btn sm" id="sv_sks" onclick="svSekSimpan()">Simpan sekolah</button>${SV.sek.length?'<button class="btn ghost sm" onclick="svSekForm(\'\')">Batal</button>':''}</p></div>`:''}
+async function svSekSimpan(){const s=SV.sekEdit;if(!s)return;
+  if(!s.id&&!await svLepas())return;
+  const b=$('#sv_sks');b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('surat.sekolah.save',{id:s.id,nama:$('#sv_sn').value,nama_lengkap:$('#sv_sl').value});
+    SV.sek=r.data.sekolah;SV.tpl=r.data.template;SV.sekEdit=null;toast('Sekolah tersimpan');
+    if(!s.id){SV.sid=r.id;SV.tid='';svApply(await api('surat.tpl.get',{id:'',sekolah:r.id}))}
+    svForm();return}
+  catch(e){fail(e)}
+  b.disabled=false;b.textContent='Simpan sekolah'}
+async function svSekHapus(){const s=svSek();if(!s)return;
+  if(!await ask('Hapus sekolah "'+s.nama+'"? Sekolah hanya bisa dihapus bila sudah tidak punya template kop.',{title:'Hapus sekolah',ok:'Hapus',bad:true}))return;
+  try{const d=await api('surat.sekolah.hapus',{id:s.id});SV.sek=d.sekolah;SV.tpl=d.template;SV.sid='';SV.tid='';SV.kotor=false;toast('Sekolah dihapus');vSurat()}catch(e){fail(e)}}
+
+ 
+function svForm(){
+  const sopt=SV.sek.map(x=>`<option value="${esc(x.id)}" ${x.id===SV.sid?'selected':''}>${esc(x.nama)}</option>`).join('');
+  const atas=`<div style="max-width:560px"><label for="sv_pilih">Sekolah</label>
+   ${SV.sek.length?`<select id="sv_pilih" onchange="svPilihSek(this.value)">${sopt}</select>`:'<div class="empty">Belum ada sekolah. Tambahkan sekolah dulu (misalnya SMP IT atau SMA IT), lalu buat template kop surat untuknya.</div>'}
+   <p class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="svSekForm('baru')">+ Tambah sekolah</button>${SV.sid?'<button class="btn ghost sm" onclick="svSekForm(\'ubah\')">Ubah nama sekolah</button><button class="btn bad sm" id="sv_hs" onclick="svSekHapus()">Hapus sekolah ini</button>':''}</p></div><div id="sv_sekf"></div>`;
+  if(!SV.sid||!SV.p){$('#svb').innerHTML=atas;svSekRender();return}
+  const p=SV.p,ada=svTplDi(SV.sid);
+  const topt=ada.map(t=>`<option value="${esc(t.id)}" ${t.id===SV.tid?'selected':''}>${esc(t.nama)}</option>`).join('')+(SV.tid===''?'<option value="" selected>(template baru, belum disimpan)</option>':'');
+  const fld=(k,l,ty,ph,mx)=>`<label for="sv_${k}">${l}</label>`+(ty==='ta'
     ?`<textarea id="sv_${k}" maxlength="${mx}" style="min-height:70px" placeholder="${esc(ph)}" oninput="svSet('${k}',this.value)">${esc(p[k])}</textarea>`
     :`<input id="sv_${k}" maxlength="${mx}" autocomplete="off" placeholder="${esc(ph)}" value="${esc(p[k])}" oninput="svSet('${k}',this.value)">`);
-  const opt=SV.daftar.map(x=>`<option value="${esc(x.id)}" ${x.id===SV.id?'selected':''}>${esc(x.nama)}</option>`).join('')+(SV.id===''?'<option value="" selected>(sekolah baru, belum disimpan)</option>':'');
-  $('#svb').innerHTML=`<div style="max-width:560px"><label for="sv_pilih">Sekolah</label>
-   <select id="sv_pilih" onchange="svPilih(this.value)">${opt}</select>
-   <p class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="svBaru()">+ Tambah sekolah</button>${SV.id?'<button class="btn bad sm" id="sv_hs" onclick="svHapus()">Hapus sekolah ini</button>':''}</p>
-   <small>${SV.daftar.length?'Pilih sekolah yang profilnya ingin dilihat atau diubah. Setiap sekolah punya kop, logo, dan kepala sekolah sendiri.':'<b>Belum ada sekolah.</b> Isi data sekolah pertama di bawah, lalu klik Simpan.'}</small></div>
+  const num=(k,l,min,max)=>`<label for="sv_${k}">${l}</label><input id="sv_${k}" type="number" min="${min}" max="${max}" step="1" value="${esc(p[k])}" oninput="svSet('${k}',Number(this.value))">`;
+  $('#svb').innerHTML=atas+`<div class="sv-box" style="max-width:560px"><label for="sv_tpl" style="margin-top:0">Template kop surat</label>
+   <select id="sv_tpl" onchange="svPilihTpl(this.value)">${topt}</select>
+   <p class="row" style="margin-top:8px"><button class="btn ghost sm" id="sv_bt" onclick="svBaruTpl()">+ Tambah template</button>${SV.tid?'<button class="btn ghost sm" id="sv_st" onclick="svSalinTpl()">Salin template ini</button><button class="btn bad sm" id="sv_ht" onclick="svHapusTpl()">Hapus template</button>':''}</p>
+   <small>Template = kop surat, gambar, dan penandatangan. Satu sekolah boleh punya beberapa template (misalnya kop resmi dan kop tanpa nama sekolah).</small></div>
   <div class="sv-g" style="margin-top:6px"><div>
-   ${SV_F.map(([judul,fs],i)=>`<h3 class="sv-h">${judul}</h3>`+(i===0?svGbrBlok('logo','Logo (PNG atau JPG, otomatis diperkecil)','Logo tampil di kiri kop.'):'')+fs.map(fld).join('')+(i===2?svGbrBlok('ttd','Tanda tangan (gambar, boleh kosong)','Foto atau pindai tanda tangan di kertas putih. Cap boleh ikut dalam gambar yang sama. Otomatis diperkecil.'):'')).join('')}
-   <label for="sv_warna">Warna kop</label><input id="sv_warna" type="color" value="${esc(p.warna)}" style="width:64px;padding:2px" oninput="svSet('warna',this.value)">
-   <p class="row" style="margin-top:18px"><button class="btn" id="sv_sv" onclick="svSimpan()">${SV.id?'Simpan perubahan':'Simpan sekolah'}</button><button class="btn ghost" onclick="svCetakContoh()">Cetak contoh</button></p>
+   <h3 class="sv-h">Template</h3>${fld('nama_template','Nama template (contoh: Kop resmi)','in','Kop resmi',100)}
+   <h3 class="sv-h">Teks kop surat</h3>
+   ${fld('judul','Judul kop (bebas: nama sekolah, nama yayasan, atau kosongkan)','in','',100)}${fld('slogan','Slogan (boleh kosong)','in',"Leadership - Entrepreneurship - Qur'anic",100)}
+   ${fld('alamat','Alamat (Enter = baris baru)','ta','Jl. Jipang No. 11 Kel. Karunrung\nKec. Rappocini, Kota Makassar',250)}${fld('kontak','Telepon / email (boleh kosong)','in','+62 411 8205500',150)}${fld('web','Situs web (boleh kosong)','in','www.sitalbirunimakassar.sch.id',100)}
+   <div class="row" style="align-items:flex-end;margin-top:6px"><div><label for="sv_warna" style="margin:0">Warna kop</label><input id="sv_warna" type="color" value="${esc(p.warna)}" style="width:64px;padding:2px" oninput="svSet('warna',this.value)"></div>
+    <div style="flex:1;min-width:110px">${num('kop_tinggi','Tinggi kop (mm)',10,80)}</div><div style="flex:1;min-width:110px">${num('kop_pad','Jarak teks dari tepi (mm)',0,60)}</div></div>
+   <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input id="sv_garis" type="checkbox" style="width:auto" ${p.garis===false?'':'checked'} onchange="svSet('garis',this.checked)"> Garis ganda di bawah kop</label>
+   <h3 class="sv-h">Gambar (logo, tanda tangan, cap, watermark)</h3><div id="sv_lp"></div>
+   <h3 class="sv-h">Isi surat</h3>${fld('kota','Kota tempat surat dibuat','in','Makassar',60)}
+   <h3 class="sv-h">Penandatangan</h3>
+   ${fld('kepala_nama','Nama penandatangan (beserta gelar)','in','Muhammad Irham, S.Pd.I',100)}${fld('kepala_jabatan','Jabatan (bagian "Yang bertanda tangan di bawah ini")','in','Kepala Sekolah',60)}
+   ${fld('ttd_jabatan','Jabatan di blok tanda tangan','in','Kepala SMP IT Al Biruni Mandiri',100)}${fld('kepala_idlabel','Label nomor induk','in','NIY',10)}${fld('kepala_id','Nomor induk','in','13 14 003',40)}
+   <p class="row" style="margin-top:18px"><button class="btn" id="sv_sv" onclick="svSimpan()">${SV.tid?'Simpan perubahan':'Simpan template'}</button><button class="btn ghost" onclick="svCetakContoh()">Cetak contoh</button></p>
   </div>
-  <div><h3 class="sv-h" style="margin-top:0">Pratinjau (contoh Surat Keterangan Aktif)</h3><div id="sv_wrap" class="sv-wrap"></div>
-   <p><small>Bagian berlatar kuning hanyalah contoh data. Pada tahap berikutnya diisi otomatis dari data siswa.</small></p></div></div>`;
-  svGbrInfo('logo');svGbrInfo('ttd');svPrev();
+  <div style="position:sticky;top:8px"><h3 class="sv-h" style="margin-top:0">Pratinjau (contoh Surat Keterangan Aktif)</h3><div id="sv_wrap" class="sv-wrap"></div>
+   <p><small>Bagian berlatar kuning hanyalah contoh data. Klik atau seret gambar di pratinjau untuk memilih dan memindahkannya.</small></p></div></div>`;
+  svSekRender();svLapisPanel();svPrev();
+  const w=$('#sv_wrap');if(w)w.addEventListener('pointerdown',svSeret);
   if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
 async function svSimpan(){const b=$('#sv_sv'),t=b.textContent;b.disabled=true;b.textContent='Menyimpan...';
-  try{const d=await api('surat.sekolah.save',{id:SV.id,profil:SV.p,logo:SV.logoBaru,hapusLogo:SV.hapusLogo,ttd:SV.ttdBaru,hapusTtd:SV.hapusTtd});
-    SV.daftar=d.daftar;svPakai(d.sekolah);svForm();toast('Sekolah tersimpan');return}
+  try{const lapis=SV.lapis.map(l=>{const o={id:l.id,label:l.label,jangkar:l.jangkar,x:l.x,y:l.y,w:l.w,o:l.o,z:l.z};if(l._baru)o.img=l.img;return o});
+    const r=await api('surat.tpl.save',{id:SV.tid,sekolah:SV.sid,profil:SV.p,lapis:lapis});
+    SV.sek=r.data.sekolah;SV.tpl=r.data.template;svApply(r.tpl);svForm();toast('Template tersimpan');return}
   catch(e){fail(e)}
   b.disabled=false;b.textContent=t}
 
@@ -5171,6 +5253,108 @@ async function mnuSimpan(){const b=document.getElementById('mnu_sv');b.disabled=
   b.disabled=false;b.textContent='Simpan urutan'}
 async function mnuReset(){if(!await ask('Kembalikan semua menu ke urutan awal?'))return;
   try{await api('menu.simpan',{});mnuSimpanLokal({});mnuTerapkan();toast('Urutan menu dikembalikan');mnuMuatUlang()}catch(e){fail(e)}}
+</script>
+<style id="sr-rich-css">
+/* editor teks untuk kolom Narasi sertifikat: toolbar disederhanakan (tanpa gambar, tabel, tautan, daftar) */
+#dmain .rtw.rtmini .rtmode,#dmain .rtw.rtmini .rtimg,#dmain .rtw.rtmini [data-s=block],#dmain .rtw.rtmini [data-s=kol],#dmain .rtw.rtmini [data-s=blok],
+#dmain .rtw.rtmini .rtb[data-c=gambar],#dmain .rtw.rtmini .rtb[data-c=galeri],#dmain .rtw.rtmini .rtb[data-c=tabel],#dmain .rtw.rtmini .rtb[data-c=link],#dmain .rtw.rtmini .rtb[data-c=unlink],
+#dmain .rtw.rtmini .rtb[data-c=insertHorizontalRule],#dmain .rtw.rtmini .rtb[data-c=insertUnorderedList],#dmain .rtw.rtmini .rtb[data-c=insertOrderedList],#dmain .rtw.rtmini .rtb[data-c=justifyFull]{display:none}
+#dmain .rtw.rtoff{opacity:.5;pointer-events:none}
+</style>
+<script id="sr-rich-js">
+/* ===== Sertifikat: Narasi memakai editor teks (tebal, miring, garis bawah, warna, ukuran, huruf, rata teks) =====
+   Memakai: rtMount, rtBersih_, rtTeks_ (EditorTeksUI), srFields, srDraw, srNarCnt, srToggle, srPrev, SC, SR_FONT, $ (SertifikatUI/Index).
+   Include SETELAH SertifikatUI dan EditorTeksUI. Narasi lama (teks biasa) tetap terbaca dan tergambar sama seperti sebelumnya.
+   Tidak ada fungsi lama yang diganti isinya; hanya dibungkus. */
+
+/* ---------- membaca HTML narasi menjadi paragraf berisi potongan bergaya ---------- */
+function srrParse(html){
+  html=rtBersih_(String(html==null?'':html));
+  const doc=new DOMParser().parseFromString('<body>'+html+'</body>','text/html'),paras=[];
+  const BLK=/^(P|H2|H3|H4|LI|BLOCKQUOTE)$/,HEAD=/^H[2-4]$/;
+  const inl=(n,st,p)=>{
+    if(n.nodeType===3){if(n.nodeValue)p.runs.push(Object.assign({t:n.nodeValue},st));return}
+    if(n.nodeType!==1)return;
+    const tg=n.tagName;if(tg==='BR'){p.runs.push({br:1});return}
+    const s=Object.assign({},st);
+    if(tg==='STRONG')s.b=1;if(tg==='EM')s.i=1;if(tg==='U')s.u=1;if(tg==='S')s.s=1;
+    const cs=n.style||{};
+    if(cs.color)s.c=cs.color;
+    if(cs.fontSize){const m=/^([\d.]+)em$/.exec(cs.fontSize);if(m)s.z=(s.z||1)*Number(m[1])}
+    if(cs.fontFamily)s.f=cs.fontFamily;
+    n.childNodes.forEach(k=>inl(k,s,p))};
+  const blok=(n,pre)=>{
+    n.childNodes.forEach(k=>{
+      if(k.nodeType===3){if(!k.nodeValue.trim())return;const p={a:'',runs:[]};inl(k,{},p);paras.push(p);return}
+      if(k.nodeType!==1)return;
+      if(BLK.test(k.tagName)){const p={a:(k.style&&k.style.textAlign)||'',runs:[]};
+        inl(k,HEAD.test(k.tagName)?{b:1,z:k.tagName==='H2'?1.3:k.tagName==='H3'?1.15:1}:{},p);
+        if(k.tagName==='LI')p.runs.unshift({t:'• '});paras.push(p)}
+      else if(/^(UL|OL|SECTION|TABLE|THEAD|TBODY|TR|FIGURE)$/.test(k.tagName))blok(k,0);
+      else if(/^(TD|TH)$/.test(k.tagName)){const p={a:'',runs:[]};inl(k,{},p);paras.push(p)}
+      else{const p={a:'',runs:[]};inl(k,{},p);paras.push(p)}})};
+  blok(doc.body,0);return paras}
+
+/* ---------- menata baris (bungkus kata) lalu menggambar di canvas ---------- */
+function srrGambar(cv,f,html){
+  const c=cv.getContext('2d'),px0=f.size/100*cv.width,maxW=f.lebar/100*cv.width,paras=srrParse(html);
+  const fam=r=>r.f||SR_FONT[f.font],fnt=r=>(r.i?'italic ':'')+((r.b||f.bold)?'bold ':'')+Math.max(4,px0*(r.z||1))+'px '+fam(r);
+  const out=[];
+  paras.forEach((p,pi)=>{
+    let ln={it:[],w:0,h:px0*1.25},lines=[];
+    const baru=()=>{lines.push(ln);ln={it:[],w:0,h:px0*1.25}};
+    p.runs.forEach(r=>{
+      if(r.br){baru();return}
+      String(r.t).replace(/\n/g,' ').split(/(\s+)/).forEach(w=>{if(!w)return;
+        c.font=fnt(r);const ww=c.measureText(w).width,sp=/^\s+$/.test(w);
+        if(!sp&&ln.w+ww>maxW&&ln.it.some(x=>!/^\s+$/.test(x.t))){while(ln.it.length&&/^\s+$/.test(ln.it[ln.it.length-1].t)){ln.w-=ln.it.pop().w}baru()}
+        if(sp&&!ln.it.length)return;
+        ln.it.push({t:w,w:ww,r:r,font:c.font});ln.w+=ww;ln.h=Math.max(ln.h,px0*(r.z||1)*1.25)})});
+    lines.push(ln);
+    lines.forEach(l=>{while(l.it.length&&/^\s+$/.test(l.it[l.it.length-1].t)){l.w-=l.it.pop().w}});
+    out.push({a:p.a||f.align,lines:lines,gap:pi<paras.length-1?px0*0.3:0})});
+  let H=0;out.forEach(p=>{p.lines.forEach(l=>H+=l.h);H+=p.gap});if(!H)return;
+  const x=f.x/100*cv.width,left=f.align==='left'?x:f.align==='right'?x-maxW:x-maxW/2;
+  let y=f.y/100*cv.height-H/2;
+  c.textBaseline='middle';c.textAlign='left';
+  out.forEach(p=>{p.lines.forEach(l=>{
+    let cx=p.a==='left'?left:p.a==='right'?left+maxW-l.w:left+(maxW-l.w)/2;const yc=y+l.h/2;
+    l.it.forEach(it=>{c.font=it.font;c.fillStyle=it.r.c||f.color;c.fillText(it.t,cx,yc);
+      const sz=px0*(it.r.z||1),lw=Math.max(1,sz/16);
+      if(it.r.u||it.r.s){c.fillRect(cx,it.r.u?yc+sz*0.42:yc,it.w,lw)}
+      cx+=it.w});
+    y+=l.h});y+=p.gap})}
+
+/* ---------- gambar sertifikat: bagian Narasi digambar dengan penata baru, bagian lain tetap seperti semula ---------- */
+(function(){
+  if(typeof srDraw!=='function'||typeof rtBersih_!=='function')return;
+  const asli=srDraw;
+  srDraw=function(cv,img,cfg,vals,maxW){
+    const nar=vals&&vals.narasi,f=cfg&&cfg.narasi;
+    asli(cv,img,cfg,Object.assign({},vals,{narasi:''}),maxW);
+    if(!f||!f.aktif||!String(nar||'').trim())return;
+    let kosong=false;try{kosong=!rtTeks_(rtBersih_(nar)).trim()}catch(e){}
+    if(kosong)return;
+    try{srrGambar(cv,f,nar)}catch(e){console.warn('narasi:',e)}}})();
+
+/* ---------- formulir: kolom Narasi diganti editor ---------- */
+(function(){
+  if(typeof srFields!=='function'||typeof rtMount!=='function')return;
+  const asli=srFields;
+  srNarCnt=function(){const e=$('#sr_cnt'),n=$('#sr_narasi');if(e&&n){let t=n.value;try{t=rtTeks_(n.value)}catch(x){}e.textContent=t.length+' / 1500 karakter'}};
+  srFields=function(){
+    asli.apply(this,arguments);
+    const ta=$('#sr_narasi');if(!ta||ta.dataset.rt)return;
+    let w=null;try{w=rtMount('sr_narasi',false)}catch(e){console.warn(e)}
+    if(!w)return;w.classList.add('rtmini');
+    const ed=w.querySelector('.rte'),up=()=>{SC.v.narasi=ta.value;srNarCnt();srPrev()};
+    ed.addEventListener('input',up);ed.addEventListener('blur',up);
+    if(SC.v.sh&&SC.v.sh.narasi){w.classList.add('rtoff');ed.contentEditable='false'}
+    srNarCnt()};
+  if(typeof srToggle==='function'){const t0=srToggle;
+    srToggle=function(k,on){t0.apply(this,arguments);if(k!=='narasi')return;const ta=$('#sr_narasi'),w=ta&&ta.previousElementSibling;
+      if(w&&w.classList.contains('rtw')){w.classList.toggle('rtoff',!on);const ed=w.querySelector('.rte');if(ed)ed.contentEditable=on?'true':'false'}}}
+})();
 </script>
 <script>
 
