@@ -5370,7 +5370,7 @@ function srrGambar(cv,f,html){
 (function () {
   'use strict';
   var JENIS = ['Lowongan', 'Magang', 'Beasiswa', 'Pelatihan'], STATUS = ['Draft', 'Aktif', 'Ditutup'];
-  var CR = { rows: [], jenis: '', status: '', edit: null };
+  var CR = { rows: [], jenis: '', status: '', q: '', edit: null };
 
   if (MENU.Admin && !MENU.Admin.some(function (m) { return m[0] === 'career'; })) MENU.Admin.push(['career', 'Career Bank']);
 
@@ -5385,26 +5385,43 @@ function srrGambar(cv,f,html){
     crDaftar();
   }
 
+  function crCocok(r, q) {
+    var kata = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    if (!kata.length) return true;
+    var t = [r.Jenis, r.Judul, r.Organisasi, r.Lokasi, r.Deskripsi, r.Syarat, r.Kontak].join(' ').toLowerCase();
+    return kata.every(function (k) { return t.indexOf(k) >= 0; });
+  }
+
+  
   function crDaftar() {
-    var n = {}; CR.rows.forEach(function (r) { n[r.Jenis] = (n[r.Jenis] || 0) + 1; });
-    var tabs = [['', 'Semua', CR.rows.length]].concat(JENIS.map(function (j) { return [j, j, n[j] || 0]; }));
-    var list = CR.rows.filter(function (r) { return (!CR.jenis || r.Jenis === CR.jenis) && (!CR.status || r.Status === CR.status); });
+    M('<div class="row" style="justify-content:space-between"><h2>Career Bank</h2><button class="btn" onclick="crForm()">Tambah peluang</button></div>' +
+      '<p><small>Hanya peluang berstatus <b>Aktif</b> yang <b>dicentang "Tampilkan di halaman publik"</b> yang tampil di halaman Career Bank untuk umum (sampai tanggal tutupnya lewat). Lainnya hanya terlihat oleh Admin cabang ini dan Superadmin.</small></p>' +
+      '<div class="row" style="margin:10px 0"><label for="crq" style="margin:0">Cari</label><input id="crq" type="search" maxlength="80" placeholder="Judul, lembaga, lokasi..." style="max-width:300px" autocomplete="off" value="' + esc(CR.q) + '" oninput="crCari(this.value)">' +
+      '<label for="crst" style="margin:0">Status</label><select id="crst" style="max-width:160px" onchange="crStatus(this.value)">' + opt(STATUS, CR.status, 'Semua') + '</select></div>' +
+      '<div id="crIsi"></div>');
+    crIsi();
+  }
+
+  function crIsi() {
+    var el = $('#crIsi'); if (!el) return;
+    var cocok = CR.rows.filter(function (r) { return crCocok(r, CR.q) && (!CR.status || r.Status === CR.status); });
+    var n = {}; cocok.forEach(function (r) { n[r.Jenis] = (n[r.Jenis] || 0) + 1; });
+    var tabs = [['', 'Semua', cocok.length]].concat(JENIS.map(function (j) { return [j, j, n[j] || 0]; }));
+    var list = cocok.filter(function (r) { return !CR.jenis || r.Jenis === CR.jenis; });
     var baris = list.map(function (r) {
       var id = esc(r.Peluang_ID);
       return '<tr><td>' + esc(r.Jenis) + '</td><td><b>' + esc(r.Judul) + '</b><br><small>' + esc(r.Organisasi) + (r.Lokasi ? ', ' + esc(r.Lokasi) : '') + '</small></td>' +
         '<td>' + (r.Tanggal_Tutup ? esc(r.Tanggal_Tutup) : '<small>tanpa batas</small>') + (r.Lewat ? '<br><small style="color:#b45309">sudah lewat</small>' : '') + '</td>' +
-        '<td>' + esc(r.Status) + '</td><td class="row"><button class="btn ghost sm" onclick="crUbah(\'' + id + '\')">Ubah</button><button class="btn bad sm" onclick="crHapus(\'' + id + '\')">Hapus</button></td></tr>';
+        '<td>' + esc(r.Status) + '</td><td>' + (r.Publik === 'Ya' ? (r.Status === 'Aktif' && !r.Lewat ? '<b>Tampil</b>' : 'Dipilih, belum tampil') : '<small>Tidak</small>') + '</td><td class="row"><button class="btn ghost sm" onclick="crUbah(\'' + id + '\')">Ubah</button><button class="btn bad sm" onclick="crHapus(\'' + id + '\')">Hapus</button></td></tr>';
     }).join('');
-    M('<div class="row" style="justify-content:space-between"><h2>Career Bank</h2><button class="btn" onclick="crForm()">Tambah peluang</button></div>' +
-      '<p><small>Peluang berstatus <b>Aktif</b> tampil di halaman publik Career Bank (menu Career Bank di halaman depan) sampai tanggal tutupnya lewat. Draft dan Ditutup hanya terlihat oleh Admin.</small></p>' +
-      '<div class="tabs">' + tabs.map(function (t) { return '<a href="javascript:void 0" onclick="crTab(\'' + t[0] + '\')" class="' + (t[0] === CR.jenis ? 'on' : '') + '">' + t[1] + ' (' + t[2] + ')</a>'; }).join('') + '</div>' +
-      '<div class="row" style="margin:10px 0"><label for="crst" style="margin:0">Status</label><select id="crst" style="max-width:180px" onchange="crStatus(this.value)">' + opt(STATUS, CR.status, 'Semua') + '</select></div>' +
-      (list.length ? '<div class="tw"><table><thead><tr><th>Jenis</th><th>Peluang</th><th>Tutup</th><th>Status</th><th></th></tr></thead><tbody>' + baris + '</tbody></table></div>'
-        : '<div class="empty">' + (CR.rows.length ? 'Tidak ada yang cocok dengan pilihan ini.' : 'Belum ada peluang. Klik "Tambah peluang".') + '</div>'));
+    el.innerHTML = '<div class="tabs">' + tabs.map(function (t) { return '<a href="javascript:void 0" onclick="crTab(\'' + t[0] + '\')" class="' + (t[0] === CR.jenis ? 'on' : '') + '">' + t[1] + ' (' + t[2] + ')</a>'; }).join('') + '</div>' +
+      (list.length ? '<div class="tw" style="margin-top:10px"><table><thead><tr><th>Jenis</th><th>Peluang</th><th>Tutup</th><th>Status</th><th>Publik</th><th></th></tr></thead><tbody>' + baris + '</tbody></table></div>'
+        : '<div class="empty" style="margin-top:10px">' + (CR.rows.length ? 'Tidak ada yang cocok dengan pilihan ini.' : 'Belum ada peluang. Klik "Tambah peluang".') + '</div>');
   }
 
-  window.crTab = function (j) { CR.jenis = j; crDaftar(); };
-  window.crStatus = function (s) { CR.status = s; crDaftar(); };
+  window.crTab = function (j) { CR.jenis = j; crIsi(); };
+  window.crStatus = function (s) { CR.status = s; crIsi(); };
+  window.crCari = function (v) { CR.q = String(v || '').slice(0, 80); crIsi(); };
 
   window.crUbah = function (id) {
     var r = CR.rows.filter(function (x) { return x.Peluang_ID === id; })[0];
@@ -5425,7 +5442,8 @@ function srrGambar(cv,f,html){
       '<label for="crk">Kontak (boleh kosong)</label><input id="crk" maxlength="150" value="' + esc(r.Kontak || '') + '">' +
       '<label for="crb">Tanggal tutup (boleh kosong)</label><input id="crb" type="date" value="' + esc(r.Tanggal_Tutup || '') + '">' +
       '<label for="crw">Status</label><select id="crw">' + opt(STATUS, r.Status || 'Draft') + '</select>' +
-      '<p><small>Draft = belum siap, hanya Admin yang melihat. Aktif = tampil di halaman publik. Ditutup = sudah tidak berlaku, tidak tampil.</small></p>' +
+      '<p class="row" style="align-items:center"><input id="crp" type="checkbox" style="width:auto"' + (r.Publik === 'Ya' ? ' checked' : '') + '><label for="crp" style="margin:0">Tampilkan di halaman publik</label></p>' +
+      '<p><small>Draft = belum siap. Aktif = siap. Ditutup = sudah tidak berlaku. Peluang hanya tampil di publik bila statusnya <b>Aktif</b> dan kotak di atas dicentang. Kolom Kontak ikut terlihat publik, jangan isi data pribadi.</small></p>' +
       '<p class="row"><button class="btn" id="crsv">Simpan</button><button type="button" class="btn ghost" onclick="crBatal()">Batal</button></p></form>');
   };
 
@@ -5435,7 +5453,7 @@ function srrGambar(cv,f,html){
     e.preventDefault();
     var b = $('#crsv'); b.disabled = true; b.textContent = 'Menyimpan...';
     var p = { id: CR.edit || undefined, jenis: $('#crj').value, judul: $('#crt').value, organisasi: $('#cro').value, lokasi: $('#crl').value,
-      deskripsi: $('#crd').value, syarat: $('#crs').value, tautan: $('#cru').value, kontak: $('#crk').value, tutup: $('#crb').value, status: $('#crw').value };
+      deskripsi: $('#crd').value, syarat: $('#crs').value, tautan: $('#cru').value, kontak: $('#crk').value, tutup: $('#crb').value, status: $('#crw').value, publik: $('#crp').checked };
     try { await api('career.save', p); toast('Tersimpan'); await vCareer(); }
     catch (x) { fail(x); b.disabled = false; b.textContent = 'Simpan'; }
     return false;
@@ -5457,7 +5475,7 @@ function srrGambar(cv,f,html){
 
 (function () {
   'use strict';
-  var CP = { rows: null, jenis: '', cab: '' };
+  var CP = { rows: null, jenis: '', cab: '', q: '', kunci: false };
   var JENIS = ['Lowongan', 'Magang', 'Beasiswa', 'Pelatihan'];
 
   
@@ -5476,12 +5494,22 @@ function srrGambar(cv,f,html){
   function simpanCab(k) { try { localStorage.setItem('cabCareer', k); } catch (e) { } }
   function bacaCab() { try { return localStorage.getItem('cabCareer') || ''; } catch (e) { return ''; } }
   function tgl(s) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); if (!m) return ''; var b = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']; return +m[3] + ' ' + b[+m[2] - 1] + ' ' + m[1]; }
+  
+  function cpCocok(r, q) {
+    var kata = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    if (!kata.length) return true;
+    var t = [r.Jenis, r.Judul, r.Organisasi, r.Lokasi, r.Deskripsi, r.Syarat].join(' ').toLowerCase();
+    return kata.every(function (k) { return t.indexOf(k) >= 0; });
+  }
   function paragraf(t) { return esc(t).replace(/\n/g, '<br>'); }
 
   window.careerPublik = async function () {
     show('v-career');
     var box = document.getElementById('careerBox'), cabs = (typeof BOOT !== 'undefined' && BOOT.cabang) || [];
-    if (cabs.length > 1) {
+    
+    var qc = ''; try { qc = new URLSearchParams(location.search).get('c') || ''; } catch (e) { }
+    if (qc && cabs.some(function (c) { return c.kode === qc; })) { CP.cab = qc; CP.kunci = true; }
+    if (cabs.length > 1 && !CP.kunci) {
       var tersimpan = bacaCab();
       if (!CP.cab) CP.cab = cabs.some(function (c) { return c.kode === tersimpan; }) ? tersimpan : '';
       if (!CP.cab) { cpPilihCabang(box, cabs); return; }
@@ -5502,9 +5530,21 @@ function srrGambar(cv,f,html){
   function cpGambar() {
     var box = document.getElementById('careerBox'), cabs = (typeof BOOT !== 'undefined' && BOOT.cabang) || [], nama = '';
     cabs.forEach(function (c) { if (c.kode === CP.cab) nama = c.nama; });
-    var n = {}; CP.rows.forEach(function (r) { n[r.Jenis] = (n[r.Jenis] || 0) + 1; });
-    var tabs = [['', 'Semua', CP.rows.length]].concat(JENIS.map(function (j) { return [j, j, n[j] || 0]; }));
-    var list = CP.rows.filter(function (r) { return !CP.jenis || r.Jenis === CP.jenis; });
+    box.innerHTML = '<span class="eyebrow">Peluang karier</span><h2>Career Bank' + (nama ? ' &middot; ' + esc(nama) : '') + '</h2>' +
+      '<p class="lead">Lowongan, magang, beasiswa, dan pelatihan untuk siswa dan alumni.</p>' +
+      (cabs.length > 1 && !CP.kunci ? '<p><a href="javascript:void 0" onclick="cpGanti()">Ganti sekolah</a></p>' : '') +
+      '<label for="cpq">Cari peluang</label><input id="cpq" type="search" maxlength="80" placeholder="Ketik kata kunci, mis. desain atau Makassar" autocomplete="off" value="' + esc(CP.q) + '" oninput="cpCari(this.value)">' +
+      '<div id="cpHasil" role="region" aria-live="polite"></div>';
+    cpIsi();
+  }
+
+  
+  function cpIsi() {
+    var el = document.getElementById('cpHasil'); if (!el) return;
+    var cocok = CP.rows.filter(function (r) { return cpCocok(r, CP.q); });
+    var n = {}; cocok.forEach(function (r) { n[r.Jenis] = (n[r.Jenis] || 0) + 1; });
+    var tabs = [['', 'Semua', cocok.length]].concat(JENIS.map(function (j) { return [j, j, n[j] || 0]; }));
+    var list = cocok.filter(function (r) { return !CP.jenis || r.Jenis === CP.jenis; });
     var kartu = list.map(function (r) {
       var link = r.Tautan ? '<a class="btn sm" href="' + esc(r.Tautan) + '" target="_blank" rel="noopener noreferrer">Buka tautan pendaftaran</a>' : '';
       return '<article class="card" style="padding:16px"><span class="tag">' + esc(r.Jenis) + '</span><h3 style="margin:6px 0 2px">' + esc(r.Judul) + '</h3>' +
@@ -5514,13 +5554,12 @@ function srrGambar(cv,f,html){
         (r.Syarat ? '<details><summary>Syarat</summary><p>' + paragraf(r.Syarat) + '</p></details>' : '') +
         (r.Kontak ? '<p><small>Kontak: ' + esc(r.Kontak) + '</small></p>' : '') + link + '</article>';
     }).join('');
-    box.innerHTML = '<span class="eyebrow">Peluang karier</span><h2>Career Bank' + (nama ? ' &middot; ' + esc(nama) : '') + '</h2>' +
-      '<p class="lead">Lowongan, magang, beasiswa, dan pelatihan untuk siswa dan alumni.</p>' +
-      (cabs.length > 1 ? '<p><a href="javascript:void 0" onclick="cpGanti()">Ganti sekolah</a></p>' : '') +
-      '<div class="tabs">' + tabs.map(function (t) { return '<a href="javascript:void 0" onclick="cpTab(\'' + t[0] + '\')" class="' + (t[0] === CP.jenis ? 'on' : '') + '">' + t[1] + ' (' + t[2] + ')</a>'; }).join('') + '</div>' +
-      (list.length ? '<div class="grid" style="margin-top:14px">' + kartu + '</div>' : '<div class="empty" style="margin-top:14px">' + (CP.rows.length ? 'Tidak ada peluang pada jenis ini.' : 'Belum ada peluang yang dibuka.') + '</div>');
+    var kosong = CP.q.trim() ? 'Tidak ada peluang yang cocok dengan pencarian ini.' : (CP.rows.length ? 'Tidak ada peluang pada jenis ini.' : 'Belum ada peluang yang dibuka.');
+    el.innerHTML = '<div class="tabs" style="margin-top:12px">' + tabs.map(function (t) { return '<a href="javascript:void 0" onclick="cpTab(\'' + t[0] + '\')" class="' + (t[0] === CP.jenis ? 'on' : '') + '">' + t[1] + ' (' + t[2] + ')</a>'; }).join('') + '</div>' +
+      (list.length ? '<div class="grid" style="margin-top:14px">' + kartu + '</div>' : '<div class="empty" style="margin-top:14px">' + kosong + '</div>');
   }
-  window.cpTab = function (j) { CP.jenis = j; cpGambar(); };
+  window.cpTab = function (j) { CP.jenis = j; cpIsi(); };
+  window.cpCari = function (v) { CP.q = String(v || '').slice(0, 80); cpIsi(); };
 })();
 </script>
 <script>
@@ -5771,6 +5810,53 @@ const TEMA_SERIF=true,TEMA_FOOTER=true;
     const y=document.getElementById('yr');if(y&&!y.textContent)y.textContent=new Date().getFullYear()}
   isi();
   if(typeof renderProfil==='function'){const o=renderProfil;renderProfil=function(){const r=o.apply(this,arguments);try{isi()}catch(e){}return r}}
+})();
+</script>
+<style id="nd-css">
+/* ===== MENU ATAS: beberapa tautan digabung jadi satu dropdown "Kampus" ===== */
+.nav .nd{position:relative;display:inline-flex}
+.nav .nd-b{display:inline-flex;align-items:center;gap:6px}
+.nav .nd-b::after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.nav .nd.open .nd-b::after{transform:rotate(-135deg) translateY(-1px)}
+.nav .nd-m{display:none;position:absolute;left:0;top:calc(100% + 2px);min-width:210px;padding:6px;background:#fff;border:1px solid var(--line,#d7e4ea);border-radius:12px;box-shadow:0 14px 34px rgba(10,37,64,.16);z-index:70;flex-direction:column;gap:2px}
+.nav .nd-m a{display:block;color:var(--ink,#0a2540);white-space:nowrap}
+.nav .nd.open .nd-m{display:flex}
+@media(hover:hover) and (min-width:721px){.nav .nd:hover .nd-m{display:flex}.nav .nd:hover .nd-b::after{transform:rotate(-135deg) translateY(-1px)}}
+@media(max-width:720px){
+ .nav .nd{display:block}.nav .nd-b{width:100%;justify-content:space-between;text-align:left}
+ .nav .nd-m{position:static;min-width:0;box-shadow:none;border:0;border-left:3px solid var(--teal,#0a8f9d);border-radius:0;margin:2px 0 6px 12px;padding:2px 0 2px 6px}
+ .nav .nd.open .nd-m{display:flex}}
+</style>
+<script id="nd-js">
+/* Menu atas: Kampus Tujuan, Berita, Beasiswa, dan Jalur Kampus digabung menjadi satu dropdown "Kampus".
+   Memakai: mnuTop, mnuTerapkan, MNU (UrutMenuUI; boleh tidak ada), $ . Include SETELAH UrutMenuUI.
+   Mematikan: hapus baris include_('MenuDropdownUI') di Index.html. Fitur Urutan Menu tetap berfungsi. */
+(function(){
+  const ISI=['#/kampus','#/kategori/Berita','#/kategori/Beasiswa','#/kategori/Jalur Kampus'],NAMA='Kampus';
+  const hr=a=>String(a.getAttribute('href')||'');
+  const semua=()=>[...document.querySelectorAll('#nav > a, #nav .nd-m > a')];
+  if(typeof mnuTop==='function')mnuTop=function(){return semua()};   // daftar menu tetap lengkap (termasuk yang ada di dalam dropdown)
+  function tutup(){document.querySelectorAll('#nav .nd.open').forEach(x=>{x.classList.remove('open');const b=x.querySelector('.nd-b');if(b)b.setAttribute('aria-expanded','false')})}
+  function pasang(){
+    const nav=document.getElementById('nav');if(!nav)return;
+    nav.querySelectorAll('.nd').forEach(g=>{[...g.querySelectorAll('.nd-m > a')].forEach(a=>nav.insertBefore(a,g));g.remove()});   // bongkar dulu (aman diulang)
+    const ang=[...nav.querySelectorAll(':scope > a')].filter(a=>ISI.indexOf(hr(a))>=0);
+    if(ang.length<2)return;
+    const g=document.createElement('div');g.className='nd';
+    g.innerHTML='<button type="button" class="nd-b" aria-haspopup="true" aria-expanded="false">'+NAMA+'</button><div class="nd-m" role="menu"></div>';
+    const belumDiatur=typeof MNU==='object'&&MNU&&!(Array.isArray(MNU.top)&&MNU.top.length);   // urutan bawaan: Beranda, Profil, Kampus
+    const profil=[...nav.querySelectorAll(':scope > a')].find(a=>hr(a)==='#/profil');
+    const ref=belumDiatur&&profil?profil.nextSibling:ang[0];
+    nav.insertBefore(g,ref&&ref.parentNode===nav?ref:ang[0]);
+    const m=g.querySelector('.nd-m');ang.forEach(a=>m.appendChild(a));
+    g.classList.toggle('nvx',ang.every(a=>a.classList.contains('nvx')));
+    g.querySelector('.nd-b').addEventListener('click',e=>{e.stopPropagation();const buka=!g.classList.contains('open');tutup();g.classList.toggle('open',buka);e.currentTarget.setAttribute('aria-expanded',buka?'true':'false')});
+    m.addEventListener('click',e=>{if(e.target.closest('a'))tutup()})}
+  if(!window.__ndPasang){window.__ndPasang=1;
+    document.addEventListener('click',e=>{if(!e.target.closest('#nav .nd'))tutup()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')tutup()})}
+  if(typeof mnuTerapkan==='function'){const o=mnuTerapkan;mnuTerapkan=function(){const r=o.apply(this,arguments);try{pasang()}catch(e){console.warn(e)}return r}}
+  try{pasang()}catch(e){console.warn(e)}
 })();
 </script>
 </body>
