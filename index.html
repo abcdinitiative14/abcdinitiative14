@@ -2926,7 +2926,7 @@ Object.assign(VIEWS,{sert:vSert,'g-sert':vSert});
 <script>
 
 
-const SV={tab:'',sek:[],tpl:[],sid:'',tid:'',sekEdit:null,p:null,lapis:[],pilih:-1,ada:false,kotor:false,rz:0};
+const SV={tab:'',jenis:[],sek:[],tpl:[],sid:'',tid:'',sekEdit:null,p:null,lapis:[],pilih:-1,ada:false,kotor:false,rz:0};
 const SV_GBR_MAX=46000;   
 const SV_PRESET={
  logo:{label:'Logo kiri',jangkar:'kop',x:9,y:50,w:14,o:100,z:'depan',s0:300,min:80},
@@ -3002,31 +3002,49 @@ function svHalaman(t,lapis,isi,edit){
   return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">${svKop(t,lapis,edit)}${isi}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
 const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
 const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
-
-
-
-function svSuratAktif(t,lapis,sk,d,edit){
-  const nm=(sk&&(sk.nama_lengkap||sk.nama))||t.judul||'',ss=d.siswa||[];
-  const baris=ss.map((x,i)=>`<tr><td class="no">${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.ttl)}</td><td>${esc(x.nisn)}</td><td>${esc(x.kelas)}</td></tr>`).join('');
-  return svHalaman(t,lapis,`<div class="jd">SURAT KETERANGAN</div><div class="no">Nomor: ${d.no?esc(d.no):'&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;'}</div>
-  <p>Yang bertanda tangan di bawah ini:</p>
-  <table class="f">${svRow('Nama',`<b>${esc(t.kepala_nama||'')}</b>`)}${svRow(esc(t.kepala_idlabel||'NIY'),esc(t.kepala_id||''))}${svRow('Jabatan',esc(t.kepala_jabatan||''))}</table>
-  <p>Menerangkan dengan benar bahwa:</p>
-  <table class="sv-tb"><thead><tr><th>No.</th><th>Nama</th><th>TTL</th><th>NISN</th><th>Kelas</th></tr></thead><tbody>${baris}</tbody></table>
-  <p>Yang bersangkutan benar sebagai siswa aktif di <b>${esc(nm)}</b> Tahun Ajaran ${esc(d.ta)} ${esc(d.semester)}.</p>
-  <p>Demikian surat ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
-  ${svTtd(t,d.tanggal||svTgl(new Date()),lapis,edit,true)}`,edit)}
-const SV_DCONTOH={no:'022/SMPIT ABMJ/JIPANG/IX/2026',siswa:[{nama:'Muhammad Kenzie Amadeuz',ttl:'Makassar, 2 Maret 2012',nisn:'0122540766',kelas:'IX (Sembilan)'},{nama:'Aisyah Putri',ttl:'Gowa, 9 Mei 2012',nisn:'0123456789',kelas:'IX (Sembilan)'}],ta:'2026-2027',semester:'Semester Ganjil'};
-function svContoh(t,lapis,sk,edit){return svSuratAktif(t,lapis,sk,SV_DCONTOH,edit)}
-
  
-const svSek=()=>SV.sek.find(x=>x.id===SV.sid)||null;
+const svJenis=id=>(SV.jenis||[]).find(j=>j.id===id)||null;
 
+function svFmtTgl(iso,hari){const a=String(iso||'').split('-');if(a.length!==3)return '';const d=new Date(+a[0],+a[1]-1,+a[2]);if(isNaN(d))return '';
+  let s=svTgl(d);if(hari){try{s=d.toLocaleDateString('id-ID',{weekday:'long'})+', '+s}catch(e){}}return s}
+
+function svNilai(n,ctx){if(n==='sekolah')return ctx.sek;
+  if(ctx.row&&ctx.row[n]!==undefined)return ctx.row[n];
+  const f=ctx.spec.f.find(x=>x.k===n),x=ctx.v[n];if(x===undefined||x===null)return '';
+  return f&&f.t==='tanggal'?svFmtTgl(x,f.hari):String(x)}
+const svBr=t=>esc(t).split('\n').join('<br>');
+
+function svTpl(str,ctx){let out='',i=0;str=String(str);
+  while(i<str.length){const o=str.indexOf('{{',i);if(o<0){out+=esc(str.slice(i));break}
+    const e=str.indexOf('}}',o);if(e<0){out+=esc(str.slice(i));break}
+    out+=esc(str.slice(i,o));let tok=str.slice(o+2,e),tebal=false;if(tok.charAt(0)==='*'){tebal=true;tok=tok.slice(1)}
+    const h=svBr(tok.split('|').map(n=>svNilai(n,ctx)).filter(x=>String(x).trim()).join(' / '));out+=tebal&&h?'<b>'+h+'</b>':h;i=e+2}
+  return out}
+
+function svRender(spec,t,lapis,sk,d,edit){
+  const nm=(sk&&(sk.nama_lengkap||sk.nama))||t.judul||'',v=d.v||{},ctx={spec:spec,v:v,sek:nm};
+  const daftar=k=>Array.isArray(v[k])?v[k]:[];
+  const blok=spec.isi.map(b=>{
+    if(b.t==='p'){const h=svTpl(b.x,ctx);return `<p${b.tengah?' style="text-align:center"':''}>${b.tebal?'<b>'+h+'</b>':h}</p>`}
+    if(b.t==='penanda')return `<table class="f">${svRow('Nama',`<b>${esc(t.kepala_nama||'')}</b>`)}${svRow(esc(t.kepala_idlabel||'NIY'),esc(t.kepala_id||''))}${svRow('Jabatan',esc(t.kepala_jabatan||''))}${b.sekolah?svRow('Sekolah',esc(nm)):''}</table>`;
+    if(b.t==='kv'){const c=b.dari?Object.assign({},ctx,{row:daftar(b.dari)[0]||{}}):ctx;return `<table class="f">${b.baris.map(r=>({l:r[0],h:svTpl(r[1],c)})).filter(r=>r.h).map(r=>svRow(esc(r.l),r.h)).join('')}</table>`}   
+    if(b.t==='tabel'){const f=spec.f.find(x=>x.k===b.dari);
+      return `<table class="sv-tb"><thead><tr><th>No.</th>${f.kol.map(c=>`<th>${esc(c.l)}</th>`).join('')}</tr></thead><tbody>${daftar(b.dari).map((r,i)=>`<tr><td class="no">${i+1}</td>${f.kol.map(c=>`<td>${esc(r[c.k]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+    return ''}).join('\n  ');
+  return svHalaman(t,lapis,`<div class="jd">${esc(spec.judul)}</div><div class="no">${esc(spec.nomorLabel)} ${d.no?esc(d.no):'&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;'}</div>
+  ${blok}
+  ${svTtd(t,d.tanggal||svTgl(new Date()),lapis,edit,!!spec.mengetahui)}`,edit)}
+const SV_CONTOH_V={siswa:[{nama:'Muhammad Kenzie Amadeuz',ttl:'Makassar, 2 Maret 2012',nisn:'0122540766',kelas:'IX (Sembilan)'},{nama:'Aisyah Putri',ttl:'Gowa, 9 Mei 2012',nisn:'0123456789',kelas:'IX (Sembilan)'}],ta:'2026-2027',semester:'Semester Ganjil'};
+function svContoh(t,lapis,sk,edit){const sp=svJenis('aktif');return sp?svRender(sp,t,lapis,sk,{no:'022/SMPIT ABMJ/JIPANG/IX/2026',tanggal:svTgl(new Date()),v:SV_CONTOH_V},edit):''}
+
+/* ---------- pratinjau dan cetak ---------- */
+const svSek=()=>SV.sek.find(x=>x.id===SV.sid)||null;
+// mengecilkan kertas 210 mm agar muat di lebar kolom pratinjau
 function svFit(){['sv_wrap','sb_wrap'].forEach(svFit1)}
 function svFit1(id){const w=$('#'+id),k0=w&&w.firstElementChild;if(!w||!k0||!w.clientWidth)return;const k=Math.min(1,w.clientWidth/k0.offsetWidth);k0.style.transform='scale('+k+')';w.style.height=Math.ceil(k0.offsetHeight*k)+'px'}
 function svPrev(){const w=$('#sv_wrap');if(!w||!SV.p)return;w.innerHTML=svContoh(SV.p,SV.lapis,svSek(),true);svFit()}
-
-
+// cetak lewat iframe tersembunyi: pengguna memilih "Simpan sebagai PDF" di dialog cetak. Margin diatur @page.
+// Gambar 'halaman' memakai position:fixed sehingga ikut tercetak di SETIAP halaman (watermark).
 function svCetak(html,judul){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   f.srcdoc='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(judul||'Surat')+'</title><style>'+SV_CSS+
@@ -3035,14 +3053,14 @@ function svCetak(html,judul){
   document.body.appendChild(f)}
 function svCetakContoh(){svCetak(svContoh(SV.p,SV.lapis,svSek(),false),'Contoh surat')}
 
- 
+/* ---------- gambar: perkecil di peramban ---------- */
 function svShrink(file,s0,smin){return new Promise((ok,no)=>{
   if(String(file.type).indexOf('image/')!==0)return no(new Error('File harus berupa gambar'));
   const fr=new FileReader();fr.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
   fr.onload=()=>{const im=new Image();im.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
     im.onload=()=>{
       if(!im.naturalWidth||!im.naturalHeight)return no(new Error('Gambar tidak bisa dibaca'));
-      for(let side=s0;side>=smin;side-=40){   
+      for(let side=s0;side>=smin;side-=40){   // coba PNG (tembus pandang) dulu, lalu JPEG makin kecil sampai muat
         const k=Math.min(1,side/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k));
         const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);
         let u=cv.toDataURL('image/png');if(u.length<=SV_GBR_MAX)return ok(u);
@@ -3051,7 +3069,7 @@ function svShrink(file,s0,smin){return new Promise((ok,no)=>{
       no(new Error('Gambar terlalu rumit. Pakai gambar yang lebih sederhana.'))};
     im.src=fr.result};fr.readAsDataURL(file)})}
 
- 
+/* ---------- editor gambar (lapisan) ---------- */
 const svBulat=v=>Math.round(v*10)/10;
 function svTambahGbr(inp){const f=inp.files[0];if(!f)return;
   if(SV.lapis.length>=SV_MAXL){inp.value='';toast('Maksimal '+SV_MAXL+' gambar per template',1);return}
@@ -3096,7 +3114,7 @@ const svTplDi=sid=>SV.tpl.filter(t=>t.sekolah===sid);
 async function svLepas(){return !SV.kotor||await ask('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan itu?',{title:'Perubahan belum disimpan',ok:'Buang perubahan',bad:true})}
 async function vSurat(){svCssPasang();
   M(`<h2>Surat</h2><div class="row" id="svt" style="margin-bottom:6px"></div><div id="svb"><div class="skel"></div></div>`);
-  try{const d=await api('surat.data',{});SV.sek=d.sekolah;SV.tpl=d.template;
+  try{const d=await api('surat.data',{});SV.jenis=d.jenis;SV.sek=d.sekolah;SV.tpl=d.template;
     if(!SV.sek.some(x=>x.id===SV.sid))SV.sid=SV.sek[0]?SV.sek[0].id:'';
     SV.sekEdit=SV.sek.length?null:{id:'',nama:'',nama_lengkap:''};
     if(SV.sid){const ada=svTplDi(SV.sid),id=ada.some(t=>t.id===SV.tid)?SV.tid:(ada[0]?ada[0].id:'');
@@ -3110,7 +3128,7 @@ function svTampil(){
 async function svTab(k){if(k===SV.tab)return;
   if(SV.tab==='tpl'&&!await svLepas())return;
   if(SV.tab==='tpl')SV.kotor=false;
-  try{if(k==='buat'||k==='arsip'){const d=await api('surat.data',{});SV.sek=d.sekolah;SV.tpl=d.template;SB.t=null}}catch(e){fail(e);return}
+  try{if(k==='buat'||k==='arsip'){const d=await api('surat.data',{});SV.jenis=d.jenis;SV.sek=d.sekolah;SV.tpl=d.template;SB.t=null}}catch(e){fail(e);return}
   SV.tab=k;svTampil()}
 async function svPilihSek(id){if(id===SV.sid)return;
   if(!await svLepas()){svForm();return}
@@ -3126,7 +3144,7 @@ async function svHapusTpl(){const t=SV.tpl.find(x=>x.id===SV.tid);if(!t)return;
   if(!await ask('Hapus template "'+t.nama+'" beserta gambar-gambarnya?',{title:'Hapus template',ok:'Hapus',bad:true}))return;
   try{const d=await api('surat.tpl.hapus',{id:SV.tid});SV.tpl=d.template;SV.sek=d.sekolah;SV.tid='';SV.kotor=false;toast('Template dihapus');vSurat()}catch(e){fail(e)}}
 
- 
+/* ---------- sekolah ---------- */
 function svSekForm(mode){SV.sekEdit=mode==='baru'?{id:'',nama:'',nama_lengkap:'',kode:''}:mode==='ubah'&&svSek()?Object.assign({},svSek()):null;svSekRender();if(SV.sekEdit){const e=$('#sv_sn');if(e)e.focus()}}
 function svSekRender(){const el=$('#sv_sekf');if(!el)return;const s=SV.sekEdit;
   el.innerHTML=s?`<div class="sv-box" style="max-width:560px"><b>${s.id?'Ubah sekolah':'Tambah sekolah'}</b>
@@ -3147,7 +3165,7 @@ async function svSekHapus(){const s=svSek();if(!s)return;
   if(!await ask('Hapus sekolah "'+s.nama+'"? Sekolah hanya bisa dihapus bila sudah tidak punya template kop.',{title:'Hapus sekolah',ok:'Hapus',bad:true}))return;
   try{const d=await api('surat.sekolah.hapus',{id:s.id});SV.sek=d.sekolah;SV.tpl=d.template;SV.sid='';SV.tid='';SV.kotor=false;toast('Sekolah dihapus');vSurat()}catch(e){fail(e)}}
 
-/* ---------- formulir ---------- */
+ 
 function svForm(){
   const sopt=SV.sek.map(x=>`<option value="${esc(x.id)}" ${x.id===SV.sid?'selected':''}>${esc(x.nama)}</option>`).join('');
   const atas=`<div style="max-width:560px"><label for="sv_pilih">Sekolah</label>
@@ -3201,87 +3219,109 @@ async function svSimpan(){const b=$('#sv_sv'),t=b.textContent;b.disabled=true;b.
   b.disabled=false;b.textContent=t}
 
 
-/* ---------- S2: buat surat (Surat Keterangan Aktif Belajar, satu atau banyak siswa) ---------- */
+/* ---------- buat surat: formulir dibuat dari spesifikasi jenis (S2 sampai S4) ---------- */
 // SB = keadaan tab "Buat surat". Template dimuat sendiri (SB.t, SB.lapis) supaya tidak mengganggu editor template (SV.p).
-const SB_MAXR=40,SB_BARIS=()=>({sid:'',nama:'',ttl:'',nisn:'',kelas:''});
-const SB={tid:'',want:'',arsipId:'',cekN:0,cekTm:0,t:null,lapis:[],hasil:[],total:0,tm:0,
-  f:{no:'',bln:0,thn:0,siswa:[SB_BARIS()],ta:'',semester:'Semester Ganjil',tgl:''}};
+// SB.f = {jenis, no, bln, thn, tgl, v}; v = isian sesuai spesifikasi jenis (daftar = array baris).
+const SB={tid:'',want:'',arsipId:'',cekN:0,cekTm:0,t:null,lapis:[],hasil:{},tm:0,f:{jenis:'aktif',no:'',bln:0,thn:0,tgl:'',v:{}}};
 const SV_ROM=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'],SV_TERB=['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh','Sebelas','Dua Belas'];
-
+// "9" atau "IX" atau "Kelas 9" -> "IX (Sembilan)"; bila tidak dikenali, pakai nama kelas apa adanya. (tanpa regex)
 function svKelasTeks(tingkat,nama){const s=String(tingkat||'').trim();let d='';for(const ch of s){if(ch>='0'&&ch<='9')d+=ch}
   let n=d?+d:SV_ROM.indexOf(s.toUpperCase());if(n>=1&&n<=12)return SV_ROM[n]+' ('+SV_TERB[n]+')';return String(nama||s)}
 const svHariIni=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
 const svTglIso=v=>{const a=String(v||'').split('-');if(a.length!==3)return svTgl(new Date());return svTgl(new Date(+a[0],+a[1]-1,+a[2]))};
-
+const svBSpec=()=>svJenis(SB.f.jenis)||SV.jenis[0];
+const svBBaris=f=>{const o={};if(f.sumber)o.sid='';f.kol.forEach(c=>{o[c.k]=''});return o};
+const svBIsi=(f,r)=>f.kol.some(c=>String(r[c.k]||'').trim());
+// isian awal; lama = isian jenis sebelumnya: nilai dengan nama dan jenis isian sama dibawa (mis. tahun ajaran, semester)
+function svBV0(sp,lama){const v={};lama=lama||{};
+  sp.f.forEach(f=>{
+    if(f.t==='daftar'){v[f.k]=[svBBaris(f)];return}
+    const x=lama[f.k];v[f.k]=(typeof x==='string'&&x&&(f.t==='ta'||(f.t==='pilih'&&f.opsi.indexOf(x)>=0)))?x:(f.t==='pilih'?(f.def||''):'')});
+  return v}
+// nomor surat: <nomor>/<kode sekolah>/<kode lokasi>/<bulan romawi>/<tahun>; bagian kosong dilewati; kosong semua bila nomor urut belum diisi
 function svBNomor(){const f=SB.f,sk=svSek();if(!String(f.no||'').trim())return '';
   return [String(f.no).trim(),sk&&sk.kode,SB.t&&SB.t.kode_lokasi,SV_ROM[f.bln],f.thn].filter(Boolean).join('/')}
-const svBIsi=r=>[r.nama,r.ttl,r.nisn,r.kelas].some(v=>String(v||'').trim());
-const svBData=()=>({no:svBNomor(),siswa:SB.f.siswa,ta:SB.f.ta,semester:SB.f.semester,tanggal:svTglIso(SB.f.tgl)});
-function svBPrev(){const w=$('#sb_wrap');if(!w||!SB.t)return;w.innerHTML=svSuratAktif(SB.t,SB.lapis,svSek(),svBData(),false);svFit();const n=$('#sb_nomor');if(n)n.textContent=svBNomor()||'(isi nomor urut dulu)'}
+const svBData=()=>({no:svBNomor(),tanggal:svTglIso(SB.f.tgl),v:SB.f.v});
+function svBPrev(){const w=$('#sb_wrap');if(!w||!SB.t)return;w.innerHTML=svRender(svBSpec(),SB.t,SB.lapis,svSek(),svBData(),false);svFit();const n=$('#sb_nomor');if(n)n.textContent=svBNomor()||'(isi nomor urut dulu)'}
 async function svBMuat(id){const d=await api('surat.tpl.get',{id:id,sekolah:SV.sid});SB.tid=d.id;SB.t=d.profil;SB.lapis=d.lapis||[]}
 async function svBuat(){
   const b=$('#svb');if(!SV.sek.length||!SV.tpl.length){b.innerHTML='<div class="sv-box">Belum ada sekolah atau template kop. Buat dulu di tab <b>Sekolah dan template kop</b>.</div>';return}
   if(!SV.sek.some(x=>x.id===SV.sid))SV.sid=SV.sek[0].id;
   const ada=svTplDi(SV.sid);if(!ada.length){b.innerHTML=svBAtas()+'<div class="sv-box">Sekolah ini belum punya template kop. Buat dulu di tab <b>Sekolah dan template kop</b>.</div>';return}
   try{if(!SB.t||!ada.some(t=>t.id===SB.tid))await svBMuat((ada.find(t=>t.id===SB.want)||ada[0]).id);SB.want=''}catch(e){fail(e);return}
-  const f=SB.f,now=new Date();if(!f.tgl)f.tgl=svHariIni();if(!f.bln)f.bln=now.getMonth()+1;if(!f.thn)f.thn=now.getFullYear();
+  const f=SB.f,sp=svBSpec(),now=new Date();f.jenis=sp.id;if(!f.tgl)f.tgl=svHariIni();if(!f.bln)f.bln=now.getMonth()+1;if(!f.thn)f.thn=now.getFullYear();
+  if(!Object.keys(f.v).length)f.v=svBV0(sp);
   const th=[];for(let y=now.getFullYear()-3;y<=now.getFullYear()+1;y++)th.push(y);if(th.indexOf(+f.thn)<0)th.push(+f.thn);
-  const sk=svSek(),taL=(SB.t.ta_list||[]).slice();if(f.ta&&taL.length&&taL.indexOf(f.ta)<0)taL.push(f.ta);
-  const ta=taL.length?`<select id="sb_ta" onchange="svBF('ta',this.value)"><option value="">Pilih tahun ajaran</option>${taL.map(x=>`<option${f.ta===x?' selected':''}>${esc(x)}</option>`).join('')}</select>`
-    :`<input id="sb_ta" maxlength="20" placeholder="2026-2027" value="${esc(f.ta)}" oninput="svBF('ta',this.value)"><small>Daftar tahun ajaran bisa diisi di template, supaya tinggal dipilih.</small>`;
+  const sk=svSek();
   b.innerHTML=svBAtas()+`<div class="sv-g" style="margin-top:6px"><div>
-   <label for="sb_jenis" style="margin-top:0">Jenis surat</label><select id="sb_jenis"><option>Surat Keterangan Aktif Belajar</option></select>
+   <label for="sb_jenis" style="margin-top:0">Jenis surat</label><select id="sb_jenis" onchange="svBJenis(this.value)">${SV.jenis.map(j=>`<option value="${esc(j.id)}"${j.id===sp.id?' selected':''}>${esc(j.nama)}</option>`).join('')}</select>
    <h3 class="sv-h">Nomor surat</h3>
    <div class="row" style="align-items:flex-end"><div style="flex:1;min-width:90px"><label for="sb_no" style="margin-top:0">Nomor urut</label><input id="sb_no" maxlength="10" placeholder="022" value="${esc(f.no)}" oninput="svBF('no',this.value)"></div>
     <div style="flex:1;min-width:90px"><label for="sb_bln" style="margin-top:0">Bulan</label><select id="sb_bln" onchange="svBF('bln',+this.value)">${SV_ROM.slice(1).map((r,i)=>`<option value="${i+1}"${f.bln===i+1?' selected':''}>${r}</option>`).join('')}</select></div>
     <div style="flex:1;min-width:90px"><label for="sb_thn" style="margin-top:0">Tahun</label><select id="sb_thn" onchange="svBF('thn',+this.value)">${th.map(y=>`<option${+f.thn===y?' selected':''}>${y}</option>`).join('')}</select></div></div>
    <small>Hasil: <b id="sb_nomor"></b></small><small id="sb_cek" style="display:block"></small>
    ${sk&&sk.kode&&SB.t.kode_lokasi?'':'<small style="display:block;color:#b3261e">'+(sk&&sk.kode?'':'Kode sekolah belum diisi (tab Sekolah, tombol Ubah nama sekolah). ')+(SB.t.kode_lokasi?'':'Kode lokasi belum diisi di template.')+'</small>'}
-   <h3 class="sv-h">Siswa</h3>
-   <label for="sb_q" style="margin-top:0">Cari dari data siswa (nama atau NIS), klik untuk menambahkan</label><input id="sb_q" type="search" maxlength="60" autocomplete="off" placeholder="Ketik nama atau NIS" oninput="svBCari(this.value)">
-   <div id="sb_hasil" class="sv-box" style="padding:4px;max-height:190px;overflow:auto"></div>
-   <div id="sb_rows"></div>
-   <p style="margin-top:8px"><button class="btn ghost sm" type="button" id="sb_tambah" onclick="svBTambah()">+ Tambah siswa</button></p>
-   <h3 class="sv-h">Tahun ajaran, semester, dan tanggal</h3>
-   <label for="sb_ta" style="margin-top:0">Tahun ajaran</label>${ta}
-   <label for="sb_semester">Semester</label><select id="sb_semester" onchange="svBF('semester',this.value)">${['Semester Ganjil','Semester Genap'].map(x=>`<option${f.semester===x?' selected':''}>${x}</option>`).join('')}</select>
+   <div id="sb_isi"></div>
    <label for="sb_tgl">Tanggal surat</label><input id="sb_tgl" type="date" value="${esc(f.tgl)}" oninput="svBF('tgl',this.value)">
    <p class="row" style="margin-top:18px"><button class="btn" id="sb_cetak" onclick="svBCetak()">Simpan ke arsip dan cetak</button><button class="btn ghost" type="button" id="sb_baru" onclick="svBBaru()">Surat baru</button></p>
    <small id="sb_st" style="display:block"></small>
   </div>
   <div style="position:sticky;top:8px"><h3 class="sv-h" style="margin-top:0">Pratinjau</h3><div id="sb_wrap" class="sv-wrap"></div></div></div>`;
-  svBRows();svBCari('');svBPrev();svBCek();svBSt();if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
+  svBIsiForm();svBPrev();svBCek();svBSt();if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
 function svBAtas(){
   const ada=svTplDi(SV.sid);
   return `<div class="sv-box" style="max-width:560px"><label for="sb_sek" style="margin-top:0">Sekolah</label><select id="sb_sek" onchange="svBSek(this.value)">${SV.sek.map(x=>`<option value="${esc(x.id)}"${x.id===SV.sid?' selected':''}>${esc(x.nama)}</option>`).join('')}</select>
    <label for="sb_tpl">Template kop</label><select id="sb_tpl" onchange="svBTpl(this.value)">${ada.map(t=>`<option value="${esc(t.id)}"${t.id===SB.tid?' selected':''}>${esc(t.nama||'Template')}</option>`).join('')}</select></div>`}
 async function svBSek(id){SV.sid=id;SB.t=null;SB.arsipId='';await svBuat()}
 async function svBTpl(id){try{await svBMuat(id);await svBuat()}catch(e){fail(e)}}
+function svBJenis(id){const sp=svJenis(id);if(!sp)return;SB.f.v=svBV0(sp,SB.f.v);SB.f.jenis=id;SB.arsipId='';SB.hasil={};svBIsiForm();svBPrev();svBCek();svBSt()}
 function svBF(k,v){SB.f[k]=v;svBPrev();if(k==='no'||k==='thn')svBCek()}
+function svBV(k,v){SB.f.v[k]=v;svBPrev()}
 
-function svBRows(){const e=$('#sb_rows');if(!e)return;const r=SB.f.siswa;
-  e.innerHTML=r.map((x,i)=>`<div class="sv-box"><div class="row" style="justify-content:space-between;align-items:center"><b>Siswa ${i+1}</b>${r.length>1?`<button class="btn bad sm" type="button" onclick="svBHapus(${i})">Hapus</button>`:''}</div>
-   <label for="sb_r${i}_nama">Nama</label><input id="sb_r${i}_nama" maxlength="100" value="${esc(x.nama)}" oninput="svBR(${i},'nama',this.value)">
-   <label for="sb_r${i}_ttl">Tempat, tanggal lahir (TTL)</label><input id="sb_r${i}_ttl" maxlength="100" placeholder="Makassar, 2 Maret 2012" value="${esc(x.ttl)}" oninput="svBR(${i},'ttl',this.value)">
-   <div class="row"><div style="flex:1;min-width:120px"><label for="sb_r${i}_nisn">NISN</label><input id="sb_r${i}_nisn" maxlength="20" value="${esc(x.nisn)}" oninput="svBR(${i},'nisn',this.value)"></div>
-   <div style="flex:1;min-width:120px"><label for="sb_r${i}_kelas">Kelas</label><input id="sb_r${i}_kelas" maxlength="40" placeholder="IX (Sembilan)" value="${esc(x.kelas)}" oninput="svBR(${i},'kelas',this.value)"></div></div></div>`).join('');
-  const t=$('#sb_tambah');if(t)t.disabled=r.length>=SB_MAXR}
-function svBR(i,k,v){if(SB.f.siswa[i]){SB.f.siswa[i][k]=v;svBPrev()}}
-function svBTambah(){if(SB.f.siswa.length>=SB_MAXR){toast('Maksimal '+SB_MAXR+' siswa per surat',1);return}
-  SB.f.siswa.push(SB_BARIS());svBRows();svBPrev();const e=$('#sb_r'+(SB.f.siswa.length-1)+'_nama');if(e)e.focus()}
-function svBHapus(i){if(SB.f.siswa.length<2)return;SB.f.siswa.splice(i,1);svBRows();svBPrev()}
-function svBCari(q){clearTimeout(SB.tm);SB.tm=setTimeout(async()=>{
-  try{const r=await api('surat.siswa.cari',{q:q});SB.hasil=r.siswa;SB.total=r.total;svBHasil()}catch(e){fail(e)}},q?250:0)}
-function svBHasil(){const h=$('#sb_hasil');if(!h)return;
-  h.innerHTML=SB.hasil.length?SB.hasil.map((x,i)=>`<button class="btn ghost sm" style="display:block;width:100%;text-align:left;margin:2px 0" onclick="svBPilih(${i})">${esc(x.nama)} <small>${esc(x.nis)}${x.kelas?' · '+esc(x.kelas):''}</small></button>`).join('')+(SB.total>SB.hasil.length?`<small style="display:block;padding:4px">Menampilkan ${SB.hasil.length} dari ${SB.total}. Persempit pencarian.</small>`:''):'<small style="display:block;padding:6px">Tidak ada siswa yang cocok.</small>'}
+// ---- formulir isian dari spesifikasi (dibuat ulang hanya saat jenis/baris berubah, bukan saat mengetik, supaya kursor tidak lompat)
+function svBIsiForm(){const e=$('#sb_isi');if(!e)return;const sp=svBSpec(),v=SB.f.v,q={};
+  sp.f.forEach(f=>{const i=$('#sb_q_'+f.k);if(i)q[f.k]=i.value});   
+  e.innerHTML=sp.f.map(f=>f.t==='daftar'?svBDaftarHtml(f):svBFldHtml(f,v)).join('');
+  sp.f.filter(f=>f.t==='daftar'&&f.sumber).forEach(f=>{const i=$('#sb_q_'+f.k);if(i&&q[f.k])i.value=q[f.k];svBCari(f.k,q[f.k]||'')})}
+function svBFldHtml(f,v){const id='sb_f_'+f.k,x=String(v[f.k]==null?'':v[f.k]),h=f.opsional?' <small>(boleh kosong)</small>':'',lb=`<label for="${id}">${esc(f.l)}${h}</label>`,on=`oninput="svBV('${f.k}',this.value)"`;
+  if(f.t==='area')return lb+`<textarea id="${id}" maxlength="${f.maks||250}" style="min-height:64px" placeholder="${esc(f.ph||'')}" ${on}>${esc(x)}</textarea>`;
+  if(f.t==='tanggal')return lb+`<input id="${id}" type="date" value="${esc(x)}" ${on}>`;
+  if(f.t==='pilih')return lb+`<select id="${id}" onchange="svBV('${f.k}',this.value)">${f.opsi.map(o=>`<option${x===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  if(f.t==='ta'){const l=(SB.t.ta_list||[]).slice();if(x&&l.length&&l.indexOf(x)<0)l.push(x);
+    return l.length?lb+`<select id="${id}" onchange="svBV('${f.k}',this.value)"><option value="">Pilih ${esc(f.l.toLowerCase())}</option>${l.map(o=>`<option${x===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`
+      :lb+`<input id="${id}" maxlength="20" placeholder="2026-2027" value="${esc(x)}" ${on}><small>Daftar tahun ajaran bisa diisi di template, supaya tinggal dipilih.</small>`}
+  return lb+`<input id="${id}" ${f.t==='angka'?'inputmode="numeric" maxlength="4"':`maxlength="${f.maks||100}"`} placeholder="${esc(f.ph||'')}" value="${esc(x)}" ${on}>`}
+function svBDaftarHtml(f){const r=SB.f.v[f.k]||[],banyak=f.maks>1,sat=f.sumber==='guru'?'guru':'siswa';
+  return `<h3 class="sv-h">${esc(f.l)}</h3>`+(f.sumber?`<label for="sb_q_${f.k}" style="margin-top:0">Cari dari data ${sat} (nama${f.sumber==='siswa'?' atau NIS':''}), klik untuk ${banyak?'menambahkan':'mengisi'}</label><input id="sb_q_${f.k}" type="search" maxlength="60" autocomplete="off" placeholder="Ketik nama" oninput="svBCari('${f.k}',this.value)"><div id="sb_h_${f.k}" class="sv-box" style="padding:4px;max-height:190px;overflow:auto"></div>`:'')
+   +r.map((x,i)=>`<div class="sv-box"><div class="row" style="justify-content:space-between;align-items:center"><b>${banyak?esc(f.l)+' '+(i+1):'Data '+esc(sat)}</b>${banyak&&r.length>1?`<button class="btn bad sm" type="button" onclick="svBHapus('${f.k}',${i})">Hapus</button>`:''}</div>
+     <div class="row">${f.kol.map((c,j)=>`<div style="flex:${j===0||c.k==='ttl'?'1 1 100%':'1 1 120px'};min-width:120px"><label for="sb_l_${f.k}_${i}_${c.k}">${esc(c.l)}${c.k==='nama'||c.wajib?'':' <small>(boleh kosong)</small>'}</label>${c.t==='pilih'
+        ?`<select id="sb_l_${f.k}_${i}_${c.k}" onchange="svBR('${f.k}',${i},'${c.k}',this.value)"><option value=""></option>${c.opsi.map(o=>`<option${x[c.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`
+        :`<input id="sb_l_${f.k}_${i}_${c.k}" maxlength="${c.maks||100}" placeholder="${esc(c.ph||'')}" value="${esc(x[c.k])}" oninput="svBR('${f.k}',${i},'${c.k}',this.value)">`}</div>`).join('')}</div></div>`).join('')
+   +(banyak?`<p style="margin-top:8px"><button class="btn ghost sm" type="button" id="sb_add_${f.k}" onclick="svBTambah('${f.k}')"${r.length>=f.maks?' disabled':''}>+ Tambah ${esc(f.l.toLowerCase())}</button></p>`:'')}
+function svBFld(k){return svBSpec().f.find(f=>f.k===k)}
+function svBR(k,i,c,val){const r=SB.f.v[k];if(r&&r[i]){r[i][c]=val;svBPrev()}}
+function svBTambah(k){const f=svBFld(k),r=SB.f.v[k];if(r.length>=f.maks){toast('Maksimal '+f.maks+' baris per surat',1);return}
+  r.push(svBBaris(f));svBIsiForm();svBPrev();const e=$('#sb_l_'+k+'_'+(r.length-1)+'_nama');if(e)e.focus()}
+function svBHapus(k,i){const r=SB.f.v[k];if(r.length<2)return;r.splice(i,1);svBIsiForm();svBPrev()}
+// pencarian dari data sekolah (siswa atau guru)
+function svBCari(k,q){clearTimeout(SB.tm);SB.tm=setTimeout(async()=>{const f=svBFld(k);if(!f)return;
+  try{const r=await api(f.sumber==='guru'?'surat.guru.cari':'surat.siswa.cari',{q:q});if(!$('#sb_h_'+k))return;SB.hasil[k]={l:f.sumber==='guru'?r.guru:r.siswa,total:r.total};svBHasil(k)}catch(e){fail(e)}},q?250:0)}
+function svBHasil(k){const h=$('#sb_h_'+k),d=SB.hasil[k];if(!h||!d)return;
+  h.innerHTML=d.l.length?d.l.map((x,i)=>`<button class="btn ghost sm" style="display:block;width:100%;text-align:left;margin:2px 0" onclick="svBPilih('${k}',${i})">${esc(x.nama)} <small>${esc(x.nis||'')}${x.kelas?' &middot; '+esc(x.kelas):''}</small></button>`).join('')+(d.total>d.l.length?`<small style="display:block;padding:4px">Menampilkan ${d.l.length} dari ${d.total}. Persempit pencarian.</small>`:''):'<small style="display:block;padding:6px">Tidak ada yang cocok.</small>'}
+// mengisi baris dari data. Hanya kolom yang ada di jenis ini yang diisi. TTL, NISN, NIY, jabatan tidak ada di data, jadi diketik admin.
+function svBPilih(k,i){const f=svBFld(k),x=(SB.hasil[k]||{}).l&&SB.hasil[k].l[i];if(!f||!x)return;const r=SB.f.v[k];
+  if(r.some(y=>y.sid===x.id)){toast('Itu sudah ada di daftar',1);return}
+  const isi={sid:x.id,nama:x.nama},has=n=>f.kol.some(c=>c.k===n);
+  if(f.sumber==='siswa'){if(has('nis'))isi.nis=x.nis;if(has('kelas'))isi.kelas=svKelasTeks(x.tingkat,x.kelas)}
+  const sat=f.maks===1,last=r[r.length-1];
+  if(sat)Object.assign(r[0],svBBaris(f),isi);
+  else if(!svBIsi(f,last))Object.assign(last,isi);
+  else{if(r.length>=f.maks){toast('Maksimal '+f.maks+' baris per surat',1);return}r.push(Object.assign(svBBaris(f),isi))}
+  const ta=svBSpec().f.find(y=>y.t==='ta');
+  if(f.sumber==='siswa'&&x.ta&&ta&&!SB.f.v[ta.k]&&!(SB.t.ta_list||[]).length)SB.f.v[ta.k]=x.ta;
+  svBIsiForm();svBPrev();toast(f.sumber==='guru'?'Guru ditambahkan. Lengkapi NIY dan jabatan.':'Siswa ditambahkan. Lengkapi data yang kosong.')}
 
-function svBPilih(i){const x=SB.hasil[i];if(!x)return;const r=SB.f.siswa;
-  if(r.some(y=>y.sid===x.id)){toast('Siswa itu sudah ada di daftar',1);return}
-  const isi={sid:x.id,nama:x.nama,kelas:svKelasTeks(x.tingkat,x.kelas)},k=r.length-1;
-  if(!svBIsi(r[k]))Object.assign(r[k],isi);else{if(r.length>=SB_MAXR){toast('Maksimal '+SB_MAXR+' siswa per surat',1);return}r.push(Object.assign(SB_BARIS(),isi))}
-  if(x.ta&&!SB.f.ta&&!(SB.t.ta_list||[]).length){SB.f.ta=x.ta;const e=$('#sb_ta');if(e)e.value=x.ta}
-  svBRows();svBPrev();toast('Siswa ditambahkan. Lengkapi TTL dan NISN.')}
-
+// ---- pemeriksaan nomor: apakah nomor urut ini sudah dipakai (sekolah dan tahun yang sama), dan nomor terakhir yang dipakai
 function svBCek(){clearTimeout(SB.cekTm);const n=++SB.cekN;
   SB.cekTm=setTimeout(async()=>{const e=$('#sb_cek');if(!e)return;
     try{const r=await api('surat.arsip.cek',{sekolah:SV.sid,thn:SB.f.thn,no:SB.f.no,id:SB.arsipId});if(n!==SB.cekN||!$('#sb_cek'))return;
@@ -3292,45 +3332,54 @@ function svBCek(){clearTimeout(SB.cekTm);const n=++SB.cekN;
     catch(x){if(n===SB.cekN&&$('#sb_cek')){e.style.color='';e.textContent=''}}},350)}
 function svBSt(){const e=$('#sb_st');if(!e)return;
   e.textContent=SB.arsipId?'Surat ini sudah ada di arsip. Mencetak lagi akan memperbarui isinya di arsip. Pilih "Surat baru" untuk membuat surat lain.':'Mencetak otomatis menyimpan surat ke arsip.'}
-function svBBaru(){Object.assign(SB.f,{no:'',siswa:[SB_BARIS()]});SB.arsipId='';
-  const e=$('#sb_no');if(e)e.value='';svBRows();svBPrev();svBCek();svBSt()}
-async function svBCetak(){const f=SB.f,t=SB.t;if(!t)return;const r=f.siswa.filter(svBIsi),kurang=[];
+function svBBaru(){const sp=svBSpec();SB.f.no='';SB.f.v=svBV0(sp,SB.f.v);SB.arsipId='';SB.hasil={};
+  const e=$('#sb_no');if(e)e.value='';svBIsiForm();svBPrev();svBCek();svBSt()}
+// isian yang akan dikirim: baris daftar yang benar-benar kosong dibuang
+function svBBersih(){const sp=svBSpec(),v={};sp.f.forEach(f=>{const x=SB.f.v[f.k];v[f.k]=f.t==='daftar'?(x||[]).filter(r=>svBIsi(f,r)):x});return v}
+async function svBCetak(){const f=SB.f,t=SB.t,sp=svBSpec();if(!t)return;const v=svBBersih(),kurang=[];
   if(!svBNomor())kurang.push('nomor urut surat');
-  if(!r.length)kurang.push('data siswa');else if(r.some(x=>!String(x.nama||'').trim()))kurang.push('nama pada setiap siswa');
-  if(!String(f.ta||'').trim())kurang.push('tahun ajaran');
+  sp.f.forEach(fl=>{
+    if(fl.t==='daftar'){const r=v[fl.k];if(!r.length)kurang.push(fl.l.toLowerCase());
+      else fl.kol.forEach(c=>{if((c.k==='nama'||c.wajib)&&r.some(x=>!String(x[c.k]||'').trim()))kurang.push(c.l.toLowerCase()+' pada setiap baris')})}
+    else if(!fl.opsional&&!String(v[fl.k]||'').trim())kurang.push(fl.l.toLowerCase())});
   if(!String(t.kepala_nama||'').trim())kurang.push('nama penandatangan (isi di template)');
   if(kurang.length){toast('Lengkapi dulu: '+kurang.join(', '),1);return}
   const b=$('#sb_cetak'),teks=b.textContent;b.disabled=true;b.textContent='Menyimpan...';
-  const body={id:SB.arsipId,sekolah:SV.sid,tpl:SB.tid,jenis:'aktif',no:f.no,bln:f.bln,thn:f.thn,tgl:f.tgl,ta:f.ta,semester:f.semester,siswa:r};
+  const body={id:SB.arsipId,sekolah:SV.sid,tpl:SB.tid,jenis:sp.id,no:f.no,bln:f.bln,thn:f.thn,tgl:f.tgl,v:v};
   try{let x=await api('surat.arsip.simpan',body);
     if(x.duplikat&&x.duplikat.length){const d=x.duplikat[0];
       const ok=await ask('Nomor urut '+f.no+' tahun '+f.thn+' sudah pernah dipakai pada surat '+d.nomor+(d.tanggal?' ('+svTglIso(d.tanggal)+')':'')+(d.siswa?' untuk '+d.siswa:'')+'. Dua surat dengan nomor yang sama bisa menyulitkan saat diperiksa. Tetap pakai nomor ini?',{title:'Nomor sudah pernah dipakai',ok:'Ya, tetap pakai',bad:true});
       if(!ok)return;
       x=await api('surat.arsip.simpan',Object.assign({lanjut:true},body))}
     SB.arsipId=x.id;svBSt();svBCek();
-    svCetak(svSuratAktif(t,SB.lapis,svSek(),Object.assign(svBData(),{siswa:r,no:x.nomor}),false),'Surat Keterangan - '+r[0].nama+(r.length>1?' dan '+(r.length-1)+' siswa lain':''));
+    const nm=((v[sp.ringkas]||[])[0]||{}).nama||'',n=(v[sp.ringkas]||[]).length;
+    svCetak(svRender(sp,t,SB.lapis,svSek(),{no:x.nomor,tanggal:svTglIso(f.tgl),v:v},false),sp.nama+(nm?' - '+nm:'')+(n>1?' dan '+(n-1)+' lainnya':''));
     toast('Tersimpan di arsip: '+x.nomor)}
   catch(e){fail(e)}
   finally{b.disabled=false;b.textContent=teks}}
 
- 
-const SA={q:'',sek:'',tm:0,n:0};
+/* ---------- arsip surat ---------- */
+const SA={q:'',sek:'',jns:'',tm:0,n:0};
 function svArsip(){const b=$('#svb');
-  b.innerHTML=`<div class="sv-box" style="max-width:640px"><label for="sa_q" style="margin-top:0">Cari nomor atau nama siswa</label><input id="sa_q" type="search" maxlength="60" autocomplete="off" value="${esc(SA.q)}" oninput="svArsipCari(this.value)">
-   <label for="sa_sek">Sekolah</label><select id="sa_sek" onchange="SA.sek=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua sekolah</option>${SV.sek.map(x=>`<option value="${esc(x.id)}"${x.id===SA.sek?' selected':''}>${esc(x.nama)}</option>`).join('')}</select></div>
+  b.innerHTML=`<div class="sv-box" style="max-width:640px"><label for="sa_q" style="margin-top:0">Cari nomor atau nama</label><input id="sa_q" type="search" maxlength="60" autocomplete="off" value="${esc(SA.q)}" oninput="svArsipCari(this.value)">
+   <label for="sa_sek">Sekolah</label><select id="sa_sek" onchange="SA.sek=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua sekolah</option>${SV.sek.map(x=>`<option value="${esc(x.id)}"${x.id===SA.sek?' selected':''}>${esc(x.nama)}</option>`).join('')}</select>
+   <label for="sa_jns">Jenis surat</label><select id="sa_jns" onchange="SA.jns=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua jenis</option>${SV.jenis.map(x=>`<option value="${esc(x.id)}"${x.id===SA.jns?' selected':''}>${esc(x.nama)}</option>`).join('')}</select></div>
    <div id="sa_hasil" style="margin-top:8px;max-width:640px"><div class="skel"></div></div>`;
   svArsipCari(SA.q,1)}
 function svArsipCari(q,cepat){SA.q=q;clearTimeout(SA.tm);const n=++SA.n;
-  SA.tm=setTimeout(async()=>{try{const r=await api('surat.arsip.list',{q:q,sekolah:SA.sek});if(n!==SA.n||!$('#sa_hasil'))return;
-    $('#sa_hasil').innerHTML=r.surat.length?r.surat.map(x=>`<div class="sv-box"><b>${esc(x.nomor)}</b><br><small>${esc(x.sekolahNama)} &middot; ${esc(x.tanggal?svTglIso(x.tanggal):'')} &middot; ${x.jumlah} siswa</small><br>${esc(x.siswa)}
+  SA.tm=setTimeout(async()=>{try{const r=await api('surat.arsip.list',{q:q,sekolah:SA.sek,jenis:SA.jns});if(n!==SA.n||!$('#sa_hasil'))return;
+    $('#sa_hasil').innerHTML=r.surat.length?r.surat.map(x=>`<div class="sv-box"><b>${esc(x.nomor)}</b><br><small>${esc(x.jenisNama)} &middot; ${esc(x.sekolahNama)} &middot; ${esc(x.tanggal?svTglIso(x.tanggal):'')} &middot; ${x.jumlah} ${x.jenis==='tugas'?'guru':'siswa'}</small><br>${esc(x.siswa)}
       <p class="row" style="margin:6px 0 0"><button class="btn ghost sm" onclick="svBuka('${esc(x.id)}')">Buka di formulir</button></p></div>`).join('')
       +(r.total>r.surat.length?`<small>Menampilkan ${r.surat.length} dari ${r.total} surat terbaru. Persempit pencarian.</small>`:''):'<div class="sv-box">Belum ada surat'+(q?' yang cocok':' di arsip')+'.</div>'}
     catch(e){fail(e)}},cepat?0:250)}
-
-async function svBuka(id){try{const g=await api('surat.arsip.get',{id:id});
+// membuka surat arsip di formulir: mencetak lagi memperbarui surat itu (bukan membuat baru)
+async function svBuka(id){try{const g=await api('surat.arsip.get',{id:id}),sp=svJenis(g.jenis);
+    if(!sp){toast('Jenis surat ini tidak dikenal',1);return}
     if(!SV.sek.some(x=>x.id===g.sekolah)){toast('Sekolah surat ini sudah tidak ada',1);return}
     SV.sid=g.sekolah;SB.t=null;SB.want=g.tpl;SB.arsipId=g.id;
-    SB.f=Object.assign({},SB.f,{no:g.no,bln:g.bln||SB.f.bln,thn:g.thn||SB.f.thn,tgl:g.tgl||SB.f.tgl,ta:g.ta,semester:g.semester||SB.f.semester,siswa:(g.siswa&&g.siswa.length?g.siswa:[SB_BARIS()]).map(x=>Object.assign(SB_BARIS(),x))});
+    const v=svBV0(sp);sp.f.forEach(f=>{const x=g.v[f.k];if(x===undefined)return;
+      v[f.k]=f.t==='daftar'?(x.length?x:v[f.k]).map(r=>Object.assign(svBBaris(f),r)):x});
+    SB.f={jenis:sp.id,no:g.no,bln:g.bln||0,thn:g.thn||0,tgl:g.tgl||'',v:v};SB.hasil={};
     SV.tab='buat';svTampil();toast('Surat dibuka. Ubah lalu cetak untuk memperbarui arsip.')}
   catch(e){fail(e)}}
 
@@ -6157,6 +6206,12 @@ function srrGambar(cv,f,html){
 .tp-fg>.tp-f1{grid-column:span 2}
 .tp-fg h4{margin:0 0 12px;color:#fff;font:700 12px/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}
 .tp-fg ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.tp-ig{border-top:1px solid #ffffff22;padding:26px 0 8px}
+.tp-igg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:12px 0 14px}
+.tp-igg iframe{width:100%;height:480px;border:0;border-radius:14px;background:#fff}
+.tp-igg.tp-igp iframe{max-width:540px;height:560px}
+.tp-igv{padding:22px;border:1px dashed #ffffff44;border-radius:14px;color:#9fb8c4;text-align:center}
+.tp-igb{display:inline-block;padding:9px 18px;border-radius:999px;background:linear-gradient(135deg,#0a8f9d,#2ec4b6);color:#fff!important;font-weight:600;text-decoration:none!important}
 .tp-fl{display:block;height:50px;width:auto;max-width:100%;object-fit:contain;margin:0 0 12px}
 .tp-fn{font-family:Georgia,"Times New Roman",serif;font-size:1.35em;line-height:1.3;color:#fff;margin:0 0 10px}
 .tp-fg p{margin:0 0 8px;line-height:1.6;white-space:pre-line}
@@ -6186,7 +6241,13 @@ const TPF_BAWAAN=()=>({kolom:[{judul:'Jelajahi',links:[{t:'Beranda',u:'#/'},{t:'
 const tpfE=s=>typeof esc==='function'?esc(s):String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const tpfA=l=>{const ext=/^(https?:|mailto:|tel:)/i.test(l.u);return `<a href="${tpfE(l.u)}"${/^https?:/i.test(l.u)?' target="_blank" rel="noopener noreferrer"':''}>${tpfE(l.t)}</a>`};
 /* isi footer dari pengaturan; yang dikosongkan memakai data Profil Sekolah / bawaan */
-function tpfBangun(c,B){c=c||{};B=B||window.BOOT||{};const p=B.profil||{},E=tpfE;
+const tpfIgU=v=>{v=String(v||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@/,'').split(/[\/?#]/)[0];return /^[A-Za-z0-9._]{1,30}$/.test(v)?v:''};
+const tpfIgP=v=>{const m=/^(?:https:\/\/(?:www\.)?instagram\.com\/)?(p|reel|tv)\/([A-Za-z0-9_-]{5,20})(?:[\/?#].*)?$/i.exec(String(v||'').trim());return m?m[1].toLowerCase()+'/'+m[2]:''};
+function tpfIgBlok(c,pv){const u=tpfIgU(c.igUser),ps=(c.igPosts||[]).map(tpfIgP).filter(Boolean).slice(0,3);if(!u&&!ps.length)return '';
+  const ifr=s=>pv?`<div class="tp-igv">Postingan Instagram tampil di sini pada halaman publik</div>`:`<iframe src="https://www.instagram.com/${s}/embed" loading="lazy" title="Instagram" referrerpolicy="strict-origin-when-cross-origin" allowtransparency="true" scrolling="no"></iframe>`;
+  const isi=ps.length?`<div class="tp-igg">${ps.map(ifr).join('')}</div>`:`<div class="tp-igg tp-igp">${ifr(u)}</div>`;
+  return `<div class="tp-ig"><h4>Instagram${u?' @'+tpfE(u):''}</h4>${isi}${u?`<a class="tp-igb" href="https://www.instagram.com/${tpfE(u)}/" target="_blank" rel="noopener noreferrer">Ikuti @${tpfE(u)} di Instagram</a>`:''}</div>`}
+function tpfBangun(c,B,pv){c=c||{};B=B||window.BOOT||{};const p=B.profil||{},E=tpfE;
   const nama=c.nama||B.school||'';
   const lg=c.logoMode==='teks'?'':(c.logoMode==='khusus'&&c.logo)?c.logo:(TPL||TPL_BAWAAN);   // bawaan: logo header menggantikan tulisan nama
   const prof=String(p.profil_sekolah||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
@@ -6199,6 +6260,7 @@ function tpfBangun(c,B){c=c||{};B=B||window.BOOT||{};const p=B.profil||{},E=tpfE
     <div class="tp-f1">${lg?`<img class="tp-fl" ${c.logoMode==='khusus'?'':'data-s="1" '}src="${E(lg)}" alt="${E(nama)}">`:`<div class="tp-fn">${E(nama)}</div>`}${tag?`<p>${E(tag)}</p>`:''}</div>
     ${kol.map(k=>`<div>${k.judul?`<h4>${E(k.judul)}</h4>`:''}<ul>${(k.links||[]).map(l=>`<li>${tpfA(l)}</li>`).join('')}</ul></div>`).join('')}
     <div><h4>Hubungi kami</h4>${kon?`<p>${E(kon)}</p>`:'<p>Informasi kontak belum diisi.</p>'}${sos?`<div class="tp-fs">${sos}</div>`:''}</div></div>
+    ${tpfIgBlok(c,pv)}
     <div class="tp-fb"><div>${E(hak)}</div></div></div>`}
 function tpfTampil(){const ft=document.getElementById('tpFooter')||document.querySelector('footer');if(!ft)return;
   ft.id='tpFooter';ft.classList.add('tp-ft');ft.innerHTML=tpfBangun(TPF);
@@ -6239,7 +6301,7 @@ function tpfLogoPasang(){const i=document.getElementById('logo');if(i)i.src=TPL|
 const tpfBaris=a=>(a||[]).map(l=>l.t+' | '+l.u).join('\n');
 function tpfUraikan(txt){const out=[];let salah=0;String(txt||'').split('\n').forEach(b=>{b=b.trim();if(!b)return;const i=b.indexOf('|');if(i<0){salah++;return}const t=b.slice(0,i).trim(),u=b.slice(i+1).trim();if(!t||!u){salah++;return}out.push({t:t,u:u})});return{out:out,salah:salah}}
 function vFooterTpf(){
-  const c=(TPF&&(TPF.kolom&&TPF.kolom.length||TPF.logoMode==='khusus'||TPF.logoMode==='teks'||TPF.nama||TPF.tagline||TPF.kontak||TPF.hakcipta||(TPF.sosial&&TPF.sosial.length)))?TPF:Object.assign({},TPF_BAWAAN(),{nama:'',tagline:'',kontak:'',hakcipta:'',sosial:[]});
+  const c=(TPF&&(TPF.kolom&&TPF.kolom.length||TPF.igUser||(TPF.igPosts&&TPF.igPosts.length)||TPF.logoMode==='khusus'||TPF.logoMode==='teks'||TPF.nama||TPF.tagline||TPF.kontak||TPF.hakcipta||(TPF.sosial&&TPF.sosial.length)))?TPF:Object.assign({},TPF_BAWAAN(),{nama:'',tagline:'',kontak:'',hakcipta:'',sosial:[]});
   const kol=[0,1,2].map(i=>(c.kolom&&c.kolom[i])||{judul:'',links:[]});
   TPF_LG=c.logo||'';const lm=c.logoMode||'situs';
   M(`<h2>Footer</h2><div class="tp-ed" style="max-width:760px">
@@ -6252,6 +6314,10 @@ function vFooterTpf(){
    <label style="font-weight:400"><input type="radio" name="ft_lm" value="khusus" ${lm==='khusus'?'checked':''} onchange="tpfPrev()"> Pakai gambar lain (impor sendiri)</label>
    <label style="font-weight:400"><input type="radio" name="ft_lm" value="teks" ${lm==='teks'?'checked':''} onchange="tpfPrev()"> Hanya tulisan nama</label>
    <label for="ft_lf">Impor gambar footer (PNG atau JPG, otomatis diperkecil)</label><input id="ft_lf" type="file" accept="image/png,image/jpeg,image/webp" onchange="tpfFtLogo(this)"><small id="ft_li">${TPF_LG?'Gambar impor tersimpan.':''}</small>
+   <h3 style="margin-top:22px">Instagram</h3>
+   <p><small>Isi <b>nama akun</b> (contoh: <code>abcdinitiative</code>) agar muncul tombol "Ikuti". Untuk menampilkan isi Instagram langsung di footer, tempel <b>tautan postingan atau reel</b> (satu per baris, maksimal 3), contoh: <code>https://www.instagram.com/p/AbC123xyz/</code>. Bila tidak ada tautan postingan, yang tampil adalah kotak profil akun. Dikosongkan semua = bagian Instagram tidak tampil. Akun harus <b>publik</b>.</small></p>
+   <label for="ft_ig">Nama akun Instagram</label><input id="ft_ig" maxlength="60" placeholder="namaakun" value="${tpfE(c.igUser||'')}" oninput="tpfPrev()">
+   <label for="ft_igp">Tautan postingan / reel (satu per baris)</label><textarea id="ft_igp" placeholder="https://www.instagram.com/p/..." oninput="tpfPrev()">${tpfE((c.igPosts||[]).map(x=>'https://www.instagram.com/'+x+'/').join('\n'))}</textarea>
    <h3 style="margin-top:22px">Kolom tautan (maksimal 3 kolom)</h3>
    <p><small>Tulis satu tautan per baris dengan format <b>Teks | alamat</b>. Contoh alamat: <code>#/</code> (Beranda), <code>#/kampus</code> (Kampus Tujuan), <code>#/kategori/Berita</code>, <code>#/profil</code>, <code>#/login</code>, atau alamat lengkap yang diawali <code>https://</code>, <code>mailto:</code>, <code>tel:</code>. Maksimal 8 tautan per kolom. Kolom yang judul dan isinya kosong tidak ditampilkan.</small></p>
    ${kol.map((k,i)=>`<div class="tp-kol"><label for="ft_j${i}" style="margin-top:0">Judul kolom ${i+1}</label><input id="ft_j${i}" maxlength="30" value="${tpfE(k.judul||'')}" oninput="tpfPrev()">
@@ -6268,8 +6334,9 @@ function tpfFtLogo(i){const f=i.files[0];if(!f)return;
 function tpfBaca(){const g=id=>(document.getElementById(id)||{}).value||'';const s=tpfUraikan(g('ft_s'));let salah=s.salah;
   const kolom=[0,1,2].map(i=>{const u=tpfUraikan(g('ft_l'+i));salah+=u.salah;return{judul:g('ft_j'+i).trim(),links:u.out.slice(0,8)}}).filter(k=>k.judul||k.links.length);
   const rm=document.querySelector('input[name=ft_lm]:checked'),lm=rm?rm.value:'situs',lk=lm==='khusus'&&TPF_LG?TPF_LG:'';
-  return{cfg:{logoMode:(lm==='khusus'&&!lk)?'situs':lm,logo:lk,nama:g('ft_n').trim(),tagline:g('ft_t').trim(),kontak:g('ft_k').trim(),hakcipta:g('ft_h').trim(),kolom:kolom,sosial:s.out.slice(0,6)},salah:salah}}
-function tpfPrev(){const e=document.getElementById('ft_pv');if(!e)return;e.innerHTML=tpfBangun(tpfBaca().cfg)}
+  const igP=g('ft_igp').split('\n').map(tpfIgP).filter(Boolean).slice(0,3);if(g('ft_igp').trim()&&g('ft_igp').split('\n').filter(x=>x.trim()).some(x=>!tpfIgP(x)))salah++;
+  return{cfg:{igUser:tpfIgU(g('ft_ig')),igPosts:igP,logoMode:(lm==='khusus'&&!lk)?'situs':lm,logo:lk,nama:g('ft_n').trim(),tagline:g('ft_t').trim(),kontak:g('ft_k').trim(),hakcipta:g('ft_h').trim(),kolom:kolom,sosial:s.out.slice(0,6)},salah:salah}}
+function tpfPrev(){const e=document.getElementById('ft_pv');if(!e)return;e.innerHTML=tpfBangun(tpfBaca().cfg,undefined,true)}
 async function tpfSimpan(){const b=document.getElementById('ft_sv'),t=b.textContent;b.disabled=true;b.textContent='Menyimpan...';const r=tpfBaca();
   try{const c=await api('footer.save',r.cfg)||{};TPF=c;try{localStorage.setItem('ft_cfg',JSON.stringify(c))}catch(e){}tpfTampil();
     const diterima=(c.sosial||[]).length+(c.kolom||[]).reduce((n,k)=>n+k.links.length,0),dikirim=r.cfg.sosial.length+r.cfg.kolom.reduce((n,k)=>n+k.links.length,0);
