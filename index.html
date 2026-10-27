@@ -5365,6 +5365,7 @@ try{if(typeof DS_P==='object'){
   DS_P.cabang='<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>';
   DS_P.paket='<path d="M16.5 9.4l-9-5.19"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/>'}
   if(typeof DS_K==='object')DS_K['sa-cabang']='cabang'}catch(e){}
+const mnuTulis=x=>/career/i.test(String(x[0]))||/career\s*bank/i.test(String(x[1]))||x[0]==='surat'||/^(buat\s+)?surat\b/i.test(String(x[1]))||x[0]==='sert'||/^(buat\s+)?sertifikat\b/i.test(String(x[1]));
 const mnuCabPaket=x=>x[0]==='sa-cabang'||/paket\s*akses/i.test(String(x[1]))||/(^|[-_])paket/i.test(String(x[0]));
 /* Dashboard: menu dikelompokkan oleh TemaDashboard (dsGroups). Urutan kelompok (ikon di rel) dan urutan item dalam kelompok diatur di sini. */
 if(typeof dsGroups==='function'){const o=dsGroups;dsGroups=function(role,menus){let g=o.apply(this,arguments);
@@ -5373,6 +5374,9 @@ if(typeof dsGroups==='function'){const o=dsGroups;dsGroups=function(role,menus){
     /* Cabang dan Paket Akses dipindah ke kelompok Pengguna (bersama menu Pengguna) dan diberi ikon sendiri */
     const pen=g.find(x=>x.id==='pengguna');
     if(pen)g.filter(x=>x!==pen).forEach(x=>{const k=x.items.filter(mnuCabPaket);if(!k.length)return;x.items=x.items.filter(y=>!mnuCabPaket(y));k.forEach(y=>pen.items.push(y))});
+    /* Career Bank, Sertifikat, dan Surat dipindah ke kelompok "Artikel / Menulis" karena sama-sama kegiatan menulis */
+    const tul=g.find(x=>x.id==='tulis');
+    if(tul)g.filter(x=>x!==tul).forEach(x=>{const k=x.items.filter(mnuTulis);if(!k.length)return;x.items=x.items.filter(y=>!mnuTulis(y));k.forEach(y=>tul.items.push(y))});
     g=g.filter(x=>x.items.length);
     g.forEach(x=>x.items.forEach(y=>{if(typeof DS_K==='object'&&mnuCabPaket(y)){DS_K[y[0]]=y[0]==='sa-cabang'?'cabang':'paket'}}));
     const gi=(MNU.grp||{})[role],it=(MNU.dash||{})[role];
