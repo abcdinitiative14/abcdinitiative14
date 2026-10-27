@@ -364,10 +364,10 @@ const TA=()=>{const d=new Date(),a=d.getMonth()>=6?d.getFullYear():d.getFullYear
 const ST=['Status','Status','bool'];
 const ENT={
  siswa:{t:'Siswa',id:'Siswa_ID',s:1,ro:1,
-  cols:[['NIS','NIS'],['Nama_Siswa','Nama'],['Kelas_ID','Kelas','kelas'],['Tahun_Ajaran','Tahun ajaran'],['User_ID','Akun','akun']],
+  cols:[['NIS','NIS'],['Nama_Siswa','Nama'],['Kelas_ID','Kelas','kelas'],['Tahun_Ajaran','Tahun ajaran'],['TTL','Tempat, tanggal lahir','ttl'],['User_ID','Akun','akun']],
   form:[['NIS','Nomor Induk Siswa (NIS)'],['Nama_Siswa','Nama siswa'],['Kelas_ID','Kelas','kelas'],['Tahun_Ajaran','Tahun ajaran (contoh 2025/2026)','ta'],['User_ID','Akun login (opsional)','akun']]},
- guru:{t:'Guru',id:'Guru_ID',ro:1,
-  cols:[['Nama_Guru','Nama'],['Email','Email'],['User_ID','Akun','akun'],ST],
+ guru:{t:'Guru',id:'Guru_ID',s:1,ro:1,
+  cols:[['NIY','NIY'],['Nama_Guru','Nama'],['Email','Email'],['TTL','Tempat, tanggal lahir','ttl'],['User_ID','Akun','akun'],ST],
   form:[['Nama_Guru','Nama guru'],['Email','Email'],['User_ID','Akun login (opsional)','akun'],ST]},
  kelas:{t:'Kelas',id:'Kelas_ID',
   cols:[['Nama_Kelas','Nama kelas'],['Tingkat','Tingkat'],['Tahun_Ajaran','Tahun ajaran'],ST],
@@ -395,7 +395,7 @@ function vMaster(e){const c=ENT[e],hasK=c.cols.some(x=>x[0]==='Kelas_ID');
  if(!MEM.master)$('#mt').innerHTML='<div class="skel"></div>';
  swr('master','master.all',{},d=>{if(!$('#mt'))return;const k=$('#mk');if(k){const cur=k.value;k.innerHTML='<option value="">Semua kelas</option>'+d.kelas.map(x=>`<option value="${esc(x.Kelas_ID)}">${esc(x.Nama_Kelas)} (${esc(x.Tahun_Ajaran)})</option>`).join('');k.value=cur}drawMaster(e)})}
 function drawMaster(e){const d=MEM.master,c=ENT[e];if(!d||!$('#mt'))return;const L=LK(d);
- const cell=(r,x)=>{const v=r[x[0]];if(x[2]==='bool')return v===false?'Nonaktif':'Aktif';if(x[2])return esc(L[x[2]][v]||'');if(e==='siswa'&&x[0]==='NIS'&&!v)return '<span style="color:var(--bad)">lengkapi</span>';return esc(v)};
+ const cell=(r,x)=>{const v=r[x[0]];if(x[2]==='bool')return v===false?'Nonaktif':'Aktif';if(x[2]==='ttl')return esc([r.Tempat_Lahir,r.Tanggal_Lahir?(typeof pgTgl==='function'?pgTgl(r.Tanggal_Lahir):r.Tanggal_Lahir):''].filter(Boolean).join(', '));if(x[2])return esc(L[x[2]][v]||'');if(e==='siswa'&&x[0]==='NIS'&&!v)return '<span style="color:var(--bad)">lengkapi</span>';return esc(v)};
  const q=(($('#mq')||{}).value||'').toLowerCase(),kf=($('#mk')||{}).value||'',g=c.cols[c.s||0];
  let rows=d[e].filter(r=>!kf||r.Kelas_ID===kf);
  if(q)rows=rows.filter(r=>c.cols.some(x=>cell(r,x).toLowerCase().includes(q)));
@@ -476,7 +476,7 @@ const ROLES=['Admin','Guru','Wali Kelas','Murid'];
 const PG={tab:'',sel:new Set(),tampil:[]};   
 const PGU={id:'',role:'',ta:'',rows:[],wali:''};   
 const PGR={sibuk:false};                            
-const PGI_KOLOM={nama:'nama',namalengkap:'nama',username:'username',user:'username',password:'password',katasandi:'password',sandi:'password',email:'email',role:'role',peran:'role',aktif:'aktif',status:'aktif',ta:'ta',tahunajaran:'ta',nis:'nis',kelas:'kelas',mengajar:'mengajar',wali:'wali',walikelas:'wali'};
+const PGI_KOLOM={nama:'nama',namalengkap:'nama',username:'username',user:'username',password:'password',katasandi:'password',sandi:'password',email:'email',role:'role',peran:'role',aktif:'aktif',status:'aktif',ta:'ta',tahunajaran:'ta',nis:'nis',kelas:'kelas',mengajar:'mengajar',wali:'wali',walikelas:'wali',niy:'niy',tempat:'tempat',tempatlahir:'tempat',tanggal:'tanggal',tanggallahir:'tanggal'};
 const PGI_MAX=300, PGI_CHUNK=15;   
 let PGI=pgImBaru();                
 function pgImBaru(){return {rows:[],tak:[],nama:'',ta:'',cek:null,hasil:null,sibuk:false,prog:0,total:0,galat:''}}
@@ -484,8 +484,11 @@ function pgImBaru(){return {rows:[],tak:[],nama:'',ta:'',cek:null,hasil:null,sib
 
 const pwField=(id,label)=>`<label for="${id}">${label}</label><div class="pwbox"><input id="${id}" type="password" autocomplete="new-password"><button type="button" class="eye" onclick="tp('${id}',this)" aria-label="Tampilkan password">${EYE}</button></div>`;
 const pgTaBawaan=()=>typeof TA==='function'?TA():'';
+// tanggal yyyy-mm-dd -> "12 Mei 2010" (dipakai juga oleh daftar master di Index.html)
+function pgTgl(v){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));if(!m)return String(v||'');
+  return +m[3]+' '+['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][+m[2]-1]+' '+m[1]}
 
-/* ---------- daftar pengguna ---------- */
+ 
 function vPengguna2(){
   PGI=pgImBaru();PGU.id='';PG.sel=new Set();
   M(`<div class="row" style="justify-content:space-between"><h2>Pengguna</h2><span class="row"><button class="btn ghost" onclick="vImpor()">Impor CSV</button><button class="btn" onclick="formUser()">Tambah pengguna</button></span></div>
@@ -516,7 +519,7 @@ function drawUsers(){const all=MEM.users;if(!all||!$('#ut'))return;
   $('#ut').innerHTML=n?groups.map(([k,rows])=>{const sh=rows.slice(0,Math.max(0,left));left-=sh.length;sh.forEach(u=>{if(!(S.user&&S.user.id===u.User_ID))PG.tampil.push(u.User_ID)});
     return sh.length?(PG.tab===''?`<h3 style="margin:18px 0 6px">${k==='-'?'Belum ada role (menunggu verifikasi)':esc(k)} <small>(${rows.length})</small></h3>`:'')+uTable(sh)+(sh.length<rows.length?'<p><small>Sebagian tidak ditampilkan. Gunakan pencarian.</small></p>':''):''}).join(''):'<div class="empty">Tidak ada pengguna yang cocok.</div>';pgMenunggu();pgBar()}
 
- 
+/* ---------- hapus massal (centang) ---------- */
 function pgBar(){const el=$('#pgbar');if(!el)return;const n=PG.sel.size;
   el.innerHTML='<button class="btn ghost sm" onclick="pgPilihSemua()">Pilih semua yang tampil</button>'+(n?`<button class="btn ghost sm" onclick="pgPilihKosong()">Batal pilih</button><button class="btn bad sm" onclick="pgHapusTerpilih()">Hapus terpilih (${n})</button>`:'')}
 function pgPilih(id,on){if(on)PG.sel.add(id);else PG.sel.delete(id);pgBar()}
@@ -534,7 +537,7 @@ async function saveUser2(b){const tr=b.closest('tr'),a=tr.querySelector('.a').ch
     delete MEM.stats;delete MEM.master;toast('Tersimpan. Profil guru/siswa dibuat otomatis; lengkapi kelas dan mata pelajaran lewat tombol Ubah.');if(berubah)drawUsers()}
   catch(e){fail(e)}b.disabled=false}
 
- 
+/* ---------- pendaftaran mandiri (buka/tutup) ---------- */
 function pgDaftarDraw(buka){const el=$('#pgreg');if(!el)return;
   el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center;gap:12px"><div><b>Pendaftaran mandiri</b> &middot; <b style="color:${buka?'var(--teal)':'var(--bad)'}">${buka?'Terbuka':'Ditutup'}</b>
     <br><small>${buka?'Calon pengguna bisa mendaftar dari halaman depan. Akun baru tidak bisa masuk sebelum Anda memverifikasinya.':'Formulir pendaftaran di halaman depan dinonaktifkan. Akun hanya dibuat oleh admin (tombol Tambah pengguna atau Impor CSV).'}</small>
@@ -553,10 +556,10 @@ async function pgDaftarSet(buka){if(PGR.sibuk)return;PGR.sibuk=true;   // penjag
     if(!await ask(buka?'Buka pendaftaran mandiri? Siapa pun bisa mengirim pendaftaran dari halaman depan. Akun baru tetap menunggu verifikasi Anda.':'Tutup pendaftaran mandiri? Formulir pendaftaran di halaman depan dinonaktifkan. Akun yang sudah mendaftar tidak terpengaruh.',{title:buka?'Buka pendaftaran':'Tutup pendaftaran',ok:buka?'Buka':'Tutup'}))return;
     const b=$('#pgregb');if(b)b.disabled=true;
     try{const r=await api('registrasi.set',{buka:buka===true});pgDaftarDraw(r.buka!==false);toast(r.buka?'Pendaftaran mandiri dibuka':'Pendaftaran mandiri ditutup')}
-    catch(e){fail(e);pgDaftarMuat()}   
+    catch(e){fail(e);pgDaftarMuat()}   // gagal: tampilkan status sebenarnya dari server dan aktifkan lagi tombolnya
   }finally{PGR.sibuk=false}}
 
- 
+/* ---------- tambah pengguna ---------- */
 function formUser(){
   M(`<h2>Tambah pengguna</h2><div style="max-width:520px">
   <label>Nama lengkap</label><input id="un" autocomplete="off">
@@ -573,7 +576,7 @@ async function saveNewUser(){const b=$('#usv');b.disabled=true;b.textContent='Me
     toast(u.Role==='Admin'?'Pengguna ditambahkan':'Pengguna ditambahkan. Lengkapi kelas dan mata pelajaran lewat tombol Ubah.');vPengguna2()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
 
- 
+/* ---------- ubah pengguna: profil, kelas, mata pelajaran ---------- */
 const pgTaList=d=>[...new Set(d.kelas.map(k=>String(k.Tahun_Ajaran)))].sort().reverse();
 const pgOptKelas=(d,ta,sel)=>'<option value="">- pilih kelas -</option>'+d.kelas.filter(k=>String(k.Tahun_Ajaran)===ta&&(k.Status!==false||k.Kelas_ID===sel))
   .sort((a,b)=>String(a.Nama_Kelas).localeCompare(String(b.Nama_Kelas))).map(k=>`<option value="${esc(k.Kelas_ID)}" ${k.Kelas_ID===sel?'selected':''}>${esc(k.Nama_Kelas)}</option>`).join('');
@@ -589,9 +592,21 @@ async function pgUbah(id){
   try{const d=await api('master.all');MEM.master=d;if(PGU.id!==id||!$('#pgu'))return;pgUbahDraw(u,d)}
   catch(e){if(e.message==='SESI_HABIS')return fail(e);if($('#pgu'))$('#pgu').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
 
+// isian identitas (NIY untuk guru dan wali kelas; tempat dan tanggal lahir untuk guru, wali kelas, dan murid). Boleh kosong.
+function pgIdentitasHtml(u,d){
+  const guru=u.Role==='Guru'||u.Role==='Wali Kelas',g=guru?d.guru.find(x=>x.User_ID===u.User_ID):null,sw=u.Role==='Murid'?d.siswa.find(x=>x.User_ID===u.User_ID):null,r=g||sw;
+  PGU.tgl='';PGU.tglAneh=false;if(!r)return '';
+  const tg=String(r.Tanggal_Lahir||''),iso=/^\d{4}-\d{2}-\d{2}$/.test(tg);PGU.tglAneh=!!tg&&!iso;
+  const hariIni=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  return (g?`<label for="pgniy">NIY (boleh kosong)</label><input id="pgniy" value="${esc(g.NIY||'')}" maxlength="30" autocomplete="off">`:'')+
+    `<label for="pgtl">Tempat lahir (boleh kosong)</label><input id="pgtl" value="${esc(r.Tempat_Lahir||'')}" maxlength="60" autocomplete="off">
+    <label for="pgtg">Tanggal lahir (boleh kosong)</label><input id="pgtg" type="date" value="${iso?esc(tg):''}" min="1900-01-01" max="${hariIni}">`+
+    (PGU.tglAneh?`<p><small style="color:var(--bad)">Tanggal di data ini ("${esc(tg)}") tidak berformat tahun-bulan-tanggal. Pilih ulang tanggalnya di atas bila ingin memperbaikinya; bila dibiarkan kosong, nilai lama tidak diubah.</small></p>`:'')}
+
 function pgUbahDraw(u,d){
   const prof=pgKartu('Profil',`<label for="pgn">Nama lengkap</label><input id="pgn" value="${esc(u.Nama_Lengkap)}" autocomplete="off">
     <label for="pge">Email (opsional)</label><input id="pge" type="email" value="${esc(u.Email)}" autocomplete="off">
+    ${pgIdentitasHtml(u,d)}
     <p><button class="btn" id="pgpb" onclick="pgSimpanProfil()">Simpan profil</button></p>`);
   let tug;
   if(u.Role==='Murid')tug=pgMuridHtml(u,d);
@@ -601,11 +616,14 @@ function pgUbahDraw(u,d){
   if(u.Role==='Guru'||u.Role==='Wali Kelas')pgRowsDraw()}
 
 async function pgSimpanProfil(){const b=$('#pgpb'),nama=$('#pgn').value,email=$('#pge').value;b.disabled=true;
-  try{const r=await api('user.profil.save',{id:PGU.id,nama,email});const u=(MEM.users||[]).find(x=>x.User_ID===PGU.id);if(u){u.Nama_Lengkap=r.Nama_Lengkap;u.Email=r.Email}
+  const p={id:PGU.id,nama,email};
+  if($('#pgtl')){p.tempat=$('#pgtl').value;if($('#pgniy'))p.niy=$('#pgniy').value;
+    const tg=$('#pgtg').value;if(!(PGU.tglAneh&&!tg))p.tanggal=tg}   // tanggal lama berformat aneh dan tidak dipilih ulang: jangan dikirim (tidak dihapus)
+  try{const r=await api('user.profil.save',p);const u=(MEM.users||[]).find(x=>x.User_ID===PGU.id);if(u){u.Nama_Lengkap=r.Nama_Lengkap;u.Email=r.Email}
     delete MEM.master;delete MEM.stats;toast('Profil tersimpan')}
   catch(e){fail(e)}if($('#pgpb'))$('#pgpb').disabled=false}
 
-/* murid: NIS dan kelas */
+ 
 function pgMuridHtml(u,d){
   const tas=pgTaList(d);
   if(!tas.length)return pgKartu('Kelas dan NIS','<p><small>Belum ada kelas. Tambahkan kelas lebih dulu di menu Kelas.</small></p>');
@@ -634,7 +652,7 @@ async function pgTautkan(){const sid=$('#pgsw').value;if(!sid){toast('Pilih sisw
   if(!await ask('Tautkan akun ini ke data siswa yang dipilih?'))return;
   try{await api('user.siswa.tautkan',{id:PGU.id,siswaId:sid});delete MEM.master;delete MEM.stats;toast('Akun tertaut ke data siswa');pgUbah(PGU.id)}catch(e){fail(e)}}
 
- 
+/* guru / wali kelas: mata pelajaran per kelas, dan kelas yang diwalikan */
 function pgGuruHtml(u,d){
   const tas=pgTaList(d);
   if(!tas.length)return pgKartu('Kelas dan mata pelajaran','<p><small>Belum ada kelas. Tambahkan kelas lebih dulu di menu Kelas.</small></p>');
@@ -669,7 +687,7 @@ async function pgSimpanGuru(){const b=$('#pgsv'),rows=PGU.rows.filter(r=>r[0]||r
 /* ---------- hapus & reset password ---------- */
 function delUser(id){hapusPenggunaDialog([id],()=>{PG.sel=new Set();vPengguna2()})}   // hapus permanen, sama seperti hapus massal
 
- 
+/* ---------- reset password (password lama tidak bisa dilihat: disimpan sebagai hash) ---------- */
 function formReset(id){const u=(MEM.users||[]).find(x=>x.User_ID===id);if(!u)return;
   M(`<h2>Reset password</h2><div style="max-width:520px"><p>Pengguna: <b>${esc(u.Nama_Lengkap)}</b> (${esc(u.Username)})${u.Role?' &middot; '+esc(u.Role):''}</p>
   <p><small>Password lama tidak dapat dilihat karena disimpan dalam bentuk terenkripsi satu arah. Anda bisa membuat password baru: isi sendiri, atau kosongkan agar dibuatkan acak.</small></p>
@@ -687,8 +705,8 @@ function salinPw(){const el=$('#rpv');el.select();let ok=false;
   if(!ok&&navigator.clipboard)navigator.clipboard.writeText(el.value).then(()=>toast('Password disalin'),()=>toast('Salin manual: blok teks lalu Ctrl+C',1));
   else toast(ok?'Password disalin':'Salin manual: blok teks lalu Ctrl+C',ok?0:1)}
 
- 
-
+/* ---------- impor akun massal dari CSV ---------- */
+// penguraian CSV: pemisah koma atau titik koma (dideteksi dari baris judul), kutip ganda, BOM, baris kosong diabaikan
 function pgCsv(text){
   text=String(text||'').replace(/^\uFEFF/,'');
   const first=text.split(/\r\n|\n|\r/)[0]||'',sep=first.split(';').length>first.split(',').length?';':',';
@@ -709,18 +727,18 @@ function pgImBaca(text){
   const data=t.slice(1);if(data.length>PGI_MAX)throw new Error('Maksimal '+PGI_MAX+' baris per file ('+data.length+' baris ditemukan). Pecah file menjadi beberapa bagian.');
   const rows=data.map((r,i)=>{const o={_n:i+1};head.forEach((k,j)=>{if(k&&!(k in o))o[k]=String(r[j]==null?'':r[j]).trim()});return o});
   return {rows,tak}}
-
+// sel CSV aman: awalan = + - @ diberi tanda kutip supaya tidak dibaca Excel sebagai rumus
 function pgCsvSel(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return /[",;\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function pgUnduh(nama,teks,mime){const url=URL.createObjectURL(new Blob([teks],{type:mime})),a=document.createElement('a');a.href=url;a.download=nama;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
 function pgImContoh(){const ta=pgTaBawaan()||'2026/2027';
-  pgUnduh('contoh-impor-akun.csv','\uFEFF'+['nama,username,password,email,role,aktif,nis,kelas,mengajar,wali,ta',
-   'Budi Santoso,budi.s,,budi@contoh.sch.id,Murid,ya,12345,X-1,,,'+ta,'Ani Lestari,ani.l,,,Guru,ya,,,MTK@X-1|IPA@X-2,,'+ta,'Rina Wulandari,rina.w,,,Wali Kelas,ya,,,MTK@X-3,X-3,'+ta].join('\r\n'),'text/csv;charset=utf-8')}
+  pgUnduh('contoh-impor-akun.csv','\uFEFF'+['nama,username,password,email,role,aktif,nis,kelas,mengajar,wali,ta,niy,tempat,tanggal',
+   'Budi Santoso,budi.s,,budi@contoh.sch.id,Murid,ya,12345,X-1,,,'+ta+',,Makassar,2010-05-12','Ani Lestari,ani.l,,,Guru,ya,,,MTK@X-1|IPA@X-2,,'+ta+',Y-123,Gowa,1985-03-04','Rina Wulandari,rina.w,,,Wali Kelas,ya,,,MTK@X-3,X-3,'+ta+',,,'].join('\r\n'),'text/csv;charset=utf-8')}
 
 function vImpor(){
   PGI=pgImBaru();PGI.ta=pgTaBawaan();
   M(`<div class="row" style="justify-content:space-between"><h2>Impor akun dari CSV</h2><button class="btn ghost" id="imback" onclick="vPengguna2()">Kembali</button></div>
   <div class="dcard" style="max-width:760px;margin-bottom:14px"><p style="margin-top:0"><b>Langkah:</b> (1) unduh contoh, isi, simpan sebagai <b>CSV UTF-8</b>; (2) pilih file; (3) klik <b>Periksa</b>; (4) klik <b>Buat akun</b>.</p>
-   <p><small>Kolom wajib: <b>nama, username, role</b> (Guru, Wali Kelas, atau Murid). Kolom opsional: <b>password</b> (kosong = dibuatkan acak), email, aktif (ya/tidak), <b>ta</b> (tahun ajaran, mis. 2026/2027), <b>nis</b> dan <b>kelas</b> (untuk Murid), <b>mengajar</b> (untuk Guru dan Wali Kelas, contoh <code>MTK@X-1|IPA@X-2</code>), <b>wali</b> (nama kelas, untuk Wali Kelas). Maksimal ${PGI_MAX} baris per file. Role Admin tidak bisa diimpor.</small></p>
+   <p><small>Kolom wajib: <b>nama, username, role</b> (Guru, Wali Kelas, atau Murid). Kolom opsional: <b>password</b> (kosong = dibuatkan acak), email, aktif (ya/tidak), <b>ta</b> (tahun ajaran, mis. 2026/2027), <b>nis</b> dan <b>kelas</b> (untuk Murid), <b>mengajar</b> (untuk Guru dan Wali Kelas, contoh <code>MTK@X-1|IPA@X-2</code>), <b>wali</b> (nama kelas, untuk Wali Kelas), <b>niy</b> (untuk Guru dan Wali Kelas), <b>tempat</b> dan <b>tanggal</b> (tempat dan tanggal lahir, penulisan tanggal 2010-05-12 atau 12/05/2010). Maksimal ${PGI_MAX} baris per file. Role Admin tidak bisa diimpor.</small></p>
    <p><button class="btn ghost sm" onclick="pgImContoh()">Unduh contoh CSV</button></p></div>
   <div class="dcard" style="max-width:760px"><label for="imta">Tahun ajaran bawaan (dipakai bila kolom <b>ta</b> kosong)</label><input id="imta" value="${esc(PGI.ta)}" style="max-width:200px">
    <label for="imf">File CSV</label><input id="imf" type="file" accept=".csv,.txt,text/csv" onchange="pgImFile(this)"><div id="imi" style="margin-top:10px"></div></div>
