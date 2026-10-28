@@ -260,8 +260,9 @@ function route(){
   if(a==='kategori'){const c=CATS.includes(b)?b:'Berita';$('#listT').textContent=c;
     $('#listTabs').innerHTML=CATS.map(x=>`<a href="#/kategori/${x}" class="${x===c?'on':''}">${x}</a>`).join('');
     $('#listGrid').innerHTML=gridHtml(BOOT.articles.filter(x=>x.Kategori===c));show('v-list')}
-  else if(a==='berita'){openArticle(b)}
   else if(a==='career'){careerPublik()}
+  else if(a==='berita'){openArticle(b)}
+  else if(a==='verif'){typeof verifPublik==='function'?verifPublik(b,sub):addEventListener('load',()=>verifPublik(b,sub))}
   else if(a==='dashboard'){if(!S.user){go('#/login');return}openDash(b)}
   else{$('#homeGrid').innerHTML=gridHtml(BOOT.articles.slice(0,6));show('v-home');if(a==='profil'||a==='kampus')$('#'+a).scrollIntoView({behavior:'smooth'})}
 }
@@ -297,7 +298,7 @@ async function doReg(e){e.preventDefault();$('#bReg').disabled=true;$('#bReg').t
 async function logout(){try{await api('logout')}catch(e){}clearSess();go('#/')}
 
  
-const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
+const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['masuk','Surat masuk'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
  Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['w-binaan','Kelas Binaan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  Murid:[['m-ringkasan','Ringkasan'],['m-kelas','Kelas'],['m-lab','Booking Lab'],['m-pid','Pemakaian PID']]};
@@ -891,6 +892,33 @@ async function ytHapus(e) {
   } catch (x) { fail(x); }
 }
 </script>
+<style>
+ 
+.kgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
+.kc{position:relative;display:flex;flex-direction:column;gap:8px;padding:16px 16px 14px 20px;background:#fff;border:1px solid var(--line);border-radius:var(--r,14px);cursor:pointer;text-align:left;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s}
+.kc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--kc,var(--teal))}
+.kc:hover,.kc:focus-visible{transform:translateY(-2px);box-shadow:0 10px 24px #0a254018;border-color:var(--teal);outline:0}
+.kc h3{margin:0;font-size:17px;line-height:1.3;overflow-wrap:anywhere}
+.kc .kcm{font-size:13px;color:#5b7083}
+.kc .kcs{font-size:14px;line-height:1.5;color:#33485a;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.kc .kcf,.kcf{display:flex;flex-wrap:wrap;gap:6px}
+.kc .kcf{margin-top:auto;padding-top:2px}
+.kc .kcgo{font-size:13px;font-weight:700;color:var(--teal)}
+.kchip{display:inline-block;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--mist);color:var(--ink)}
+.kchip.w{background:#fdecec;color:var(--bad);font-weight:600}.kchip.ok{background:#e3f6f3;color:var(--teal);font-weight:600}
+.kbar{height:7px;border-radius:99px;background:var(--mist);overflow:hidden}.kbar i{display:block;height:100%;background:var(--teal);border-radius:99px}
+.kd-head{margin:4px 0 14px}.kd-head h2{margin:2px 0 8px;overflow-wrap:anywhere}
+.kd{display:grid;gap:18px;align-items:start}
+@media(min-width:900px){.kd.dua{grid-template-columns:minmax(0,1fr) 360px}}
+.kp{background:#fff;border:1px solid var(--line);border-radius:var(--r,14px);padding:18px 20px;min-width:0}
+.kp>h3{margin:0 0 10px;font:700 12px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.12em;color:var(--teal)}
+.kp p:last-child{margin-bottom:0}
+.kb-file{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--mist);margin:0 0 8px}
+.kb-ext{min-width:44px;height:44px;border-radius:10px;background:var(--ink);color:#fff;font:700 12px/44px system-ui,sans-serif;text-align:center}
+.kb-nm{flex:1;min-width:120px;overflow-wrap:anywhere;font-weight:600}
+.kb-view{margin:4px 0 10px}.kb-view iframe{width:100%;height:68vh;min-height:380px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.kb-view img{max-width:100%;border-radius:10px;border:1px solid var(--line)}
+</style>
 <script>
  
 const GS={pair:'',tab:'materi',cur:null};
@@ -930,33 +958,54 @@ function vGTugas(){
     $('#gp').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
     gDraw()})}
 function gTab(t){GS.tab=t;gDraw()}
+const gKartuMateri=x=>{const sn=x.Ringkas!==undefined?x.Ringkas:kcPotong(x.Isi,160),tl=okUrl(x.File_URL);
+  return `<div class="kc" role="button" tabindex="0" data-id="${esc(x.Materi_ID)}" onclick="gMateriBuka(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">${esc(x.Tanggal_Teks)}</div>${sn?`<div class="kcs">${esc(sn)}</div>`:''}<div class="kcf">${x.Lampiran?kcChip('&#128206; '+esc(x.Lampiran)):''}${tl?kcChip('&#128279; Tautan'):''}${!sn&&!x.Lampiran&&!tl?kcChip('Tanpa isi'):''}</div><div class="kcgo">Buka materi &rarr;</div></div>`};
+const gKartuTugas=x=>{const tg=kcTenggat(x.Tenggat),belum=Math.max(0,(x.Kumpul||0)-(x.Dinilai||0)),pct=x.Siswa?Math.round(100*(x.Kumpul||0)/x.Siswa):0;
+  return `<div class="kc" role="button" tabindex="0" style="--kc:${belum?'var(--bad)':'var(--teal)'}" data-id="${esc(x.Tugas_ID)}" onclick="gPeriksa(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">Tenggat: ${esc(x.Tenggat_Teks||'-')}</div><div class="kcs">${esc(kcPotong(x.Deskripsi,200))}</div>
+   <div><div class="kbar" role="img" aria-label="${x.Kumpul} dari ${x.Siswa} siswa mengumpulkan"><i style="width:${pct}%"></i></div><small style="color:#5b7083">Terkumpul ${x.Kumpul}/${x.Siswa} &middot; Dinilai ${x.Dinilai}</small></div>
+   <div class="kcf">${kcChip(tg.t,tg.c)}${belum?kcChip(belum+' perlu dinilai','w'):''}${x.Lampiran?kcChip('&#128206; Lampiran'):''}${x.Gambar?kcChip('Gambar'):''}</div><div class="kcgo">Buka &amp; nilai &rarr;</div></div>`};
 function gDraw(){const d=MEM.gd;if(!d||!$('#gbody')||!GS.pair)return;
   $('#gtabs').innerHTML=[['materi','Materi'],['tugas','Tugas']].map(([k,l])=>`<a href="javascript:void 0" onclick="gTab('${k}')" class="${k===GS.tab?'on':''}">${l}</a>`).join('');
   const [k,m]=GS.pair.split('|');
   if(GS.tab==='materi'){
     const l=d.materi.filter(x=>x.Kelas_ID===k&&x.Mapel_ID===m).sort((a,b)=>String(b.Tanggal).localeCompare(String(a.Tanggal)));
-    $('#gbody').innerHTML=`<p><button class="btn" onclick="gFormMateri()">Tambah materi</button></p>`+(l.length?`<div class="tw"><table><tr><th>Judul</th><th>Tanggal</th><th>Tautan</th><th></th></tr>`+l.map(x=>`<tr><td>${esc(x.Judul)}</td><td>${esc(x.Tanggal_Teks)}</td><td>${lnk(x.File_URL)||'-'}</td><td class="row"><button class="btn ghost sm" data-id="${esc(x.Materi_ID)}" onclick="gFormMateri(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(x.Materi_ID)}" onclick="gDelMateri(this.dataset.id)">Hapus</button></td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada materi untuk kelas dan mapel ini.</div>')}
+    $('#gbody').innerHTML=`<p><button class="btn" onclick="gFormMateri()">Tambah materi</button></p>`+(l.length?'<div class="kgrid">'+l.map(gKartuMateri).join('')+'</div>':'<div class="empty">Belum ada materi untuk kelas dan mapel ini.</div>')}
   else{
     const l=d.tugas.filter(x=>x.Kelas_ID===k&&x.Mapel_ID===m).sort((a,b)=>String(b.Tenggat).localeCompare(String(a.Tenggat)));
-    $('#gbody').innerHTML=`<p><button class="btn" onclick="gFormTugas()">Buat tugas</button></p>`+(l.length?`<div class="tw"><table><tr><th>Judul</th><th>Tenggat</th><th>Terkumpul</th><th>Dinilai</th><th></th></tr>`+l.map(x=>`<tr><td>${esc(x.Judul)}</td><td>${esc(x.Tenggat_Teks||'-')}</td><td>${x.Kumpul}/${x.Siswa}</td><td>${x.Dinilai}</td><td class="row"><button class="btn sm" data-id="${esc(x.Tugas_ID)}" onclick="gPeriksa(this.dataset.id)">Periksa &amp; nilai</button><button class="btn ghost sm" data-id="${esc(x.Tugas_ID)}" onclick="gFormTugas(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(x.Tugas_ID)}" onclick="gDelTugas(this.dataset.id)">Hapus</button></td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada tugas untuk kelas dan mapel ini.</div>')}}
+    $('#gbody').innerHTML=`<p><button class="btn" onclick="gFormTugas()">Buat tugas</button></p>`+(l.length?'<div class="kgrid">'+l.map(gKartuTugas).join('')+'</div>':'<div class="empty">Belum ada tugas untuk kelas dan mapel ini.</div>')}}
+
+/* halaman penuh satu materi: pembahasan, berkas (pratinjau), tautan, Edit/Hapus */
+async function gMateriBuka(id){const d=MEM.gd,r=d&&d.materi.find(x=>x.Materi_ID===id);if(!r)return;
+  if(r.Isi===undefined){MT('<div class="skel"></div><br><div class="skel"></div>');
+    try{r.Isi=(await api('materi.get',{id})).Isi}catch(e){fail(e);gHome();return}}
+  const tl=okUrl(r.File_URL);
+  MT(`<p><button class="btn ghost sm" onclick="GS.tab='materi';gHome()">&larr; Semua materi</button></p>
+  <div class="kd-head"><span class="kcm">${esc(pairLabel())} &middot; ${esc(r.Tanggal_Teks)}</span><h2>${esc(r.Judul)}</h2>
+   <div class="row"><button class="btn ghost sm" data-id="${esc(id)}" onclick="gFormMateri(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(id)}" onclick="gDelMateri(this.dataset.id,1)">Hapus</button></div></div>
+  <div class="kd ${r.Lampiran||tl?'dua':''}"><div class="kp"><h3>PEMBAHASAN</h3>${paras(r.Isi)||'<small style="color:#5b7083">Tidak ada teks pembahasan. Isi materi ada di berkas atau tautan.</small>'}</div>
+  ${r.Lampiran||tl?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${r.Lampiran?tgBerkas('materi',id,r.Lampiran):''}${tl?`<p style="margin:8px 0 0"><a class="btn ghost sm" href="${esc(tl)}" target="_blank" rel="noopener">Buka tautan</a></p>`:''}</div>`:''}</div>`);
+  tgAuto()}
 
 async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi_ID===id)||{}:{};
   if(id&&r.Isi===undefined){   // g.data tidak membawa isi materi: ambil dulu satu materi ini
     MT('<div id="gfm-wait"><div class="skel"></div></div>');
     try{const x=await api('materi.get',{id});r=Object.assign({},r,{Isi:x.Isi})}catch(e){if($('#gfm-wait')){fail(e);gHome()}return}
-    if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
+    if(!$('#gfm-wait'))return}   
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" value="${esc(r.Judul)}">
-  <label>Isi materi (boleh kosong jika memakai tautan; Enter = paragraf baru)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
+  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan; Enter = paragraf baru)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
   <label>Tautan dokumen / video (opsional)</label><input id="ml" placeholder="https://..." value="${esc(r.File_URL)}">
   <small>Tempel tautan Google Drive atau YouTube. Atur akses tautan agar siswa dapat membukanya.</small>
+  <label>Berkas materi (opsional)</label>${r.Lampiran?`<p style="margin:0 0 6px">Berkas sekarang: <b>${esc(r.Lampiran)}</b> &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="mhf" style="width:auto;margin-right:5px">hapus berkas</label></p>`:''}
+  <input id="mf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, gambar, Word, Excel, PowerPoint. Maksimal 8 MB. Murid dapat melihat pratinjau PDF dan gambar langsung. ${r.Lampiran?'Memilih berkas baru akan menggantikan berkas lama.':''}</small>
   <p class="row"><button class="btn" id="msv" data-id="${esc(id||'')}" onclick="gSaveMateri(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="gHome()">Batal</button></p></div>`)}
 async function gSaveMateri(id){const [k,m]=GS.pair.split('|'),b=$('#msv');b.disabled=true;b.textContent='Menyimpan...';
-  try{const r=await api('materi.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#mj').value,Isi:$('#mi').value,File_URL:$('#ml').value});
+  try{const fl=await tgBaca($('#mf'));if(fl)b.textContent='Mengunggah...';
+    const r=await api('materi.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#mj').value,Isi:$('#mi').value,File_URL:$('#ml').value,file:fl,hapusLampiran:!!($('#mhf')&&$('#mhf').checked)});
     const l=MEM.gd.materi,i=l.findIndex(x=>x.Materi_ID===r.Materi_ID);if(i>=0)l[i]=r;else l.push(r);toast('Materi tersimpan');GS.tab='materi';gHome()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
-async function gDelMateri(id){if(!await ask('Hapus materi ini?',{title:'Hapus materi',ok:'Hapus',bad:true}))return;
-  try{await api('materi.delete',{id});MEM.gd.materi=MEM.gd.materi.filter(x=>x.Materi_ID!==id);toast('Materi dihapus');gDraw()}catch(e){fail(e)}}
+async function gDelMateri(id,dariDetail){if(!await ask('Hapus materi ini?',{title:'Hapus materi',ok:'Hapus',bad:true}))return;
+  try{await api('materi.delete',{id});MEM.gd.materi=MEM.gd.materi.filter(x=>x.Materi_ID!==id);toast('Materi dihapus');if(dariDetail){GS.tab='materi';gHome()}else gDraw()}catch(e){fail(e)}}
 
 /* ---------- berkas tugas (unggah ke Drive sekolah; dipakai juga oleh KelasUI) ---------- */
 const TG_OK=['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','ppt','pptx','txt','csv'],TG_ACC='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv';
@@ -988,6 +1037,31 @@ async function tgGambar(id,el){if(!el)return;const key=(S&&S.token||'')+'|'+id;
     if(document.body.contains(el))el.innerHTML=`<img src="${TG_IMG[key]}" alt="Gambar tugas" style="max-width:100%;max-height:420px;border-radius:8px;border:1px solid var(--line)">`}
   catch(e){if(document.body.contains(el))el.innerHTML='<small style="opacity:.75">Gambar tidak bisa dimuat.</small>'}}
 (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{for(const k in TG_IMG){try{URL.revokeObjectURL(TG_IMG[k])}catch(e){}delete TG_IMG[k]}});
+/* ---------- kartu & pratinjau berkas ---------- */
+const kcPotong=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).replace(/\s+\S*$/,'')+'\u2026':t};
+const kcChip=(t,c)=>`<span class="kchip ${c||''}">${t}</span>`;
+const kcKey=(e,el)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
+const kcEks=n=>({pdf:'PDF',doc:'DOC',docx:'DOC',xls:'XLS',xlsx:'XLS',ppt:'PPT',pptx:'PPT',jpg:'IMG',jpeg:'IMG',png:'IMG',txt:'TXT',csv:'CSV'}[(String(n).split('.').pop()||'').toLowerCase()]||'FILE');
+function kcTenggat(iso){if(!iso)return{t:'Tanpa tenggat',c:''};const d=new Date(iso).getTime();if(!isFinite(d))return{t:'Tanpa tenggat',c:''};
+  const sel=d-Date.now();if(sel<0)return{t:'Lewat tenggat',c:'w'};if(sel<86400000)return{t:'Kurang dari 24 jam',c:'w'};
+  const h=Math.ceil(sel/86400000);return{t:h===1?'Besok':h+' hari lagi',c:h<=2?'w':''}}
+const TG_BL={};   // blob berkas (kunci memuat token sesi)
+async function tgBlob(tipe,id){const key=(S&&S.token||'')+'|'+tipe+'|'+id;
+  if(!TG_BL[key]){const r=await api('tugas.file',{tipe,id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    TG_BL[key]={url:URL.createObjectURL(new Blob([u],{type:r.mime})),mime:r.mime}}
+  return TG_BL[key]}
+/* satu baris berkas: ikon jenis, nama, tombol Pratinjau (PDF/gambar; gambar tampil otomatis) dan Unduh */
+function tgBerkas(tipe,id,nama){const k='bf'+Math.random().toString(36).slice(2,9),eks=(String(nama).split('.').pop()||'').toLowerCase(),lihat=/^(pdf|jpg|jpeg|png)$/.test(eks);
+  return `<div class="kb-file"><span class="kb-ext">${kcEks(nama)}</span><span class="kb-nm">${esc(nama)}</span>${lihat?`<button type="button" class="btn sm" data-tipe="${tipe}" data-id="${esc(id)}" data-v="${k}" ${eks==='pdf'?'':'data-auto="1" '}onclick="tgLihat(this)">Pratinjau</button>`:''}<button type="button" class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">Unduh</button></div><div class="kb-view" id="${k}"></div>`}
+async function tgLihat(b,auto){const v=document.getElementById(b.dataset.v);if(!v)return;
+  if(v.firstChild){if(!auto){v.innerHTML='';b.textContent='Pratinjau'}return}
+  v.innerHTML='<div class="skel"></div>';
+  try{const f=await tgBlob(b.dataset.tipe,b.dataset.id);if(!document.body.contains(v))return;
+    v.innerHTML=/^image\//.test(f.mime)?`<img src="${f.url}" alt="Pratinjau berkas">`:`<iframe src="${f.url}" title="Pratinjau berkas"></iframe><small style="opacity:.75">Jika pratinjau tidak tampil di perangkat ini, gunakan tombol Unduh.</small>`;
+    b.textContent='Tutup pratinjau'}
+  catch(e){if(document.body.contains(v))v.innerHTML='<small style="color:var(--bad)">Pratinjau tidak bisa dimuat. Gunakan tombol Unduh.</small>'}}
+const tgAuto=()=>document.querySelectorAll('button[data-auto]').forEach(b=>tgLihat(b,true));
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{for(const k in TG_BL){try{URL.revokeObjectURL(TG_BL[k].url)}catch(e){}delete TG_BL[k]}});
 const tgBtn=(tipe,id,nama)=>`<button class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">&#128206; ${esc(nama)}</button>`;
 
 function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}:{};
@@ -1007,20 +1081,23 @@ async function gSaveTugas(id){const [k,m]=GS.pair.split('|'),b=$('#tsv');b.disab
     if(gm||$('#thg')&&$('#thg').checked){const kk=(S&&S.token||'')+'|'+r.Tugas_ID;if(TG_IMG[kk]){try{URL.revokeObjectURL(TG_IMG[kk])}catch(e){}delete TG_IMG[kk]}}
     const l=MEM.gd.tugas,i=l.findIndex(x=>x.Tugas_ID===r.Tugas_ID);if(i>=0)l[i]=r;else l.push(r);toast('Tugas tersimpan');GS.tab='tugas';gHome()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
-async function gDelTugas(id){if(!await ask('Hapus tugas ini?',{title:'Hapus tugas',ok:'Hapus',bad:true}))return;
-  try{await api('tugas.delete',{id});MEM.gd.tugas=MEM.gd.tugas.filter(x=>x.Tugas_ID!==id);toast('Tugas dihapus');gDraw()}catch(e){fail(e)}}
+async function gDelTugas(id,dariDetail){if(!await ask('Hapus tugas ini?',{title:'Hapus tugas',ok:'Hapus',bad:true}))return;
+  try{await api('tugas.delete',{id});MEM.gd.tugas=MEM.gd.tugas.filter(x=>x.Tugas_ID!==id);toast('Tugas dihapus');if(dariDetail){GS.tab='tugas';gHome()}else gDraw()}catch(e){fail(e)}}
 
 async function gPeriksa(id){MT('<div class="skel"></div><br><div class="skel"></div>');
   try{GS.cur=await api('tugas.kumpulan',{id});gDrawKumpul()}catch(e){fail(e);GS.tab='tugas';gHome()}}
-function gDrawKumpul(){const r=GS.cur,t=r.tugas;
-  MT(`<div class="row" style="justify-content:space-between"><h2>${esc(t.Judul)}</h2><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Kembali</button></div>
-  <p><small>${esc(pairLabel())} &middot; Tenggat: ${esc(t.Tenggat_Teks||'tanpa tenggat')}</small></p>
-  ${t.Gambar?'<div id="tgp" style="margin-bottom:8px"></div>':''}
-  ${t.Lampiran?`<p>Lampiran tugas: ${tgBtn('lampiran',t.Tugas_ID,t.Lampiran)}</p>`:''}
+function gDrawKumpul(){const r=GS.cur,t=r.tugas,tg=kcTenggat(t.Tenggat),belum=r.daftar.filter(x=>x.Pengumpulan_ID&&x.Nilai==='').length;
+  MT(`<p><button class="btn ghost sm" onclick="GS.tab='tugas';gHome()">&larr; Semua tugas</button></p>
+  <div class="kd-head"><span class="kcm">${esc(pairLabel())}</span><h2>${esc(t.Judul)}</h2>
+   <div class="kcf" style="margin-bottom:10px">${kcChip('Tenggat: '+esc(t.Tenggat_Teks||'-'))}${kcChip(tg.t,tg.c)}${kcChip('Terkumpul '+t.Kumpul+'/'+t.Siswa)}${kcChip('Dinilai '+t.Dinilai,'ok')}${belum?kcChip(belum+' perlu dinilai','w'):''}</div>
+   <div class="row"><button class="btn ghost sm" data-id="${esc(t.Tugas_ID)}" onclick="gFormTugas(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(t.Tugas_ID)}" onclick="gDelTugas(this.dataset.id,1)">Hapus</button></div></div>
+  <div class="kd ${t.Lampiran?'dua':''}"><div class="kp"><h3>PETUNJUK TUGAS</h3>${paras(t.Deskripsi)}${t.Gambar?'<div id="tgp" style="margin-top:10px"></div>':''}</div>
+  ${t.Lampiran?`<div class="kp"><h3>LAMPIRAN TUGAS</h3>${tgBerkas('lampiran',t.Tugas_ID,t.Lampiran)}</div>`:''}</div>
+  <h3 style="margin:24px 0 8px">Jawaban murid</h3>
   <div class="tw"><table><tr><th>Siswa</th><th>Jawaban</th><th>Waktu kirim</th><th>Nilai (0-100)</th><th>Umpan balik</th><th></th></tr>`+
   (r.daftar.length?r.daftar.map((x,i)=>x.Pengumpulan_ID?
     `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:380px;white-space:pre-wrap">${esc(x.Jawaban)}${x.File_Nama?`${x.Jawaban?'<br>':''}${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
-    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>');if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'))}
+    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>');if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));tgAuto()}
 async function gNilai(i){const x=GS.cur.daftar[i],b=$('#sb_'+i);b.disabled=true;b.textContent='...';
   try{const r=await api('tugas.nilai',{id:x.Pengumpulan_ID,Nilai:$('#n_'+i).value,Umpan_Balik:$('#u_'+i).value});
     x.Nilai=r.Nilai;x.Umpan_Balik=r.Umpan_Balik;toast('Nilai tersimpan');
@@ -2127,7 +2204,7 @@ Object.assign(VIEWS,{'g-ujian':vGUjian,'m-ujian':vMUjian});
 <script>
 
 
-const MK={id:'',tab:'materi',t:'',draft:{},dtk:''};   
+const MK={id:'',tab:'materi',t:'',m:'',draft:{},dtk:''};   
 const mkKey=()=>'mk:'+MK.id;
 const mkDraft=()=>{if(MK.dtk!==(S&&S.token)){MK.draft={};MK.dtk=S&&S.token}return MK.draft};
 const mkAdaDraf=t=>{const v=mkDraft()[t.Tugas_ID];return v!==undefined&&v!==t.Jawaban&&String(v).trim()!==''};
@@ -2162,22 +2239,25 @@ function mkListDraw(d){
    :'<div class="empty">Belum ada mata pelajaran untuk kelas Anda. Admin mengisinya di menu Pengampu Mapel.</div>')}
 
 /* ---------- Halaman 2: satu mapel ---------- */
-function mkDetail(id){MK.id=id;MK.t='';
+function mkDetail(id){MK.id=id;MK.t='';MK.m='';
   M('<p><a class="btn ghost sm" href="#/dashboard/m-kelas">&larr; Semua kelas</a></p><div id="mkh"></div><div class="tabs" id="mkt"></div><div id="mkb"></div>');
   const k=mkKey();if(!MEM[k])$('#mkb').innerHTML=mkSkel;
   mkSwr(k,'mk.data',{Mapel_ID:id},'#mkb',d=>{if(MK.id===id)mkRender(d)})}
-function mkTab(t){MK.tab=t;MK.t='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
+function mkTab(t){MK.tab=t;MK.t='';MK.m='';const tb=$('#mkt');if(tb)tb.style.display='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
 function mkRender(d){
   $('#mkh').innerHTML=`<h2 style="margin-bottom:4px">${esc(d.mapel.Mapel)}</h2><p style="margin-top:0"><small>Kelas ${esc(d.kelas)} &middot; ${esc(d.mapel.Guru||'-')} &middot; Tahun ajaran ${esc(d.Tahun_Ajaran)}</small> <button class="btn ghost sm" onclick="mkDetail(MK.id)">Segarkan</button></p>`;
   const belum=d.tugas.filter(t=>t.Status==='Belum').length,siap=d.ujian.filter(e=>e.State==='Siap'||e.State==='Berjalan').length;
   $('#mkt').innerHTML=[['materi','Materi',d.materi.length,0,''],['tugas','Tugas &amp; Nilai',d.tugas.length,belum,''],['ujian','Ujian',d.ujian.length,siap,'ok']]
     .map(([k,l,n,p,c])=>`<a href="javascript:void 0" onclick="mkTab('${k}')" class="${k===MK.tab?'on':''}">${l} (${n})${p?`<span class="mkbadge ${c}">${p}</span>`:''}</a>`).join('');
-  if(!MK.t)mkBody(d)}   // jangan menimpa form jawaban yang sedang diisi saat data tersegarkan di belakang layar
+  if(!MK.t&&!MK.m)mkBody(d)}   // jangan menimpa form jawaban yang sedang diisi saat data tersegarkan di belakang layar
 function mkBody(d){const el=$('#mkb');if(!el)return;
   if(MK.tab==='materi')
-    el.innerHTML=d.materi.length?d.materi.map(x=>`<div class="card" style="margin-bottom:14px"><div class="cb"><h3>${esc(x.Judul)}</h3><small>${esc(x.Guru)} &middot; ${esc(x.Tanggal_Teks)}</small><div style="margin-top:10px">${paras(x.Isi)}${typeof lnkPv==='function'?lnkPv(x.File_URL):lnk(x.File_URL)}</div></div></div>`).join(''):'<div class="empty">Belum ada materi untuk mata pelajaran ini.</div>';
+    el.innerHTML=d.materi.length?'<div class="kgrid">'+d.materi.map(x=>{const sn=kcPotong(x.Isi,170),tl=okUrl(x.File_URL);
+      return `<div class="kc" role="button" tabindex="0" data-id="${esc(x.Materi_ID)}" onclick="mkMateri(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">${esc(x.Guru)} &middot; ${esc(x.Tanggal_Teks)}</div>${sn?`<div class="kcs">${esc(sn)}</div>`:''}<div class="kcf">${x.Lampiran?kcChip('&#128206; '+esc(x.Lampiran)):''}${tl?kcChip('&#128279; Tautan'):''}${!sn&&!x.Lampiran&&!tl?kcChip('Tanpa isi'):''}</div><div class="kcgo">Buka materi &rarr;</div></div>`}).join('')+'</div>':'<div class="empty">Belum ada materi untuk mata pelajaran ini.</div>';
   else if(MK.tab==='tugas')
-    el.innerHTML=d.tugas.length?'<div class="grid">'+d.tugas.map(t=>`<div class="card"><div class="cb">${stBadge(t)}<h3>${esc(t.Judul)}</h3><small>Tenggat: ${esc(t.Tenggat_Teks||'-')}</small>${mkAdaDraf(t)?'<br><small style="color:var(--bad)">Ada draf jawaban yang belum dikirim</small>':''}${t.Status==='Dinilai'?`<p><b>Nilai: ${esc(t.Nilai)}</b></p>`:''}<p><button class="btn sm" onclick="mkTugas('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kerjakan':'Lihat'}</button></p></div></div>`).join('')+'</div>':'<div class="empty">Belum ada tugas untuk mata pelajaran ini.</div>';
+    el.innerHTML=d.tugas.length?'<div class="kgrid">'+d.tugas.map(t=>{const tg=kcTenggat(t.Tenggat),sel=t.Status==='Dinilai'?'var(--teal)':t.Status==='Terkumpul'?'#c79100':'var(--bad)';
+      return `<div class="kc" role="button" tabindex="0" style="--kc:${sel}" data-id="${esc(t.Tugas_ID)}" onclick="mkTugas(this.dataset.id)" onkeydown="kcKey(event,this)">${stBadge(t)}<h3>${esc(t.Judul)}</h3><div class="kcm">${esc(t.Guru||'')} &middot; Tenggat: ${esc(t.Tenggat_Teks||'-')}</div><div class="kcs">${esc(kcPotong(t.Deskripsi,200))}</div>
+       <div class="kcf">${t.Status==='Belum'?kcChip(tg.t,tg.c):''}${t.Status==='Dinilai'?kcChip('Nilai: '+esc(t.Nilai),'ok'):''}${t.Lampiran?kcChip('&#128206; Lampiran'):''}${t.Gambar?kcChip('Gambar'):''}${t.File_Nama?kcChip('Berkas terkirim','ok'):''}${mkAdaDraf(t)?kcChip('Draf belum dikirim','w'):''}</div><div class="kcgo">${t.Status==='Belum'?'Kerjakan':'Lihat'} &rarr;</div></div>`}).join('')+'</div>':'<div class="empty">Belum ada tugas untuk mata pelajaran ini.</div>';
   else
     el.innerHTML=d.ujian.length?'<div class="grid">'+d.ujian.map(u=>`<div class="card"><div class="cb"><span class="tag" style="color:${mCol[u.State]||'inherit'}">${esc(u.State)}</span><h3>${esc(u.Judul)}</h3><small>${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${u.Soal} soal</small><br><small>${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small>`+
       (u.State==='Siap'?`<p><button class="btn sm" onclick="mkMulai('${esc(u.Ujian_ID)}',this)">Mulai ujian</button></p>`:
@@ -2186,25 +2266,40 @@ function mkBody(d){const el=$('#mkb');if(!el)return;
        u.State==='Terlewat'?'<p><small>Waktu ujian sudah lewat.</small></p>':'<p><small>Belum dibuka.</small></p>')+'</div></div>').join('')+'</div>':'<div class="empty">Belum ada ujian untuk mata pelajaran ini.</div>'}
 
 /* ---------- Tugas: lihat & kirim jawaban ---------- */
-function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);if(!t||!$('#mkb'))return;MK.t=id;
-  const lock=t.Status==='Dinilai',late=t.Tenggat&&new Date(t.Tenggat)<new Date(),dr=mkDraft()[id],isi=!lock&&dr!==undefined?dr:t.Jawaban;
-  $('#mkb').innerHTML=`<div style="max-width:680px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">${esc(t.Judul)}</h3><button class="btn ghost sm" onclick="mkTutup()">Kembali</button></div>
-  <p><small>Guru: ${esc(t.Guru)} &middot; Tenggat: ${esc(t.Tenggat_Teks||'tanpa tenggat')}</small></p>${paras(t.Deskripsi)}
-  ${t.Gambar?'<div id="tgp" style="margin:0 0 10px"></div>':''}
-  ${t.Lampiran?`<p>Lampiran dari guru: ${tgBtn('lampiran',t.Tugas_ID,t.Lampiran)}</p>`:''}
+const mkGulir=()=>{try{const e=$('#mkh');if(e)e.scrollIntoView({block:'start'})}catch(e){}};
+/* halaman penuh satu materi: pembahasan, berkas (pratinjau PDF/gambar), tautan */
+function mkMateri(id){const d=MEM[mkKey()],x=d&&d.materi.find(m=>m.Materi_ID===id);if(!x||!$('#mkb'))return;MK.m=id;MK.t='';
+  const tb=$('#mkt');if(tb)tb.style.display='none';const tl=okUrl(x.File_URL),ada=x.Lampiran||tl;
+  $('#mkb').innerHTML=`<p><button class="btn ghost sm" onclick="mkTutup()">&larr; Semua materi</button></p>
+  <div class="kd-head"><span class="kcm">${esc(x.Guru)} &middot; ${esc(x.Tanggal_Teks)}</span><h2>${esc(x.Judul)}</h2></div>
+  <div class="kd ${ada?'dua':''}"><div class="kp"><h3>PEMBAHASAN</h3>${paras(x.Isi)||'<small style="color:#5b7083">Tidak ada teks pembahasan. Isi materi ada di berkas atau tautan.</small>'}</div>
+  ${ada?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${x.Lampiran?tgBerkas('materi',x.Materi_ID,x.Lampiran):''}${tl?`<div style="margin-top:8px">${typeof lnkPv==='function'?lnkPv(x.File_URL):lnk(x.File_URL)}</div>`:''}</div>`:''}</div>`;
+  mkGulir();tgAuto()}
+
+/* ---------- Tugas: halaman penuh (petunjuk + lampiran di kiri, jawaban di kanan) ---------- */
+function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);if(!t||!$('#mkb'))return;MK.t=id;MK.m='';
+  const tb=$('#mkt');if(tb)tb.style.display='none';
+  const lock=t.Status==='Dinilai',late=t.Tenggat&&new Date(t.Tenggat)<new Date(),dr=mkDraft()[id],isi=!lock&&dr!==undefined?dr:t.Jawaban,tg=kcTenggat(t.Tenggat);
+  $('#mkb').innerHTML=`<p><button class="btn ghost sm" onclick="mkTutup()">&larr; Semua tugas</button></p>
+  <div class="kd-head"><span class="kcm">${esc(t.Guru)}</span><h2>${esc(t.Judul)}</h2><div class="kcf">${stBadge(t)}${kcChip('Tenggat: '+esc(t.Tenggat_Teks||'tanpa tenggat'))}${t.Status==='Belum'&&t.Tenggat?kcChip(tg.t,tg.c):''}</div></div>
+  <div class="kd dua"><div>
+   <div class="kp"><h3>PETUNJUK TUGAS</h3>${paras(t.Deskripsi)}${t.Gambar?'<div id="tgp" style="margin:10px 0 0"></div>':''}</div>
+   ${t.Lampiran?`<div class="kp" style="margin-top:16px"><h3>LAMPIRAN DARI GURU</h3>${tgBerkas('lampiran',t.Tugas_ID,t.Lampiran)}</div>`:''}
+  </div>
+  <div class="kp"><h3>JAWABAN ANDA</h3>
   ${late&&!lock?'<p style="color:var(--bad)">Tenggat sudah lewat. Jawaban tetap bisa dikirim, tetapi ditandai terlambat.</p>':''}
   ${lock?`<div class="stat"><b>${esc(t.Nilai)}</b>Nilai dari guru${t.Umpan_Balik?`<br><br>${esc(t.Umpan_Balik)}`:''}</div>`:''}
-  <label>Jawaban Anda</label><textarea id="mkj" oninput="mkDraft()[MK.t]=this.value" style="min-height:180px" ${lock?'disabled':''}>${esc(isi)}</textarea>${!lock&&dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}
-  ${lock?(t.File_Nama?`<p>Berkas Anda: ${tgBtn('jawaban',t.Pengumpulan_ID,t.File_Nama)}</p>`:''):`<label>Berkas jawaban (opsional)</label>
-  ${t.File_Nama?`<p style="margin:0 0 6px">Berkas terkirim: ${tgBtn('jawaban',t.Pengumpulan_ID,t.File_Nama)} &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="mkh" style="width:auto;margin-right:5px">hapus berkas</label></p>`:''}
+  <label for="mkj">Jawaban teks</label><textarea id="mkj" oninput="mkDraft()[MK.t]=this.value" style="min-height:180px" ${lock?'disabled':''}>${esc(isi)}</textarea>${!lock&&dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}
+  ${lock?(t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}`:''):`<label for="mkf">Berkas jawaban (opsional)</label>
+  ${t.File_Nama?`<div style="margin:0 0 6px">${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}<label style="display:inline;font-weight:400"><input type="checkbox" id="mkhf" style="width:auto;margin-right:5px">hapus berkas ini</label></div>`:''}
   <input id="mkf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${t.File_Nama?'Memilih berkas baru akan menggantikan berkas lama.':'Boleh dikirim bersama jawaban teks atau sendiri.'}</small>`}
-  ${t.Waktu_Teks?`<small>Terakhir dikirim: ${esc(t.Waktu_Teks)}${t.Terlambat?' (terlambat)':''}</small>`:''}
-  ${lock?'':`<p><button class="btn" id="mkk" onclick="mkKirim('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kirim jawaban':'Perbarui jawaban'}</button></p>`}</div>`;
-  if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'))}
-function mkTutup(){MK.t='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
+  ${t.Waktu_Teks?`<p style="margin:10px 0 0"><small>Terakhir dikirim: ${esc(t.Waktu_Teks)}${t.Terlambat?' (terlambat)':''}</small></p>`:''}
+  ${lock?'':`<p><button class="btn" id="mkk" onclick="mkKirim('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kirim jawaban':'Perbarui jawaban'}</button></p>`}</div></div>`;
+  if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));mkGulir();tgAuto()}
+function mkTutup(){MK.t='';MK.m='';const tb=$('#mkt');if(tb)tb.style.display='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
 async function mkKirim(id){const b=$('#mkk'),jw=$('#mkj').value,key=mkKey(),t0=b.textContent;b.disabled=true;b.textContent='Memeriksa...';
   try{const fl=await tgBaca($('#mkf'));b.textContent=fl?'Mengunggah... (jangan tutup halaman)':'Mengirim...';
-    const r=await api('m.kumpul',{id,Jawaban:jw,file:fl,hapusFile:!!($('#mkh')&&$('#mkh').checked)}),d=MEM[key];
+    const r=await api('m.kumpul',{id,Jawaban:jw,file:fl,hapusFile:!!($('#mkhf')&&$('#mkhf').checked)}),d=MEM[key];
     if(d){const i=d.tugas.findIndex(x=>x.Tugas_ID===r.Tugas_ID);if(i>=0)d.tugas[i]=r}
     delete MEM.mkl;delete MEM.mr;if(typeof mrBadgeDraw==='function')mrBadgeDraw(true);   // daftar kartu, Ringkasan, dan lencana menu ikut disegarkan
     delete mkDraft()[id];toast('Jawaban terkirim');if($('#mkb')&&mkKey()===key)mkTutup()}
@@ -3005,7 +3100,8 @@ const SV_CSS=`.sv-paper{position:relative;z-index:0;background:#fff;color:#000;f
 .sv-paper .tt{position:relative;z-index:0;margin:8mm 0 0 auto;width:78mm}
 .sv-paper .tt .sp{height:24mm}
 .sv-paper .tt b.n{text-decoration:underline}
-.sv-contoh{background:#fff8d6;padding:0 1mm}`;
+.sv-paper .vq{display:flex;align-items:center;gap:3mm;margin-top:6mm;font-family:Arial,Helvetica,sans-serif;font-size:8pt;line-height:1.3;page-break-inside:avoid}
+.sv-paper .vq svg{width:22mm;height:22mm;flex:none;display:block}`;
 function svCssPasang(){if(document.getElementById('sv_css'))return;const s=document.createElement('style');s.id='sv_css';
   s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;align-items:start}
 .sv-wrap{border:1px solid var(--line);border-radius:10px;background:var(--mist);overflow:hidden;position:relative}
@@ -3028,16 +3124,16 @@ function svLayers(lapis,jangkar,edit,z){return (lapis||[]).map((l,i)=>({l:l,i:i}
   .map(x=>`<img class="sv-l${edit&&x.i===SV.pilih?' on':''}" data-i="${x.i}" src="${esc(x.l.img)}" alt="" draggable="false" style="left:${+x.l.x}%;top:${+x.l.y}%;width:${+x.l.w}%;opacity:${(+x.l.o)/100};z-index:${x.l.z==='belakang'?-1:1}">`).join('')}
 function svKop(t,lapis,edit){
   const ukr=(v,d)=>(+v>0?+v:d);
-  const ln=(c,v,pt)=>v?`<div class="${c}" style="font-size:${pt}pt">${esc(v)}</div>`:'';
+  const hex=v=>/^#[0-9a-fA-F]{6}$/.test(String(v||''))?v:'',ln=(c,v,pt,w)=>v?`<div class="${c}" style="font-size:${pt}pt${hex(w)?';color:'+hex(w):''}">${esc(v)}</div>`:'';
   const alamat=[t.alamat,[t.kontak,t.web].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
   const rata=t.kop_rata==='kiri'?'left':t.kop_rata==='kanan'?'right':'center';
   const pl=+t.kop_pad||0, pr=t.kop_pad_kanan===undefined?pl:(+t.kop_pad_kanan||0);
-  return `<div class="sv-kop${t.garis===false?'':' g'}" style="--kh:${+t.kop_tinggi||26}mm"><div class="t" style="text-align:${rata};padding:0 ${pr}mm 0 ${pl}mm">${ln('n',t.judul,ukr(t.uk_judul,17))}${ln('s',t.slogan,ukr(t.uk_slogan,9.5))}${ln('a',alamat,ukr(t.uk_alamat,9.5))}</div>${svLayers(lapis,'kop',edit)}</div>`}
+  return `<div class="sv-kop${t.garis===false?'':' g'}" style="--kh:${+t.kop_tinggi||26}mm"><div class="t" style="text-align:${rata};padding:0 ${pr}mm 0 ${pl}mm">${ln('n',t.judul,ukr(t.uk_judul,17),t.warna)}${ln('s',t.slogan,ukr(t.uk_slogan,9.5),t.warna_slogan)}${ln('a',alamat,ukr(t.uk_alamat,9.5),t.warna_alamat)}</div>${svLayers(lapis,'kop',edit)}</div>`}
 function svTtd(t,tanggal,lapis,edit,mengetahui){
   return `<div class="tt">${esc(t.kota||'')}, ${esc(tanggal)}<br>${mengetahui?'Mengetahui,<br>':''}${esc(t.ttd_jabatan||'')}<div class="sp"></div><b class="n">${esc(t.kepala_nama||'')}</b>${t.kepala_id?`<br>${esc(t.kepala_idlabel||'NIY')}. ${esc(t.kepala_id)}`:''}${svLayers(lapis,'ttd',edit)}</div>`}
 
 function svHalaman(t,lapis,isi,edit){
-  return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">${svKop(t,lapis,edit)}${isi}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
+  return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">   ${svKop(t,lapis,edit)}${isi}${svQr()}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
 const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
 const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
  
@@ -3056,7 +3152,7 @@ function svTpl(str,ctx){let out='',i=0;str=String(str);
   while(i<str.length){const o=str.indexOf('{{',i);if(o<0){out+=esc(str.slice(i));break}
     const e=str.indexOf('}}',o);if(e<0){out+=esc(str.slice(i));break}
     out+=esc(str.slice(i,o));let tok=str.slice(o+2,e),tebal=false;if(tok.charAt(0)==='*'){tebal=true;tok=tok.slice(1)}
-    const h=svBr(tok.split('|').map(n=>svNilai(n,ctx)).filter(x=>String(x).trim()).join(' / '));out+=tebal&&h?'<b>'+h+'</b>':h;i=e+2}
+    const h=svBr(tok.split('|').map(n=>svNilai(n,ctx)).filter((x,i,a)=>String(x).trim()&&a.indexOf(x)===i).join(' / '));out+=tebal&&h?'<b>'+h+'</b>':h;i=e+2}
   return out}
 
 function svRender(spec,t,lapis,sk,d,edit){
@@ -3086,28 +3182,34 @@ function svPrev(){const w=$('#sv_wrap');if(!w||!SV.p)return;w.innerHTML=svContoh
 function svCetak(html,judul){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   f.srcdoc='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(judul||'Surat')+'</title><style>'+SV_CSS+
-    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0;background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sv-lay{position:fixed;left:0;top:0;right:0;bottom:0}.sv-contoh{background:none}</style></head><body>'+html+'</body></html>';
+    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0;background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sv-lay{position:fixed;left:0;top:0;right:0;bottom:0}.sv-paper .vq{display:flex;align-items:center;gap:3mm;margin-top:6mm;font-family:Arial,Helvetica,sans-serif;font-size:8pt;line-height:1.3;page-break-inside:avoid}
+   .sv-paper .vq svg{width:22mm;height:22mm;flex:none;display:block}.sv-contoh{background:#fff8d6;padding:0 1mm}</style></head><body>'+html+'</body></html>';
   f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},300)};
   document.body.appendChild(f)}
 function svCetakContoh(){svCetak(svContoh(SV.p,SV.lapis,svSek(),false),'Contoh surat')}
 
 /* ---------- gambar: perkecil di peramban ---------- */
+// apakah gambar punya piksel tembus pandang (alpha < 255)?
+function svAdaTembus(im){try{const k=Math.min(1,256/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k)),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);const p=c.getImageData(0,0,w,h).data;for(let i=3;i<p.length;i+=4)if(p[i]<255)return true}catch(e){}return false}
 function svShrink(file,s0,smin){return new Promise((ok,no)=>{
   if(String(file.type).indexOf('image/')!==0)return no(new Error('File harus berupa gambar'));
   const fr=new FileReader();fr.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
   fr.onload=()=>{const im=new Image();im.onerror=()=>no(new Error('Gambar tidak bisa dibaca'));
     im.onload=()=>{
       if(!im.naturalWidth||!im.naturalHeight)return no(new Error('Gambar tidak bisa dibaca'));
-      for(let side=s0;side>=smin;side-=40){   // coba PNG (tembus pandang) dulu, lalu JPEG makin kecil sampai muat
+      const tembus=svAdaTembus(im);
+      for(let side=s0;side>=smin;side-=(tembus?20:40)){   
         const k=Math.min(1,side/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k));
         const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);
         let u=cv.toDataURL('image/png');if(u.length<=SV_GBR_MAX)return ok(u);
+        if(tembus){const d=c.getImageData(0,0,w,h),p=d.data;for(let i=0;i<p.length;i+=4){p[i]&=0xF0;p[i+1]&=0xF0;p[i+2]&=0xF0;p[i+3]=p[i+3]<8?0:p[i+3]>247?255:p[i+3]&0xF8}
+          c.putImageData(d,0,0);u=cv.toDataURL('image/png');if(u.length<=SV_GBR_MAX)return ok(u);continue}   
         c.globalCompositeOperation='destination-over';c.fillStyle='#fff';c.fillRect(0,0,w,h);
         for(const q of [.9,.75,.6]){u=cv.toDataURL('image/jpeg',q);if(u.length<=SV_GBR_MAX)return ok(u)}}
       no(new Error('Gambar terlalu rumit. Pakai gambar yang lebih sederhana.'))};
     im.src=fr.result};fr.readAsDataURL(file)})}
 
-/* ---------- editor gambar (lapisan) ---------- */
+ 
 const svBulat=v=>Math.round(v*10)/10;
 function svTambahGbr(inp){const f=inp.files[0];if(!f)return;
   if(SV.lapis.length>=SV_MAXL){inp.value='';toast('Maksimal '+SV_MAXL+' gambar per template',1);return}
@@ -3182,7 +3284,7 @@ async function svHapusTpl(){const t=SV.tpl.find(x=>x.id===SV.tid);if(!t)return;
   if(!await ask('Hapus template "'+t.nama+'" beserta gambar-gambarnya?',{title:'Hapus template',ok:'Hapus',bad:true}))return;
   try{const d=await api('surat.tpl.hapus',{id:SV.tid});SV.tpl=d.template;SV.sek=d.sekolah;SV.tid='';SV.kotor=false;toast('Template dihapus');vSurat()}catch(e){fail(e)}}
 
-/* ---------- sekolah ---------- */
+ 
 function svSekForm(mode){SV.sekEdit=mode==='baru'?{id:'',nama:'',nama_lengkap:'',kode:''}:mode==='ubah'&&svSek()?Object.assign({},svSek()):null;svSekRender();if(SV.sekEdit){const e=$('#sv_sn');if(e)e.focus()}}
 function svSekRender(){const el=$('#sv_sekf');if(!el)return;const s=SV.sekEdit;
   el.innerHTML=s?`<div class="sv-box" style="max-width:560px"><b>${s.id?'Ubah sekolah':'Tambah sekolah'}</b>
@@ -3203,7 +3305,7 @@ async function svSekHapus(){const s=svSek();if(!s)return;
   if(!await ask('Hapus sekolah "'+s.nama+'"? Sekolah hanya bisa dihapus bila sudah tidak punya template kop.',{title:'Hapus sekolah',ok:'Hapus',bad:true}))return;
   try{const d=await api('surat.sekolah.hapus',{id:s.id});SV.sek=d.sekolah;SV.tpl=d.template;SV.sid='';SV.tid='';SV.kotor=false;toast('Sekolah dihapus');vSurat()}catch(e){fail(e)}}
 
- 
+/* ---------- formulir ---------- */
 function svForm(){
   const sopt=SV.sek.map(x=>`<option value="${esc(x.id)}" ${x.id===SV.sid?'selected':''}>${esc(x.nama)}</option>`).join('');
   const atas=`<div style="max-width:560px"><label for="sv_pilih">Sekolah</label>
@@ -3226,7 +3328,9 @@ function svForm(){
    <h3 class="sv-h">Teks kop surat</h3>
    ${fld('judul','Judul kop (bebas: nama sekolah, nama yayasan, atau kosongkan)','in','',100)}${fld('slogan','Slogan (boleh kosong)','in',"Leadership - Entrepreneurship - Qur'anic",100)}
    ${fld('alamat','Alamat (Enter = baris baru)','ta','Jl. Jipang No. 11 Kel. Karunrung\nKec. Rappocini, Kota Makassar',250)}${fld('kontak','Telepon / email (boleh kosong)','in','+62 411 8205500',150)}${fld('web','Situs web (boleh kosong)','in','www.sitalbirunimakassar.sch.id',100)}
-   <div class="row" style="align-items:flex-end;margin-top:6px"><div><label for="sv_warna" style="margin:0">Warna kop</label><input id="sv_warna" type="color" value="${esc(p.warna)}" style="width:64px;padding:2px" oninput="svSet('warna',this.value)"></div>
+   <div class="row" style="align-items:flex-end;margin-top:6px"><div><label for="sv_warna" style="margin:0">Warna judul dan garis kop</label><input id="sv_warna" type="color" value="${esc(p.warna)}" style="width:64px;padding:2px" oninput="svSet('warna',this.value)"></div>
+    <div><label for="sv_warna_slogan" style="margin:0">Warna slogan</label><input id="sv_warna_slogan" type="color" value="${esc(p.warna_slogan||'#000000')}" style="width:64px;padding:2px" oninput="svSet('warna_slogan',this.value)"></div>
+    <div><label for="sv_warna_alamat" style="margin:0">Warna alamat dan kontak</label><input id="sv_warna_alamat" type="color" value="${esc(p.warna_alamat||'#000000')}" style="width:64px;padding:2px" oninput="svSet('warna_alamat',this.value)"></div>
     <div style="flex:1;min-width:110px">${num('kop_tinggi','Tinggi kop (mm)',10,80)}</div></div>
    <h3 class="sv-h">Perataan dan ukuran teks kop</h3>
    <label for="sv_rata" style="margin-top:0">Perataan teks kop</label>
@@ -3259,10 +3363,10 @@ async function svSimpan(){const b=$('#sv_sv'),t=b.textContent;b.disabled=true;b.
 
 /* ---------- buat surat: formulir dibuat dari spesifikasi jenis (S2 sampai S4) ---------- */
 // SB = keadaan tab "Buat surat". Template dimuat sendiri (SB.t, SB.lapis) supaya tidak mengganggu editor template (SV.p).
-// SB.f = {jenis, no, bln, thn, tgl, v}; v = isian sesuai spesifikasi jenis (daftar = array baris).
+
 const SB={tid:'',want:'',arsipId:'',cekN:0,cekTm:0,t:null,lapis:[],hasil:{},tm:0,f:{jenis:'aktif',no:'',bln:0,thn:0,tgl:'',v:{}}};
 const SV_ROM=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'],SV_TERB=['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh','Sebelas','Dua Belas'];
-// "9" atau "IX" atau "Kelas 9" -> "IX (Sembilan)"; bila tidak dikenali, pakai nama kelas apa adanya. (tanpa regex)
+
 function svKelasTeks(tingkat,nama){const s=String(tingkat||'').trim();let d='';for(const ch of s){if(ch>='0'&&ch<='9')d+=ch}
   let n=d?+d:SV_ROM.indexOf(s.toUpperCase());if(n>=1&&n<=12)return SV_ROM[n]+' ('+SV_TERB[n]+')';return String(nama||s)}
 const svHariIni=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
@@ -3270,13 +3374,13 @@ const svTglIso=v=>{const a=String(v||'').split('-');if(a.length!==3)return svTgl
 const svBSpec=()=>svJenis(SB.f.jenis)||SV.jenis[0];
 const svBBaris=f=>{const o={};if(f.sumber)o.sid='';f.kol.forEach(c=>{o[c.k]=''});return o};
 const svBIsi=(f,r)=>f.kol.some(c=>String(r[c.k]||'').trim());
-// isian awal; lama = isian jenis sebelumnya: nilai dengan nama dan jenis isian sama dibawa (mis. tahun ajaran, semester)
+
 function svBV0(sp,lama){const v={};lama=lama||{};
   sp.f.forEach(f=>{
     if(f.t==='daftar'){v[f.k]=[svBBaris(f)];return}
     const x=lama[f.k];v[f.k]=(typeof x==='string'&&x&&(f.t==='ta'||(f.t==='pilih'&&f.opsi.indexOf(x)>=0)))?x:(f.t==='pilih'?(f.def||''):'')});
   return v}
-// nomor surat: <nomor>/<kode sekolah>/<kode lokasi>/<bulan romawi>/<tahun>; bagian kosong dilewati; kosong semua bila nomor urut belum diisi
+
 function svBNomor(){const f=SB.f,sk=svSek();if(!String(f.no||'').trim())return '';
   return [String(f.no).trim(),sk&&sk.kode,SB.t&&SB.t.kode_lokasi,SV_ROM[f.bln],f.thn].filter(Boolean).join('/')}
 const svBData=()=>({no:svBNomor(),tanggal:svTglIso(SB.f.tgl),v:SB.f.v});
@@ -3316,7 +3420,7 @@ function svBJenis(id){const sp=svJenis(id);if(!sp)return;SB.f.v=svBV0(sp,SB.f.v)
 function svBF(k,v){SB.f[k]=v;svBPrev();if(k==='no'||k==='thn')svBCek()}
 function svBV(k,v){SB.f.v[k]=v;svBPrev()}
 
-// ---- formulir isian dari spesifikasi (dibuat ulang hanya saat jenis/baris berubah, bukan saat mengetik, supaya kursor tidak lompat)
+
 function svBIsiForm(){const e=$('#sb_isi');if(!e)return;const sp=svBSpec(),v=SB.f.v,q={};
   sp.f.forEach(f=>{const i=$('#sb_q_'+f.k);if(i)q[f.k]=i.value});   
   e.innerHTML=sp.f.map(f=>f.t==='daftar'?svBDaftarHtml(f):svBFldHtml(f,v)).join('');
@@ -3350,7 +3454,7 @@ function svBHasil(k){const h=$('#sb_h_'+k),d=SB.hasil[k];if(!h||!d)return;
 function svBPilih(k,i){const f=svBFld(k),x=(SB.hasil[k]||{}).l&&SB.hasil[k].l[i];if(!f||!x)return;const r=SB.f.v[k];
   if(r.some(y=>y.sid===x.id)){toast('Itu sudah ada di daftar',1);return}
   const isi={sid:x.id,nama:x.nama},has=n=>f.kol.some(c=>c.k===n);
-  if(f.sumber==='siswa'){if(has('nis'))isi.nis=x.nis;if(has('kelas'))isi.kelas=svKelasTeks(x.tingkat,x.kelas)}
+  if(f.sumber==='siswa'){if(has('nis'))isi.nis=x.nis;if(has('nisn'))isi.nisn=x.nis;if(has('kelas'))isi.kelas=svKelasTeks(x.tingkat,x.kelas)}
   const sat=f.maks===1,last=r[r.length-1];
   if(sat)Object.assign(r[0],svBBaris(f),isi);
   else if(!svBIsi(f,last))Object.assign(last,isi);
@@ -3365,7 +3469,7 @@ function svBCek(){clearTimeout(SB.cekTm);const n=++SB.cekN;
     try{const r=await api('surat.arsip.cek',{sekolah:SV.sid,thn:SB.f.thn,no:SB.f.no,id:SB.arsipId});if(n!==SB.cekN||!$('#sb_cek'))return;
       const x=r.ada&&r.ada[0];
       e.style.color=x?'#b3261e':'';
-      e.textContent=x?'Nomor urut ini sudah pernah dipakai tahun '+SB.f.thn+': '+x.nomor+(x.siswa?' ('+x.siswa+')':'')+'. Pastikan memang sengaja.'
+      e.textContent=x?'Nomor urut ini sudah pernah dipakai tahun '+SB.f.thn+': '+x.nomor+(x.status==='dicabut'?' [dicabut]':'')+(x.siswa?' ('+x.siswa+')':'')+'. Pastikan memang sengaja.'
         :(r.terakhir?'Nomor urut terakhir yang dipakai tahun '+SB.f.thn+': '+r.terakhir+'.':'Belum ada surat tahun '+SB.f.thn+' di sekolah ini.')}
     catch(x){if(n===SB.cekN&&$('#sb_cek')){e.style.color='';e.textContent=''}}},350)}
 function svBSt(){const e=$('#sb_st');if(!e)return;
@@ -3386,30 +3490,43 @@ async function svBCetak(){const f=SB.f,t=SB.t,sp=svBSpec();if(!t)return;const v=
   const body={id:SB.arsipId,sekolah:SV.sid,tpl:SB.tid,jenis:sp.id,no:f.no,bln:f.bln,thn:f.thn,tgl:f.tgl,v:v};
   try{let x=await api('surat.arsip.simpan',body);
     if(x.duplikat&&x.duplikat.length){const d=x.duplikat[0];
-      const ok=await ask('Nomor urut '+f.no+' tahun '+f.thn+' sudah pernah dipakai pada surat '+d.nomor+(d.tanggal?' ('+svTglIso(d.tanggal)+')':'')+(d.siswa?' untuk '+d.siswa:'')+'. Dua surat dengan nomor yang sama bisa menyulitkan saat diperiksa. Tetap pakai nomor ini?',{title:'Nomor sudah pernah dipakai',ok:'Ya, tetap pakai',bad:true});
+      const ok=await ask('Nomor urut '+f.no+' tahun '+f.thn+' sudah pernah dipakai pada surat '+d.nomor+(d.status==='dicabut'?' (sudah dicabut, nomornya tetap terhitung terpakai)':'')+(d.tanggal?' ('+svTglIso(d.tanggal)+')':'')+(d.siswa?' untuk '+d.siswa:'')+'. Dua surat dengan nomor yang sama bisa menyulitkan saat diperiksa. Tetap pakai nomor ini?',{title:'Nomor sudah pernah dipakai',ok:'Ya, tetap pakai',bad:true});
       if(!ok)return;
       x=await api('surat.arsip.simpan',Object.assign({lanjut:true},body))}
     SB.arsipId=x.id;svBSt();svBCek();
     const nm=((v[sp.ringkas]||[])[0]||{}).nama||'',n=(v[sp.ringkas]||[]).length;
-    svCetak(svRender(sp,t,SB.lapis,svSek(),{no:x.nomor,tanggal:svTglIso(f.tgl),v:v},false),sp.nama+(nm?' - '+nm:'')+(n>1?' dan '+(n-1)+' lainnya':''));
+    await svQrSiap(x.id);
+    try{svCetak(svRender(sp,t,SB.lapis,svSek(),{no:x.nomor,tanggal:svTglIso(f.tgl),v:v},false),sp.nama+(nm?' - '+nm:'')+(n>1?' dan '+(n-1)+' lainnya':''))}finally{SV_QR=''}
     toast('Tersimpan di arsip: '+x.nomor)}
   catch(e){fail(e)}
   finally{b.disabled=false;b.textContent=teks}}
 
 /* ---------- arsip surat ---------- */
-const SA={q:'',sek:'',jns:'',tm:0,n:0};
+const SA={q:'',sek:'',jns:'',st:'',tm:0,n:0,buka:''};
 function svArsip(){const b=$('#svb');
   b.innerHTML=`<div class="sv-box" style="max-width:640px"><label for="sa_q" style="margin-top:0">Cari nomor atau nama</label><input id="sa_q" type="search" maxlength="60" autocomplete="off" value="${esc(SA.q)}" oninput="svArsipCari(this.value)">
    <label for="sa_sek">Sekolah</label><select id="sa_sek" onchange="SA.sek=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua sekolah</option>${SV.sek.map(x=>`<option value="${esc(x.id)}"${x.id===SA.sek?' selected':''}>${esc(x.nama)}</option>`).join('')}</select>
-   <label for="sa_jns">Jenis surat</label><select id="sa_jns" onchange="SA.jns=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua jenis</option>${SV.jenis.map(x=>`<option value="${esc(x.id)}"${x.id===SA.jns?' selected':''}>${esc(x.nama)}</option>`).join('')}</select></div>
+   <label for="sa_jns">Jenis surat</label><select id="sa_jns" onchange="SA.jns=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua jenis</option>${SV.jenis.map(x=>`<option value="${esc(x.id)}"${x.id===SA.jns?' selected':''}>${esc(x.nama)}</option>`).join('')}</select>
+   <label for="sa_st">Status</label><select id="sa_st" onchange="SA.st=this.value;svArsipCari($('#sa_q').value,1)"><option value="">Semua</option><option value="aktif"${SA.st==='aktif'?' selected':''}>Sah</option><option value="dicabut"${SA.st==='dicabut'?' selected':''}>Dicabut</option></select></div>
    <div id="sa_hasil" style="margin-top:8px;max-width:640px"><div class="skel"></div></div>`;
   svArsipCari(SA.q,1)}
 function svArsipCari(q,cepat){SA.q=q;clearTimeout(SA.tm);const n=++SA.n;
-  SA.tm=setTimeout(async()=>{try{const r=await api('surat.arsip.list',{q:q,sekolah:SA.sek,jenis:SA.jns});if(n!==SA.n||!$('#sa_hasil'))return;
-    $('#sa_hasil').innerHTML=r.surat.length?r.surat.map(x=>`<div class="sv-box"><b>${esc(x.nomor)}</b><br><small>${esc(x.jenisNama)} &middot; ${esc(x.sekolahNama)} &middot; ${esc(x.tanggal?svTglIso(x.tanggal):'')} &middot; ${x.jumlah} ${x.jenis==='tugas'?'guru':'siswa'}</small><br>${esc(x.siswa)}
-      <p class="row" style="margin:6px 0 0"><button class="btn ghost sm" onclick="svBuka('${esc(x.id)}')">Buka di formulir</button></p></div>`).join('')
+  SA.tm=setTimeout(async()=>{try{const r=await api('surat.arsip.list',{q:q,sekolah:SA.sek,jenis:SA.jns,status:SA.st});if(n!==SA.n||!$('#sa_hasil'))return;
+    $('#sa_hasil').innerHTML=r.surat.length?r.surat.map(svArsipKartu).join('')
       +(r.total>r.surat.length?`<small>Menampilkan ${r.surat.length} dari ${r.total} surat terbaru. Persempit pencarian.</small>`:''):'<div class="sv-box">Belum ada surat'+(q?' yang cocok':' di arsip')+'.</div>'}
     catch(e){fail(e)}},cepat?0:250)}
+function svArsipKartu(x){const c=x.status==='dicabut',lain=x.status==='lain',id=esc(x.id);
+  const lencana=c?'<span class="sv-st" style="color:#b3261e;font-weight:700">DICABUT</span>':lain?'<span class="sv-st" style="color:#8a6d00;font-weight:700">STATUS TIDAK DIKENAL</span>':'<span class="sv-st" style="color:#1b6e3c;font-weight:700">SAH</span>';
+  const cb=x.cabut?'<br><small class="sv-cb">Dicabut '+esc(String(x.cabut.tgl||'').slice(0,10))+(x.cabut.alasan?': '+esc(x.cabut.alasan):'')+'</small>':'';
+  const aksi=SA.buka===x.id?`<div class="sv-cabut" style="margin-top:8px"><label for="sa_al_${id}">Alasan pencabutan (boleh dikosongkan)</label><input id="sa_al_${id}" maxlength="200" autocomplete="off"><p class="row" style="margin:6px 0 0"><button class="btn bad sm" onclick="svCabut('${id}')">Cabut surat</button><button class="btn ghost sm" onclick="SA.buka='';svArsipCari($('#sa_q').value,1)">Batal</button></p></div>`
+    :`<p class="row" style="margin:6px 0 0">${x.status==='aktif'?`<button class="btn ghost sm" onclick="svBuka('${id}')">Buka di formulir</button><button class="btn ghost sm" onclick="SA.buka='${id}';svArsipCari($('#sa_q').value,1)">Cabut surat</button>`:c?`<button class="btn ghost sm" onclick="svPulihkan('${id}')">Pulihkan</button>`:''}</p>`;
+  return `<div class="sv-box" data-id="${id}"><b>${esc(x.nomor)}</b> ${lencana}<br><small>${esc(x.jenisNama)} &middot; ${esc(x.sekolahNama)} &middot; ${esc(x.tanggal?svTglIso(x.tanggal):'')} &middot; ${x.jumlah} ${x.jenis==='tugas'?'guru':'siswa'}</small><br>${esc(x.siswa)}${cb}${aksi}</div>`}
+async function svCabut(id){const a=$('#sa_al_'+id),alasan=a?a.value:'';
+  if(!await ask('Surat ini akan dinyatakan DICABUT. Orang yang memindai kodenya akan melihat "dicabut", dan surat tidak bisa dicetak ulang kecuali dipulihkan. Nomornya tetap dianggap terpakai. Lanjutkan?',{title:'Cabut surat',ok:'Ya, cabut',bad:true}))return;
+  try{await api('surat.arsip.cabut',{id:id,alasan:alasan});SA.buka='';toast('Surat dicabut');svArsipCari($('#sa_q').value,1)}catch(e){fail(e)}}
+async function svPulihkan(id){
+  if(!await ask('Surat ini akan dinyatakan sah kembali, dan kodenya akan terbaca "sah" lagi. Lanjutkan?',{title:'Pulihkan surat',ok:'Ya, pulihkan'}))return;
+  try{await api('surat.arsip.pulihkan',{id:id});toast('Surat dipulihkan');svArsipCari($('#sa_q').value,1)}catch(e){fail(e)}}
 // membuka surat arsip di formulir: mencetak lagi memperbarui surat itu (bukan membuat baru)
 async function svBuka(id){try{const g=await api('surat.arsip.get',{id:id}),sp=svJenis(g.jenis);
     if(!sp){toast('Jenis surat ini tidak dikenal',1);return}
@@ -3422,6 +3539,242 @@ async function svBuka(id){try{const g=await api('surat.arsip.get',{id:id}),sp=sv
   catch(e){fail(e)}}
 
 Object.assign(VIEWS,{surat:vSurat});
+</script>
+<script>
+ 
+ 
+function qrBuat(teks){
+  const utf=unescape(encodeURIComponent(String(teks))),data=[];for(let i=0;i<utf.length;i++)data.push(utf.charCodeAt(i));
+  
+  const T={1:[16,10,1,16,0,0],2:[28,16,1,28,0,0],3:[44,26,1,44,0,0],4:[64,18,2,32,0,0],5:[86,24,2,43,0,0],6:[108,16,4,27,0,0],7:[124,18,4,31,0,0],8:[154,22,2,38,2,39],9:[182,22,3,36,2,37],10:[216,26,4,43,1,44]};
+  let v=1;for(;v<=10;v++){const cap=T[v][0]-(v<10?2:3);if(data.length<=cap)break}
+  if(v>10)throw new Error('Teks QR terlalu panjang');
+  const t=T[v],total=t[0],bits=[];
+  const put=(n,len)=>{for(let i=len-1;i>=0;i--)bits.push((n>>i)&1)};
+  put(4,4);put(data.length,v<10?8:16);data.forEach(b=>put(b,8));
+  const maks=total*8;for(let i=0;i<4&&bits.length<maks;i++)bits.push(0);
+  while(bits.length%8)bits.push(0);
+  const kata=[];for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|bits[i+j];kata.push(b)}
+  for(let p=0xEC;kata.length<total;p^=0xEC^0x11)kata.push(p);
+  
+  const EXP=[],LOG=[];for(let i=0,x=1;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&256)x^=0x11D}
+  for(let i=255;i<512;i++)EXP[i]=EXP[i-255];
+  const mul=(a,b)=>a&&b?EXP[LOG[a]+LOG[b]]:0;
+  const gen=n=>{let g=[1];for(let i=0;i<n;i++){const h=new Array(g.length+1).fill(0);g.forEach((c,j)=>{h[j]^=c;h[j+1]^=mul(c,EXP[i])});g=h}return g};
+  const rs=(d,n)=>{const g=gen(n),r=new Array(n).fill(0);d.forEach(b=>{const f=b^r[0];r.shift();r.push(0);if(f)for(let i=0;i<n;i++)r[i]^=mul(g[i+1],f)});return r};
+  const blok=[];let pos=0;
+  for(let i=0;i<t[2];i++){blok.push(kata.slice(pos,pos+t[3]));pos+=t[3]}
+  for(let i=0;i<t[4];i++){blok.push(kata.slice(pos,pos+t[5]));pos+=t[5]}
+  const ec=blok.map(b=>rs(b,t[1])),akhir=[],maksD=Math.max.apply(null,blok.map(b=>b.length));
+  for(let i=0;i<maksD;i++)blok.forEach(b=>{if(i<b.length)akhir.push(b[i])});
+  for(let i=0;i<t[1];i++)ec.forEach(e=>akhir.push(e[i]));
+  const n=17+4*v,M=[],F=[];for(let i=0;i<n;i++){M.push(new Array(n).fill(0));F.push(new Array(n).fill(false))}
+  const set=(r,c,x)=>{M[r][c]=x?1:0;F[r][c]=true};
+  const cari=(r0,c0)=>{for(let r=-1;r<=7;r++)for(let c=-1;c<=7;c++){const rr=r0+r,cc=c0+c;if(rr<0||cc<0||rr>=n||cc>=n)continue;
+    set(rr,cc,r>=0&&r<=6&&c>=0&&c<=6&&(r===0||r===6||c===0||c===6||(r>=2&&r<=4&&c>=2&&c<=4)))}};
+  cari(0,0);cari(0,n-7);cari(n-7,0);
+  for(let i=8;i<n-8;i++){set(6,i,i%2===0);set(i,6,i%2===0)}
+  const AL={2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],10:[6,28,50]};
+  if(v>1){const a=AL[v];const L=a[a.length-1];a.forEach(r=>a.forEach(c=>{if((r===6&&c===6)||(r===6&&c===L)||(r===L&&c===6))return;for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)set(r+i,c+j,Math.max(Math.abs(i),Math.abs(j))!==1)}))}
+  set(n-8,8,true);
+  for(let i=0;i<9;i++){if(!F[8][i])set(8,i,0);if(!F[i][8])set(i,8,0)}
+  for(let i=0;i<8;i++){if(!F[8][n-1-i])set(8,n-1-i,0);if(!F[n-1-i][8])set(n-1-i,8,0)}
+  if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>11)*0x1F25);const vi=(v<<12)|(r&0xFFF);
+    for(let i=0;i<18;i++){const b=(vi>>i)&1,a=Math.floor(i/3),c=i%3+n-11;set(a,c,b);set(c,a,b)}}
+  
+  const bit=[];akhir.forEach(b=>{for(let i=7;i>=0;i--)bit.push((b>>i)&1)});
+  let k=0,naik=true;
+  for(let c=n-1;c>0;c-=2){if(c===6)c--;
+    for(let i=0;i<n;i++){const r=naik?n-1-i:i;
+      for(let j=0;j<2;j++){const cc=c-j;if(F[r][cc])continue;M[r][cc]=k<bit.length?bit[k]:0;k++}}
+    naik=!naik}
+  const MASK=[(r,c)=>(r+c)%2===0,(r)=>r%2===0,(r,c)=>c%3===0,(r,c)=>(r+c)%3===0,(r,c)=>(Math.floor(r/2)+Math.floor(c/3))%2===0,(r,c)=>(r*c)%2+(r*c)%3===0,(r,c)=>((r*c)%2+(r*c)%3)%2===0,(r,c)=>((r+c)%2+(r*c)%3)%2===0];
+  const formatBits=m=>{let d=(0<<3)|m,r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>9)*0x537);return((d<<10)|(r&0x3FF))^0x5412};   
+  const pasang=m=>{const Q=M.map(r=>r.slice());
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(!F[r][c]&&MASK[m](r,c))Q[r][c]^=1;
+    const fb=formatBits(m),g=(r,c,i)=>{Q[r][c]=(fb>>i)&1};
+    for(let i=0;i<=5;i++)g(i,8,i);g(7,8,6);g(8,8,7);g(8,7,8);for(let i=9;i<15;i++)g(8,14-i,i);
+    for(let i=0;i<8;i++)g(8,n-1-i,i);for(let i=8;i<15;i++)g(n-15+i,8,i);
+    Q[n-8][8]=1;return Q};
+  const nilai=Q=>{let s=0;
+    for(let a=0;a<2;a++){for(let i=0;i<n;i++){let run=1;for(let j=1;j<n;j++){const x=a?Q[j][i]:Q[i][j],y=a?Q[j-1][i]:Q[i][j-1];if(x===y){run++;if(run===5)s+=3;else if(run>5)s++}else run=1}}}
+    for(let r=0;r<n-1;r++)for(let c=0;c<n-1;c++){const x=Q[r][c];if(x===Q[r][c+1]&&x===Q[r+1][c]&&x===Q[r+1][c+1])s+=3}
+    const pol=[1,0,1,1,1,0,1,0,0,0,0],pol2=pol.slice().reverse();
+    for(let a=0;a<2;a++)for(let i=0;i<n;i++)for(let j=0;j<=n-11;j++){let m1=true,m2=true;for(let q=0;q<11;q++){const x=a?Q[j+q][i]:Q[i][j+q];if(x!==pol[q])m1=false;if(x!==pol2[q])m2=false}if(m1)s+=40;if(m2)s+=40}
+    let gelap=0;Q.forEach(r=>r.forEach(x=>gelap+=x));s+=Math.floor(Math.abs(gelap*100/(n*n)-50)/5)*10;return s};
+  let best=null,bs=1e9;for(let m=0;m<8;m++){const Q=pasang(m),s=nilai(Q);if(s<bs){bs=s;best=Q}}
+  return best;
+}
+function qrSvg(teks,px){const Q=qrBuat(teks),n=Q.length,z=4;let d='';
+  Q.forEach((r,y)=>r.forEach((x,i)=>{if(x)d+='M'+(i+z)+' '+(y+z)+'h1v1h-1z'}));
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+(n+2*z)+' '+(n+2*z)+'" width="'+(px||96)+'" height="'+(px||96)+'" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>'}
+
+ 
+let SV_QR='',SV_KODE='';
+async function svQrSiap(id){
+  if(!SV_KODE){const k=await api('verif.kode',{});SV_KODE=String(k&&k.kode||'')}
+  if(!/^[a-z0-9_-]{2,30}$/i.test(SV_KODE))throw new Error('Kode cabang tidak dikenali untuk QR');
+  SV_QR=location.origin+location.pathname+'#/verif/'+SV_KODE+'/'+id}
+function svQr(){
+  if(!SV_QR)return '';
+  return '<div class="vq"><div class="g">'+qrSvg(SV_QR)+'</div><div class="k">Keaslian surat ini dapat diperiksa.<br>Pindai kode QR di samping.</div></div>'}
+
+ 
+(function(){
+  const a=document.getElementById('v-article');if(!a||document.getElementById('v-verif'))return;
+  a.insertAdjacentHTML('afterend','<section class="view" id="v-verif"><div class="sec wrap"><div id="verifBox" style="max-width:520px;margin:0 auto"></div></div></section>');
+})();
+function verifTgl(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return '';
+  try{return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}}
+function verifKartu(w,warna,ikon,judul,isi){
+  w.innerHTML='<div style="border:2px solid '+warna+';border-radius:var(--r);background:#fff;padding:28px 22px;text-align:center">'
+    +'<div style="font-size:54px;line-height:1;color:'+warna+'" aria-hidden="true">'+ikon+'</div>'
+    +'<h1 style="margin:10px 0 6px;font-size:26px;color:'+warna+'">'+esc(judul)+'</h1>'+isi+'</div>'
+    +'<p style="margin:14px 0 0;font-size:13px;color:#51606f;text-align:center">Halaman ini hanya menyatakan status surat dan tidak menampilkan isinya.</p>'}
+async function verifPublik(kode,id){
+  show('v-verif');const w=document.getElementById('verifBox');
+  w.innerHTML='<div class="skel" style="height:160px"></div>';
+  const ok=/^[a-z0-9_-]{2,30}$/i.test(kode||'')&&/^SUR-[0-9a-f]{8}$/.test(id||'');
+  if(!ok){verifKartu(w,'#b3261e','&#10007;','TIDAK SAH','<p style="margin:0">Tautan atau kode QR ini tidak valid.</p>');return}
+  try{
+    const r=await api('verif.cek',{cabang:kode,id:id}),t=verifTgl(r.tanggal),tt=t?'<p style="margin:10px 0 0">Tanggal terbit: <b>'+esc(t)+'</b></p>':'';
+    if(r.status==='sah')verifKartu(w,'#1b7f4b','&#10003;','SURAT SAH','<p style="margin:0">Surat ini tercatat di arsip sekolah.</p>'+tt+'<p style="margin:10px 0 0;font-size:14px">Cocokkan tanggal terbit di atas dengan tanggal pada surat yang Anda pegang.</p>');
+    else if(r.status==='dicabut')verifKartu(w,'#b3261e','&#10007;','SURAT DICABUT','<p style="margin:0">Surat ini pernah diterbitkan, tetapi sudah dicabut dan tidak berlaku.</p>'+tt);
+    else verifKartu(w,'#b3261e','&#10007;','TIDAK SAH','<p style="margin:0">Surat ini tidak ditemukan di arsip sekolah.</p>');
+  }catch(e){w.innerHTML='<div class="empty">'+esc(e.message||'Pemeriksaan gagal. Coba lagi.')+'</div>'}}
+</script>
+<style id="sm-css">
+#dmain .sm-chip{padding:6px 14px;border:1px solid var(--line);border-radius:99px;background:#fff;cursor:pointer;font:inherit}
+#dmain .sm-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#dmain .sm-jenis{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--mist);font-size:12px}
+#dmain .sm-lama{color:var(--bad);font-weight:600;font-size:12px}
+#dmain .sm-ket{color:#51606f;font-size:13px;white-space:pre-line}
+#dmain table select{width:auto;padding:4px 6px;font-size:13px}
+#dmain .sm-box{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:12px;margin-top:10px}
+</style>
+<script id="sm-js">
+/* ===== SURAT MASUK (S8): menu Admin 'masuk'. Memakai: M, $, esc, api, ask, toast, fail, VIEWS (Index). Berdiri sendiri. =====
+   Nama global berawalan SM / sm. Rute server: masuk.list, masuk.simpan, masuk.tandai, masuk.hapus, masuk.file (SuratMasuk.gs). */
+const SM={q:'',st:'',jn:'',sek:'',hal:1,ed:null,t:0};
+const SM_JENIS=['Undangan','Pemberitahuan','Permohonan','Edaran','Lainnya'],SM_STATUS=['Baru','Direview','Selesai'],SM_HADIR=['Belum ditentukan','Dihadiri','Tidak dihadiri','Diwakilkan'];
+const SM_BLN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const smTgl=t=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(t||'');return m?(+m[3])+' '+SM_BLN[+m[2]-1]+' '+m[1]:''};
+const smHariIni=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const smOpt=(l,v,k)=>l.map(x=>{const a=k?x[0]:x,b=k?x[1]:x;return`<option value="${esc(a)}"${a===v?' selected':''}>${esc(b)}</option>`}).join('');
+
+function vMasuk(){
+  M(`<h2>Surat masuk</h2><div id="smb"></div>`);
+  if(!MEM.masuk)$('#smb').innerHTML='<div class="skel"></div>';
+  smMuat()}
+async function smMuat(){
+  try{MEM.masuk=await api('masuk.list',{q:SM.q,status:SM.st,jenis:SM.jn,sekolah:SM.sek,hal:SM.hal});smGambar()}catch(e){fail(e)}}
+function smCari(v){SM.q=v;SM.hal=1;clearTimeout(SM.t);SM.t=setTimeout(smMuat,300)}
+function smSaring(k,v){SM[k]=v;SM.hal=1;smMuat()}
+function smHal(n){SM.hal=n;smMuat()}
+
+function smGambar(){
+  const d=MEM.masuk,el=$('#smb');if(!d||!el)return;
+  if(!$('#sm_q')){
+    el.innerHTML=`<div class="row" style="margin-bottom:10px;align-items:flex-end">
+      <button class="btn" onclick="smForm('')">+ Catat surat masuk</button>
+      <input id="sm_q" placeholder="Cari pengirim, perihal, nomor, keterangan..." style="max-width:320px" value="${esc(SM.q)}" oninput="smCari(this.value)" aria-label="Cari surat masuk">
+      <select id="sm_jn" style="max-width:170px" onchange="smSaring('jn',this.value)" aria-label="Saring jenis"><option value="">Semua jenis</option>${smOpt(SM_JENIS,SM.jn)}</select>
+      <select id="sm_sek" style="max-width:200px" onchange="smSaring('sek',this.value)" aria-label="Saring tujuan"></select></div>
+      <div class="row" id="sm_h" style="margin-bottom:12px"></div><div id="sm_l"></div>`}
+  $('#sm_sek').innerHTML='<option value="">Semua tujuan</option><option value="-"'+(SM.sek==='-'?' selected':'')+'>Umum</option>'+(d.sekolah||[]).map(x=>`<option value="${esc(x.id)}"${SM.sek===x.id?' selected':''}>${esc(x.nama)}</option>`).join('');
+  const h=d.hitung||{},tot=(h.Baru||0)+(h.Direview||0)+(h.Selesai||0);
+  $('#sm_h').innerHTML=[['','Semua',tot]].concat(SM_STATUS.map(s=>[s,s,h[s]||0])).map(([k,l,n])=>`<button type="button" class="sm-chip${SM.st===k?' on':''}" onclick="smSaring('st','${k}')">${esc(l)} (${n})</button>`).join('');
+  const sk={};(d.sekolah||[]).forEach(x=>sk[x.id]=x.nama);
+  const rows=d.baris||[];
+  $('#sm_l').innerHTML=rows.length?`<div class="tw"><table><tr><th>Diterima</th><th>Surat</th><th>Status</th><th>Diteruskan</th><th>Berkas</th><th></th></tr>`+rows.map(x=>`<tr>
+    <td>${esc(smTgl(x.diterima))}${x.status!=='Selesai'&&x.hari>=7?`<br><span class="sm-lama">${x.hari} hari belum selesai</span>`:''}</td>
+    <td><b>${esc(x.perihal)}</b><br><small>${esc(x.pengirim)}${x.nomor?' · '+esc(x.nomor):''}${x.tglSurat?' · tgl surat '+esc(smTgl(x.tglSurat)):''}</small><br><span class="sm-jenis">${esc(x.jenis)}</span> <small>${x.sekolah?esc(sk[x.sekolah]||'(sekolah dihapus)'):'Umum'}</small>
+      ${x.jenis==='Undangan'?`<br><small>Acara: ${esc(smTgl(x.tglAcara)||'belum diisi')} · Kehadiran: </small><select onchange="smTandai('${esc(x.id)}',{kehadiran:this.value},this)" aria-label="Kehadiran">${smOpt(SM_HADIR,x.kehadiran||SM_HADIR[0])}</select>`:''}
+      ${x.keterangan?`<div class="sm-ket">${esc(x.keterangan.length>160?x.keterangan.slice(0,160)+'...':x.keterangan)}</div>`:''}</td>
+    <td><select onchange="smTandai('${esc(x.id)}',{status:this.value},this)" aria-label="Status">${smOpt(SM_STATUS,x.status)}</select></td>
+    <td><label style="margin:0"><input type="checkbox" style="width:auto" ${x.diteruskan?'checked':''} onchange="smTandai('${esc(x.id)}',{diteruskan:this.checked},this)"> Sudah</label></td>
+    <td>${x.berkas?`<button class="btn sm ghost" onclick="smBerkas('${esc(x.id)}')">Lihat</button>`:'<small>-</small>'}</td>
+    <td><div class="row" style="flex-wrap:nowrap"><button class="btn sm" onclick="smForm('${esc(x.id)}')">Ubah</button><button class="btn bad sm" onclick="smHapus('${esc(x.id)}')">Hapus</button></div></td></tr>`).join('')+'</table></div>'
+    +(d.total>d.perHal?`<div class="row" style="margin-top:10px;align-items:center"><button class="btn sm ghost" ${d.hal<=1?'disabled':''} onclick="smHal(${d.hal-1})">Sebelumnya</button><small>Halaman ${d.hal} dari ${Math.ceil(d.total/d.perHal)} (${d.total} surat)</small><button class="btn sm ghost" ${d.hal*d.perHal>=d.total?'disabled':''} onclick="smHal(${d.hal+1})">Berikutnya</button></div>`:'')
+    :'<div class="empty">'+(SM.q||SM.st||SM.jn||SM.sek?'Tidak ada surat yang cocok dengan penyaringan.':'Belum ada surat masuk yang dicatat.')+'</div>'}
+
+/* tandai cepat dari daftar */
+async function smTandai(id,patch,el){
+  if(el)el.disabled=true;
+  try{const r=await api('masuk.tandai',Object.assign({id:id},patch)),l=MEM.masuk.baris,i=l.findIndex(x=>x.id===id);if(i>=0)l[i]=r.baris;MEM.masuk.hitung=r.hitung;toast('Tersimpan');smGambar()}
+  catch(e){fail(e);smGambar()}}
+async function smHapus(id){
+  const x=MEM.masuk.baris.find(y=>y.id===id);
+  if(!await ask('Hapus surat masuk "'+(x?x.perihal:id)+'"? Berkas salinannya juga dihapus.'))return;
+  try{await api('masuk.hapus',{id:id});toast('Surat masuk dihapus');smMuat()}catch(e){fail(e)}}
+
+/* melihat berkas: jendela dibuka dulu (sebelum menunggu server) agar tidak diblokir peramban */
+async function smBerkas(id){
+  const w=window.open('','_blank');
+  try{const r=await api('masuk.file',{id:id}),b=atob(r.b64),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([u],{type:r.mime}));
+    if(w)w.location.href=url;else{const a=document.createElement('a');a.href=url;a.download=r.nama||'berkas';document.body.appendChild(a);a.click();a.remove()}
+    setTimeout(()=>URL.revokeObjectURL(url),120000)}
+  catch(e){if(w)w.close();fail(e)}}
+
+/* ---------- formulir catat / ubah ---------- */
+function smForm(id){
+  const x=id?MEM.masuk.baris.find(y=>y.id===id):null;if(id&&!x)return;
+  SM.ed={id:id||'',file:null,hapus:false,ada:x?x.berkas:''};
+  const v=x||{jenis:'Undangan',status:'Baru',diterima:smHariIni(),kehadiran:SM_HADIR[0],diteruskan:false};
+  M(`<h2>${x?'Ubah':'Catat'} surat masuk</h2><div style="max-width:680px">
+   <label for="sm_jenis">Jenis surat</label><select id="sm_jenis" onchange="smJenis()">${smOpt(SM_JENIS,v.jenis)}</select>
+   <label for="sm_pengirim">Pengirim</label><input id="sm_pengirim" maxlength="150" autocomplete="off" value="${esc(v.pengirim||'')}" placeholder="Contoh: Dinas Pendidikan Kota">
+   <label for="sm_perihal">Perihal</label><input id="sm_perihal" maxlength="250" autocomplete="off" value="${esc(v.perihal||'')}" placeholder="Contoh: Rapat koordinasi kepala sekolah">
+   <label for="sm_nomor">Nomor surat (dari pengirim)</label><input id="sm_nomor" maxlength="100" autocomplete="off" value="${esc(v.nomor||'')}">
+   <div class="row" style="align-items:flex-end"><label style="margin:0;flex:1;min-width:160px">Tanggal surat<input id="sm_tgls" type="date" value="${esc(v.tglSurat||'')}"></label>
+    <label style="margin:0;flex:1;min-width:160px">Tanggal diterima<input id="sm_dit" type="date" value="${esc(v.diterima||'')}"></label></div>
+   <label for="sm_sekf">Ditujukan ke</label><select id="sm_sekf"><option value="">Umum</option>${((MEM.masuk&&MEM.masuk.sekolah)||[]).map(s=>`<option value="${esc(s.id)}"${v.sekolah===s.id?' selected':''}>${esc(s.nama)}</option>`).join('')}</select>
+   <div id="sm_und" class="sm-box"><b>Khusus undangan</b>
+    <div class="row" style="align-items:flex-end"><label style="margin:0;flex:1;min-width:160px">Tanggal acara<input id="sm_tgla" type="date" value="${esc(v.tglAcara||'')}"></label>
+     <label style="margin:0;flex:1;min-width:160px">Kehadiran<select id="sm_hadir">${smOpt(SM_HADIR,v.kehadiran||SM_HADIR[0])}</select></label></div></div>
+   <label for="sm_status">Status</label><select id="sm_status">${smOpt(SM_STATUS,v.status)}</select>
+   <label style="margin-top:12px"><input id="sm_fwd" type="checkbox" style="width:auto" ${v.diteruskan?'checked':''}> Sudah diteruskan</label>
+   <label for="sm_ket">Keterangan (mis. diteruskan kepada siapa, tindak lanjut, catatan)</label><textarea id="sm_ket" maxlength="1000" style="min-height:96px">${esc(v.keterangan||'')}</textarea>
+   <label for="sm_file">Salinan surat (JPG, PNG, atau PDF; maks 4 MB)</label>
+   <div id="sm_fi"></div><input id="sm_file" type="file" accept="image/*,application/pdf" onchange="smFile(this)">
+   <p class="row" style="margin-top:16px"><button class="btn" id="sm_sv" onclick="smSimpan()">Simpan</button><button class="btn ghost" onclick="vMasuk()">Batal</button></p></div>`);
+  smJenis();smFileInfo()}
+function smJenis(){const u=$('#sm_jenis').value==='Undangan';$('#sm_und').style.display=u?'':'none'}
+function smFileInfo(){const e=SM.ed,el=$('#sm_fi');if(!el)return;
+  el.innerHTML=e.file?`<p style="margin:4px 0"><small>Dipilih: <b>${esc(e.file.name)}</b> (menggantikan berkas lama bila ada)</small></p>`
+    :e.ada&&!e.hapus?`<p style="margin:4px 0"><small>Berkas saat ini: <b>${esc(e.ada)}</b></small> <button type="button" class="btn sm ghost" onclick="smBerkas('${esc(e.id)}')">Lihat</button> <button type="button" class="btn sm bad" onclick="SM.ed.hapus=true;smFileInfo()">Hapus berkas</button></p>`
+    :e.hapus?'<p style="margin:4px 0"><small>Berkas lama akan dihapus saat disimpan.</small> <button type="button" class="btn sm ghost" onclick="SM.ed.hapus=false;smFileInfo()">Batalkan</button></p>':''}
+function smNamaBaru(n,ext){return String(n||'surat').replace(/\.[^.]*$/,'').replace(/[^\w\-]+/g,'_').slice(0,60)+'.'+ext}
+function smFile(i){
+  const f=i.files[0];if(!f)return;SM.ed.file=null;
+  const gagal=m=>{toast(m,1);i.value='';smFileInfo()};
+  if(f.type==='application/pdf'){
+    if(f.size>4*1024*1024)return gagal('PDF maksimal 4 MB');
+    const r=new FileReader();r.onload=()=>{SM.ed.file={data:String(r.result).split(',')[1],name:smNamaBaru(f.name,'pdf')};SM.ed.hapus=false;smFileInfo()};r.onerror=()=>gagal('Berkas tidak terbaca');r.readAsDataURL(f)}
+  else if(/^image\//.test(f.type)){
+    const im=new Image(),u=URL.createObjectURL(f);
+    im.onload=()=>{const k=Math.min(1,2000/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);
+      const c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.drawImage(im,0,0,cv.width,cv.height);URL.revokeObjectURL(u);
+      const d=cv.toDataURL('image/jpeg',0.85).split(',')[1];if(d.length>5400000)return gagal('Gambar terlalu besar setelah diperkecil. Pilih gambar lain.');
+      SM.ed.file={data:d,name:smNamaBaru(f.name,'jpg')};SM.ed.hapus=false;smFileInfo()};
+    im.onerror=()=>{URL.revokeObjectURL(u);gagal('Gambar tidak terbaca')};im.src=u}
+  else gagal('Berkas harus berupa gambar (JPG atau PNG) atau PDF')}
+async function smSimpan(lanjut){
+  const b=$('#sm_sv'),e=SM.ed,und=$('#sm_jenis').value==='Undangan';
+  const p={id:e.id,jenis:$('#sm_jenis').value,pengirim:$('#sm_pengirim').value,perihal:$('#sm_perihal').value,nomor:$('#sm_nomor').value,tglSurat:$('#sm_tgls').value,diterima:$('#sm_dit').value,
+    sekolah:$('#sm_sekf').value,status:$('#sm_status').value,diteruskan:$('#sm_fwd').checked,keterangan:$('#sm_ket').value};
+  if(und){p.tglAcara=$('#sm_tgla').value;p.kehadiran=$('#sm_hadir').value}
+  if(e.file)p.file=e.file;else if(e.hapus)p.hapusFile=true;
+  if(lanjut)p.lanjut=true;
+  b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('masuk.simpan',p);
+    if(r.duplikat){b.disabled=false;b.textContent='Simpan';
+      const d=r.duplikat[0];if(await ask('Surat dengan nomor dan pengirim yang sama sudah tercatat (diterima '+smTgl(d.diterima)+'). Tetap simpan sebagai surat baru?'))return smSimpan(true);return}
+    toast('Surat masuk tersimpan');MEM.masuk=null;vMasuk()}
+  catch(x){fail(x);b.disabled=false;b.textContent='Simpan'}}
+
+Object.assign(VIEWS,{masuk:vMasuk});
 </script>
 <script>
 
