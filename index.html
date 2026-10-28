@@ -260,8 +260,8 @@ function route(){
   if(a==='kategori'){const c=CATS.includes(b)?b:'Berita';$('#listT').textContent=c;
     $('#listTabs').innerHTML=CATS.map(x=>`<a href="#/kategori/${x}" class="${x===c?'on':''}">${x}</a>`).join('');
     $('#listGrid').innerHTML=gridHtml(BOOT.articles.filter(x=>x.Kategori===c));show('v-list')}
-  else if(a==='career'){careerPublik()}
   else if(a==='berita'){openArticle(b)}
+  else if(a==='career'){careerPublik()}
   else if(a==='verif'){typeof verifPublik==='function'?verifPublik(b,sub):addEventListener('load',()=>verifPublik(b,sub))}
   else if(a==='dashboard'){if(!S.user){go('#/login');return}openDash(b)}
   else{$('#homeGrid').innerHTML=gridHtml(BOOT.articles.slice(0,6));show('v-home');if(a==='profil'||a==='kampus')$('#'+a).scrollIntoView({behavior:'smooth'})}
@@ -3100,8 +3100,9 @@ const SV_CSS=`.sv-paper{position:relative;z-index:0;background:#fff;color:#000;f
 .sv-paper .tt{position:relative;z-index:0;margin:8mm 0 0 auto;width:78mm}
 .sv-paper .tt .sp{height:24mm}
 .sv-paper .tt b.n{text-decoration:underline}
-.sv-paper .vq{display:flex;align-items:center;gap:3mm;margin-top:6mm;font-family:Arial,Helvetica,sans-serif;font-size:8pt;line-height:1.3;page-break-inside:avoid}
-.sv-paper .vq svg{width:22mm;height:22mm;flex:none;display:block}`;
+.sv-paper .vq{display:flex;align-items:center;gap:3mm;margin:6mm 0 0;page-break-inside:avoid;font-size:8pt;line-height:1.3}
+.sv-paper .vq svg{width:20mm;height:20mm;flex:none}
+.sv-contoh{background:#fff8d6;padding:0 1mm}`;
 function svCssPasang(){if(document.getElementById('sv_css'))return;const s=document.createElement('style');s.id='sv_css';
   s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;align-items:start}
 .sv-wrap{border:1px solid var(--line);border-radius:10px;background:var(--mist);overflow:hidden;position:relative}
@@ -3133,7 +3134,7 @@ function svTtd(t,tanggal,lapis,edit,mengetahui){
   return `<div class="tt">${esc(t.kota||'')}, ${esc(tanggal)}<br>${mengetahui?'Mengetahui,<br>':''}${esc(t.ttd_jabatan||'')}<div class="sp"></div><b class="n">${esc(t.kepala_nama||'')}</b>${t.kepala_id?`<br>${esc(t.kepala_idlabel||'NIY')}. ${esc(t.kepala_id)}`:''}${svLayers(lapis,'ttd',edit)}</div>`}
 
 function svHalaman(t,lapis,isi,edit){
-  return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">   ${svKop(t,lapis,edit)}${isi}${svQr()}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
+  return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">${svKop(t,lapis,edit)}${isi}${svQr()}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
 const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
 const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
  
@@ -3182,8 +3183,7 @@ function svPrev(){const w=$('#sv_wrap');if(!w||!SV.p)return;w.innerHTML=svContoh
 function svCetak(html,judul){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
   f.srcdoc='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(judul||'Surat')+'</title><style>'+SV_CSS+
-    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0;background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sv-lay{position:fixed;left:0;top:0;right:0;bottom:0}.sv-paper .vq{display:flex;align-items:center;gap:3mm;margin-top:6mm;font-family:Arial,Helvetica,sans-serif;font-size:8pt;line-height:1.3;page-break-inside:avoid}
-   .sv-paper .vq svg{width:22mm;height:22mm;flex:none;display:block}.sv-contoh{background:#fff8d6;padding:0 1mm}</style></head><body>'+html+'</body></html>';
+    '@page{size:A4;margin:14mm 18mm}html,body{margin:0;background:#fff}.sv-paper{padding:0;width:auto;min-height:0;background:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sv-lay{position:fixed;left:0;top:0;right:0;bottom:0}.sv-contoh{background:none}</style></head><body>'+html+'</body></html>';
   f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},300)};
   document.body.appendChild(f)}
 function svCetakContoh(){svCetak(svContoh(SV.p,SV.lapis,svSek(),false),'Contoh surat')}
