@@ -1562,12 +1562,13 @@ function mxcClose(){
 <script>
 
 
-const NS={sem:'Ganjil',key:'',nd:null,wk:'',ws:'',wl:[],wd:null,wreq:0,wmode:'siswa',wm:'',wmk:'',wmd:null};
+const NS={busy:false,sem:'Ganjil',key:'',nd:null,wk:'',ws:'',wl:[],wd:null,wreq:0,wmode:'siswa',wm:'',wmk:'',wmd:null};
 const SEMS=['Ganjil','Genap'];
 const semOpt=()=>SEMS.map(x=>`<option ${x===NS.sem?'selected':''}>${x}</option>`).join('');
 const warn=t=>`<p style="color:var(--bad)">${t}</p>`;
 
- 
+
+
 function vGNilai(){
   NS.key='';
   M(`<h2>Input Nilai</h2><div class="row" style="margin:8px 0"><select id="np" style="max-width:340px" onchange="GS.pair=this.value;nLoad()"></select><select id="ns" style="max-width:140px" onchange="NS.sem=this.value;nLoad()">${semOpt()}</select></div><div id="nb"></div>`);
@@ -1578,22 +1579,54 @@ function vGNilai(){
     $('#np').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
     if(NS.key!==GS.pair+'|'+NS.sem)nLoad()})}
 async function nLoad(){const [k,m]=GS.pair.split('|'),key=GS.pair+'|'+NS.sem;NS.key=key;$('#nb').innerHTML='<div class="skel"></div>';
-  try{const d=await api('n.data',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem});if(NS.key!==key||!$('#nb'))return;NS.nd=d;nDraw()}
+  try{const d=await api('n.data',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem});if(NS.key!==key||!$('#nb'))return;
+    d.kol=d.komponen.map(c=>({nama:c.nama,kelompok:c.kelompok||'',isi:c.isi||0}));   // server lama hanya mengirim {nama,bobot}
+    d.maks=d.maks||20;NS.nd=d;nDraw()}
   catch(e){if($('#nb'))$('#nb').innerHTML='';fail(e)}}
-function nDraw(){const d=NS.nd;
-  const rows=d.siswa.map((x,i)=>`<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td>`+d.komponen.map((c,j)=>{const n=d.nilai[x.Siswa_ID+'|'+c.nama]||{};
-    return `<td><input id="nv_${i}_${j}" type="number" min="0" max="100" step="any" style="width:80px" value="${esc(n.Skor===undefined?'':n.Skor)}"></td>`}).join('')+'</tr>').join('');
+const nSkorKosong=v=>String(v).trim()==='';
+function nRataBaris(vals){const a=vals.map(v=>String(v).trim().replace(',','.')).filter(v=>v!==''&&isFinite(Number(v))).map(Number);return a.length?String(Math.round(a.reduce((t,v)=>t+v,0)/a.length*100)/100):'-'}
+function nRata(i){const d=NS.nd,v=d.kol.map((c,j)=>{const e=$('#nv_'+i+'_'+j);return e?e.value:''}),t=$('#nr_'+i);if(t)t.textContent=nRataBaris(v)}
+function nAmbil(){const d=NS.nd;d.siswa.forEach((x,i)=>d.kol.forEach((c,j)=>{const e=$('#nv_'+i+'_'+j);if(e)d.nilai[x.Siswa_ID+'|'+c.nama]={Skor:e.value}}))}   
+function nTugasBerikut(){const d=NS.nd;let mx=0;d.kol.forEach(c=>{const m=/^tugas\s+(\d+)$/i.exec(c.nama);if(m)mx=Math.max(mx,Number(m[1]))});
+  if(!mx&&d.kol.some(c=>c.nama.toLowerCase()==='tugas'))mx=1;return 'Tugas '+(mx+1)}
+function nDraw(){const d=NS.nd,ada=c=>d.kol.some(x=>x.nama.toLowerCase()===c.toLowerCase());
+  const head=d.kol.map((c,j)=>`<th>${esc(c.nama)} <button type="button" class="btn sm ghost" data-j="${j}" onclick="nHapusKolom(this.dataset.j)" title="Hapus kolom ${esc(c.nama)}" aria-label="Hapus kolom ${esc(c.nama)}">&times;</button></th>`).join('');
+  const rows=d.siswa.map((x,i)=>{const isi=d.kol.map(c=>{const n=d.nilai[x.Siswa_ID+'|'+c.nama]||{};return n.Skor===undefined?'':n.Skor});
+    return `<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td>`+d.kol.map((c,j)=>`<td><input id="nv_${i}_${j}" type="number" min="0" max="100" step="any" style="width:76px" oninput="nRata(${i})" aria-label="${esc(c.nama)} ${esc(x.Nama_Siswa)}" value="${esc(isi[j])}"></td>`).join('')+`<td><b id="nr_${i}">${esc(nRataBaris(isi))}</b></td></tr>`}).join('');
+  const cepat=[nTugasBerikut(),'Capaian 1','Capaian 2'].filter(c=>!ada(c)).map(c=>`<button type="button" class="btn sm ghost" data-n="${esc(c)}" onclick="nTambah(this.dataset.n)">+ ${esc(c)}</button>`).join(' ');
+  const tg=d.kol.filter(c=>c.kelompok==='Tugas'),tgList=tg.length?tg:d.kol;
   $('#nb').innerHTML=`<p><small>${esc(pairLabel())} &middot; Tahun ajaran ${esc(d.Tahun_Ajaran)} &middot; Semester ${esc(NS.sem)}</small></p>`+
-   (d.siswa.length?`<div class="tw"><table><tr><th>NIS</th><th>Nama</th>${d.komponen.map(c=>`<th>${esc(c.nama)}</th>`).join('')}</tr>${rows}</table></div>
-   <p class="row"><button class="btn" id="nsv" onclick="nSimpan()">Simpan semua</button><button class="btn ghost" onclick="nTarik()">Isi "Tugas" dari rata-rata nilai tugas semester ini</button></p><p><small>Nilai 0-100. Kosongkan kotak jika belum ada nilai. Wali kelas langsung bisa melihat nilai ini di menu Nilai Siswa.</small></p>`:'<div class="empty">Belum ada siswa di kelas ini.</div>')}
+   (d.siswa.length?`<div class="row" style="margin:8px 0;align-items:flex-end;gap:8px;flex-wrap:wrap"><div><label for="nnew">Tambah kolom nilai</label><input id="nnew" maxlength="40" placeholder="mis. Tugas 1" style="width:190px" onkeydown="if(event.key==='Enter'){event.preventDefault();nTambah()}"></div><button type="button" class="btn ghost" onclick="nTambah()">+ Tambah kolom</button></div>
+   <p style="margin:4px 0 8px"><small>Tambah cepat:</small> ${cepat||'<small>(semua sudah ada)</small>'}</p>
+   <div class="tw"><table><tr><th>NIS</th><th>Nama</th>${head}<th>Rata-rata</th></tr>${rows}</table></div>
+   <p class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn" id="nsv" onclick="nSimpan()">Simpan semua</button>
+   <span style="margin-left:12px"><label for="ntg" class="sr-only" style="position:absolute;left:-9999px">Kolom tujuan</label><select id="ntg" style="max-width:190px">${tgList.map(c=>`<option value="${esc(c.nama)}">${esc(c.nama)}</option>`).join('')}</select> <button class="btn ghost" onclick="nTarik()">Isi dari rata-rata nilai tugas</button></span></p>
+   <p><small>Nilai 0-100. Kosongkan kotak jika belum ada nilai. Kolom baru langsung tersimpan; isi nilainya lalu tekan "Simpan semua". Untuk menghapus kolom (tanda &times;), kosongkan dulu semua nilainya dan simpan. Paling banyak ${d.maks} kolom per kelas dan mapel. Catatan: STS di rapor mid memakai kolom <b>UTS</b> (nilainya sama).</small></p>`:'<div class="empty">Belum ada siswa di kelas ini.</div>')}
+async function nTambah(nama){const d=NS.nd,e=$('#nnew');if(!d||NS.busy)return;
+  const v=String(nama!==undefined?nama:(e?e.value:'')).replace(/\s+/g,' ').trim();
+  if(!v)return toast('Tulis nama nilainya dulu, misalnya Tugas 1');
+  if(v.length>40||/[|<>]/.test(v)||/^[=+\-@]/.test(v))return toast('Nama tidak valid: maksimal 40 karakter, tanpa | < > dan tidak diawali = + - @');
+  if(d.kol.some(c=>c.nama.toLowerCase()===v.toLowerCase()))return toast('Kolom "'+v+'" sudah ada');
+  if(d.kol.length>=d.maks)return toast('Paling banyak '+d.maks+' kolom. Hapus kolom yang kosong dulu');
+  const [k,m]=GS.pair.split('|'),key=NS.key;nAmbil();NS.busy=true;
+  try{const l=await api('n.kolomTambah',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Nama:v});
+    if(NS.key!==key||NS.nd!==d)return;d.kol=l;nDraw();const f=$('#nv_0_'+(d.kol.length-1));if(f)f.focus()}
+  catch(er){fail(er)}finally{NS.busy=false}}
+async function nHapusKolom(j){const d=NS.nd,c=d&&d.kol[Number(j)];if(!c||NS.busy)return;
+  if(!await ask('Hapus kolom "'+c.nama+'"? Kolom hanya bisa dihapus bila semua nilainya sudah kosong dan tersimpan.',{title:'Hapus kolom nilai',ok:'Hapus'}))return;
+  const [k,m]=GS.pair.split('|'),key=NS.key;nAmbil();NS.busy=true;
+  try{const l=await api('n.kolomHapus',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Nama:c.nama});
+    if(NS.key!==key||NS.nd!==d)return;d.kol=l;nDraw();toast('Kolom dihapus')}
+  catch(er){fail(er)}finally{NS.busy=false}}
 async function nSimpan(){const d=NS.nd,[k,m]=GS.pair.split('|'),b=$('#nsv'),items=[];
-  d.siswa.forEach((x,i)=>d.komponen.forEach((c,j)=>items.push({Siswa_ID:x.Siswa_ID,Jenis:c.nama,Skor:$('#nv_'+i+'_'+j).value})));
+  d.siswa.forEach((x,i)=>d.kol.forEach((c,j)=>items.push({Siswa_ID:x.Siswa_ID,Jenis:c.nama,Skor:$('#nv_'+i+'_'+j).value})));
   b.disabled=true;b.textContent='Menyimpan...';
   try{const r=await api('n.save',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,items});toast(r.diubah?r.diubah+' nilai tersimpan':'Tidak ada perubahan');nLoad()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan semua'}}
-async function nTarik(){if(!await ask('Isi kolom "Tugas" dengan rata-rata nilai tugas semester '+NS.sem+' yang sudah dinilai? Isian lama di kolom itu akan diganti. Semester ditentukan dari tenggat tugas (Juli-Desember = Ganjil, Januari-Juni = Genap).',{title:'Tarik nilai tugas',ok:'Tarik nilai'}))return;
+async function nTarik(){const s=$('#ntg'),tujuan=s?s.value:'';if(!tujuan)return toast('Pilih kolom tujuan dulu');
+  if(!await ask('Isi kolom "'+tujuan+'" dengan rata-rata nilai tugas semester '+NS.sem+' yang sudah dinilai di menu Tugas? Isian lama di kolom itu akan diganti. Semester ditentukan dari tenggat tugas (Juli-Desember = Ganjil, Januari-Juni = Genap).',{title:'Tarik nilai tugas',ok:'Tarik nilai'}))return;
   const [k,m]=GS.pair.split('|');
-  try{const r=await api('n.tarikTugas',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem});toast(r.diubah?r.diubah+' nilai tugas diisi':'Sudah sama, tidak ada perubahan');nLoad()}catch(e){fail(e)}}
+  try{const r=await api('n.tarikTugas',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Jenis:tujuan});toast(r.diubah?r.diubah+' nilai tugas diisi':'Sudah sama, tidak ada perubahan');nLoad()}catch(e){fail(e)}}
 
 /* MT: seperti M, tetapi bila halaman Kelas Binaan (#bn-body) atau Mata Pelajaran (#mp-body, MapelUI) sedang tampil, isi masuk ke tab, bukan ke seluruh #dmain. */
 let MTK=0;   // nomor tampilan: naik setiap MT() menggambar; WaliUI memakainya untuk mengabaikan respons tampilan lama
@@ -1653,7 +1686,7 @@ function wMapelDraw(){const d=NS.wmd,s=$('#wm');if(!d||!s||!$('#wb'))return;
    (d.siswa.length?`<div class="tw"><table><tr><th>NIS</th><th>Nama</th>${d.komponen.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Rata-rata</th></tr>`+
     d.siswa.map(x=>`<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td>${x.nilai.map(n=>`<td>${v(n)}</td>`).join('')}<td><b>${v(x.rata)}</b></td></tr>`).join('')+
     `<tr><td colspan="${2+d.komponen.length}" style="text-align:right"><b>Rata-rata kelas</b> <small>(${d.terisi} dari ${d.siswa.length} siswa sudah bernilai)</small></td><td><b>${v(d.rataKelas)}</b></td></tr></table></div>
-    <p><small>Tanda "-" berarti guru mapel belum mengisi nilai itu. Rata-rata siswa dihitung dari komponen yang sudah terisi.</small></p>`:'<div class="empty">Belum ada siswa di kelas ini.</div>')}
+    <p><small>Tanda "-" berarti guru mapel belum mengisi nilai itu. Rata-rata siswa dihitung dari kolom nilai yang sudah terisi.</small></p>`:'<div class="empty">Belum ada siswa di kelas ini.</div>')}
 async function wMuatSiswa(){if(!$('#ws'))return;   // panel Per siswa sudah ditinggalkan
   const k=NS.wk;NS.wlk=k;NS.wl=[];NS.ws='';$('#wb').innerHTML='<div class="skel"></div>';$('#ws').innerHTML='';
   try{const l=await api('w.siswa',{Kelas_ID:k});if(NS.wk!==k||!$('#ws'))return;NS.wl=l;wIsiSiswa()}
@@ -1674,7 +1707,7 @@ function wDraw(){const d=NS.wd,v=x=>x===''?'<span style="color:#8a9aa8">-</span>
   <div class="tw"><table><tr><th>Mata Pelajaran</th><th>Guru</th>${d.komponen.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Rata-rata</th></tr>`+
   d.mapel.map(m=>`<tr><td>${esc(m.Mapel)}</td><td><small>${esc(m.Guru)}</small></td>${m.nilai.map(n=>`<td>${v(n)}</td>`).join('')}<td><b>${v(m.rata)}</b></td></tr>`).join('')+
   `<tr><td colspan="${2+d.komponen.length}" style="text-align:right"><b>Rata-rata keseluruhan</b></td><td><b>${v(d.rata)}</b></td></tr></table></div>
-  <p><small>Tanda "-" berarti guru mapel belum mengisi nilai itu. Rata-rata mapel dihitung dari komponen yang sudah terisi.</small></p>
+  <p><small>Tanda "-" berarti guru mapel belum mengisi nilai itu. Rata-rata mapel dihitung dari kolom nilai yang sudah terisi. Kolom nilai dibuat oleh guru mata pelajaran (Tugas 1, Capaian 1, dst).</small></p>
   <p><button class="btn" onclick="wUnduh(this)">Unduh Excel</button></p>`}
 function dl(r){const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
   const url=URL.createObjectURL(new Blob([u],{type:r.mime})),a=document.createElement('a');a.href=url;a.download=r.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
@@ -1707,19 +1740,22 @@ Object.assign(VIEWS,{'g-nilai':vGNilai,'w-siswa':vWSiswa,'w-nilai':vWNilai});
 <script>
 
 
-const WR={view:'g',k:'',sem:'Ganjil',batas:70,req:0,key:'',md:null,sel:'',cat:{}};
+const WR={view:'g',tab:'rekap',k:'',sem:'Ganjil',batas:70,req:0,key:'',md:null,sel:'',cat:{}};
+const RS={d:null,mid:[],sem:{},ver:0};   
+const RM={d:null,cat:{},tgl:'',kota:'',pv:''};   
 const wrIc=n=>typeof dsI==='function'?dsI(n):'';
 const wrSkel='<div class="skel"></div><br><div class="skel"></div>';
 const wrSem=()=>SEMS.map(x=>`<option ${x===WR.sem?'selected':''}>${x}</option>`).join('');
 
 function wrFrame(judul,ket){
-  WR.key='';WR.md=null;WR.sel='';
-  MT(`<h2 style="margin-bottom:4px">${judul}</h2><p style="margin-top:0"><small>${ket}</small></p>
+  const v=WR.view;WR.key='';WR.md=null;WR.sel='';RS.d=null;RM.d=null;
+  MT(`<h2 style="margin-bottom:4px">${judul}</h2><p style="margin-top:0"><small>${ket}</small></p>${v==='r'?'<div class="tabs" id="wr-tabs"></div>':''}
   <div class="row" style="margin:10px 0;align-items:flex-end;gap:12px;flex-wrap:wrap">
    <div><label for="wr-k">Kelas</label><select id="wr-k" style="max-width:300px" onchange="WR.k=this.value;wrLoad()"></select></div>
    <div><label for="wr-s">Semester</label><select id="wr-s" style="max-width:130px" onchange="WR.sem=this.value;wrLoad()">${wrSem()}</select></div>
    <div><label for="wr-b">Batas perhatian</label><input id="wr-b" type="number" min="0" max="100" step="any" value="${WR.batas}" style="width:100px" onchange="wrBatas(this.value)"></div>
   </div><div id="wr-body"></div>`);
+  if(v==='r')wrTabs();
   const tk=MTK;$('#wr-body').dataset.t=tk;   
   if(!MEM.wk)$('#wr-body').innerHTML=wrSkel;
   swr3('wk','w.kelas','#wr-body[data-t="'+tk+'"]',l=>{
@@ -1736,8 +1772,12 @@ function wrBatas(v){
 
 async function wrLoad(tk=MTK){
   const k=WR.k,sem=WR.sem,v=WR.view,id=++WR.req;if(tk!==MTK||!k||!$('#wr-body'))return;
-  WR.key=k+'|'+sem;WR.md=null;WR.sel='';$('#wr-body').innerHTML=wrSkel;
+  WR.key=k+'|'+sem;WR.md=null;WR.sel='';RS.d=null;RM.d=null;RM.pv='';$('#wr-body').innerHTML=wrSkel;
   try{
+    if(v==='r'&&WR.tab==='mid'){const r=await api('w.midData',{Kelas_ID:k,Semester:sem});
+      if(tk!==MTK||id!==WR.req||!$('#wr-body'))return;rmInit(r);rmDraw();return}
+    if(v==='r'&&WR.tab==='set'){const r=await api('w.rsGet',{Kelas_ID:k,Semester:sem});
+      if(tk!==MTK||id!==WR.req||!$('#wr-body'))return;rsInit(r);rsDraw();return}
     const d=v==='r'?await api('w.matriks',{Kelas_ID:k,Semester:sem}):await api('w.ringkasan',{Kelas_ID:k,Semester:sem,batas:WR.batas});
     if(tk!==MTK||id!==WR.req||!$('#wr-body'))return;
     if(v==='r'){WR.md=d;wrRaporDraw(d)}else wrRingDraw(d)}
@@ -1757,14 +1797,17 @@ function wrRingDraw(d){
   const tn=d.tanpaNilai.map(x=>`<li class="wr-it"><div><b>${esc(x.Nama_Siswa)}</b><small>NIS ${esc(x.NIS||'-')}</small></div></li>`).join('');
   el.innerHTML=`<div class="dtiles" style="margin-top:8px">${tile('users',d.jumlahSiswa,'Siswa')}${tile('book',d.jumlahMapel,'Mata pelajaran')}${tile('chart',d.rataKelas===''?'-':d.rataKelas,'Rata-rata kelas')}${tile('clip',d.kelengkapan+'%','Kelengkapan nilai')}</div>
   <div class="wr-grid">
-   <section class="dcard wr-card" aria-labelledby="wr-h1"><h3 id="wr-h1">Kelengkapan nilai per mapel</h3><p style="margin:0 0 6px"><small>Lengkap = semua komponen (${d.komponen.map(esc).join(', ')}) sudah diisi.</small></p><ul class="wr-list">${mp}</ul></section>
+   <section class="dcard wr-card" aria-labelledby="wr-h1"><h3 id="wr-h1">Kelengkapan nilai per mapel</h3><p style="margin:0 0 6px"><small>Lengkap = semua kolom nilai yang dibuat guru mapel itu sudah diisi.</small></p><ul class="wr-list">${mp}</ul></section>
    <section class="dcard wr-card" aria-labelledby="wr-h2"><h3 id="wr-h2">Perlu perhatian<span class="wr-n">${d.perhatian.length}</span></h3><p style="margin:0 0 6px"><small>Rata-rata atau nilai salah satu mapel di bawah ${d.batas}.</small></p>${d.perhatian.length?`<ul class="wr-list">${ph}</ul>`:'<p style="color:#5b7083">Tidak ada siswa di bawah batas.</p>'}</section>
    <section class="dcard wr-card" aria-labelledby="wr-h3"><h3 id="wr-h3">Belum punya nilai<span class="wr-n">${d.tanpaNilai.length}</span></h3>${d.tanpaNilai.length?`<ul class="wr-list">${tn}</ul>`:'<p style="color:#5b7083">Semua siswa sudah punya minimal satu nilai.</p>'}</section>
   </div>
   <p style="margin-top:16px"><a class="btn" href="#/dashboard/w-binaan/rapor">Buka Rapor Kelas Binaan</a></p>`}
 
  
-function vWRapor(){WR.view='r';wrFrame('Rapor Kelas Binaan','Rekap nilai semua mapel per siswa. Unduh rapor PDF per siswa atau rekap kelas dalam Excel. Dibuat dari nilai saat ini.')}
+function wrTabs(){const el=$('#wr-tabs');if(!el)return;
+  el.innerHTML=[['rekap','Rekap dan Rapor PDF'],['set','Pengaturan Rapor'],['mid','Rapor Mid (Excel)']].map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===WR.tab}" onclick="wrTab('${k}')" class="${k===WR.tab?'on':''}">${l}</a>`).join('')}
+function wrTab(t){if(WR.tab===t)return;WR.tab=t;wrTabs();wrLoad()}
+function vWRapor(){WR.view='r';WR.tab='rekap';wrFrame('Rapor Kelas Binaan','Rekap nilai semua mapel per siswa. Unduh rapor PDF per siswa atau rekap kelas dalam Excel. Dibuat dari nilai saat ini.')}
 
 function wrRaporDraw(d){
   const el=$('#wr-body');if(!el)return;
@@ -1802,8 +1845,109 @@ async function wrExcel(b){
   catch(e){fail(e)}
   b.disabled=false;b.textContent=txt}
 
-/* dipanggil Index.html saat keluar/ganti akun: catatan rapor dan data kelas akun sebelumnya dibuang */
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{WR.cat={};WR.md=null;WR.k='';WR.sel='';WR.key=''});
+
+/* ---------- Pengaturan Rapor (R2): jenis rapor, kolom nilai yang masuk, KKTP dan kelompok mapel ---------- */
+const RS_KEL=['Tugas','Capaian','Ulangan','Sumatif','Lainnya'];
+const rsTag=ok=>ok?'<small style="color:var(--teal)">Tersimpan</small>':'<small style="color:#8a6d00">Belum disimpan (memakai bawaan)</small>';
+function rsInit(d){RS.d=d;RS.mid=d.mid.map(c=>({nama:c.nama,label:c.label}));RS.sem={};d.semester.forEach(n=>RS.sem[n]=true)}
+function rsDraw(){const d=RS.d,el=$('#wr-body');if(!d||!el)return;
+  if(!d.mapel.length){el.innerHTML='<div class="empty">Belum ada pengampu mata pelajaran di kelas ini. Admin mengisinya di menu Pengampu Mapel.</div>';return}
+  el.innerHTML=`<p><small>${esc(d.Kelas)} &middot; Semester ${esc(d.Semester)} &middot; Tahun ajaran ${esc(d.Tahun_Ajaran)}. Pengaturan ini berlaku untuk kelas dan semester ini saja. Kolom nilai dibuat oleh guru mata pelajaran di menu Input Nilai.</small></p>
+  <div style="display:grid;gap:16px;margin-top:8px"><section class="dcard" id="rs-c1" aria-labelledby="rs-h1"></section><section class="dcard" id="rs-c2" aria-labelledby="rs-h2"></section><section class="dcard" id="rs-c3" aria-labelledby="rs-h3"></section></div>`;
+  rsMid();rsSemDraw();rsMap()}
+
+/* -- rapor mid: kolom bernomor urut, judul boleh diganti -- */
+function rsMidAmbil(){RS.mid.forEach((c,i)=>{const e=$('#rs-ml-'+i);if(e)c.label=e.value})}
+function rsMid(){const d=RS.d,el=$('#rs-c1');if(!el)return;const dipakai={};RS.mid.forEach(c=>dipakai[c.nama]=1);
+  const sisa=d.kolom.filter(c=>!dipakai[c.nama]);
+  el.innerHTML=`<h3 id="rs-h1" style="margin:0 0 4px">Rapor mid semester ${rsTag(d.tersimpan.Mid)}</h3>
+  <p style="margin:0 0 8px"><small>Pilih kolom nilai yang menjadi kolom di tabel rapor mid, urut dari kiri ke kanan (paling banyak 8). Judul kolom boleh diganti, misalnya kolom UTS ditulis <b>STS</b> (STS dan UTS adalah nilai yang sama).</small></p>
+  ${RS.mid.length?`<ol style="margin:0;padding-left:22px">`+RS.mid.map((c,i)=>`<li style="margin:6px 0"><span class="row" style="gap:6px;align-items:center;flex-wrap:wrap"><b style="min-width:110px">${esc(c.nama)}</b><input id="rs-ml-${i}" maxlength="30" value="${esc(c.label)}" placeholder="Judul di rapor (kosong = ${esc(c.nama)})" aria-label="Judul kolom ${esc(c.nama)}" style="width:210px">
+    <button type="button" class="btn sm ghost" data-i="${i}" data-g="-1" onclick="rsMidGeser(this)" aria-label="Naikkan ${esc(c.nama)}"${i===0?' disabled':''}>&#9650;</button><button type="button" class="btn sm ghost" data-i="${i}" data-g="1" onclick="rsMidGeser(this)" aria-label="Turunkan ${esc(c.nama)}"${i===RS.mid.length-1?' disabled':''}>&#9660;</button><button type="button" class="btn sm ghost" data-i="${i}" onclick="rsMidBuang(this)" aria-label="Buang ${esc(c.nama)}">&times;</button></span></li>`).join('')+`</ol>`:'<p style="color:#8a6d00;margin:0">Belum ada kolom dipilih.</p>'}
+  <p class="row" style="gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">${sisa.length?`<select id="rs-madd" aria-label="Kolom yang ditambahkan" style="max-width:220px">${sisa.map(c=>`<option value="${esc(c.nama)}">${esc(c.nama)}</option>`).join('')}</select><button type="button" class="btn ghost" onclick="rsMidTambah()">+ Tambah kolom</button>`:'<small>Semua kolom sudah dipakai.</small>'}</p>
+  <p class="row" style="gap:10px"><button type="button" class="btn" id="rs-msv" onclick="rsSimpanMid()">Simpan rapor mid</button><button type="button" class="btn ghost" onclick="rsMidBawaan()">Kembali ke bawaan</button></p>`}
+function rsMidGeser(b){rsMidAmbil();const i=Number(b.dataset.i),g=Number(b.dataset.g),j=i+g;if(j<0||j>=RS.mid.length)return;const t=RS.mid[i];RS.mid[i]=RS.mid[j];RS.mid[j]=t;rsMid()}
+function rsMidBuang(b){rsMidAmbil();RS.mid.splice(Number(b.dataset.i),1);rsMid()}
+function rsMidTambah(){const s=$('#rs-madd');if(!s||!s.value)return;if(RS.mid.length>=8)return toast('Paling banyak 8 kolom untuk rapor mid');rsMidAmbil();RS.mid.push({nama:s.value,label:s.value==='UTS'?'STS':''});rsMid()}
+function rsMidBawaan(){const d=RS.d,cp=d.kolom.filter(c=>/^capaian/i.test(c.nama)).map(c=>({nama:c.nama,label:''})),u=d.kolom.some(c=>c.nama==='UTS')?[{nama:'UTS',label:'STS'}]:[];RS.mid=cp.concat(u);rsMid()}
+async function rsSimpanMid(){rsMidAmbil();if(!RS.mid.length)return toast('Pilih minimal satu kolom nilai');
+  await rsKirim('rs-msv',{Jenis:'Mid',kolom:RS.mid.map(c=>({nama:c.nama,label:c.label.trim()}))},()=>rsMid())}
+
+/* -- rapor semester: kolom yang dirata-ratakan menjadi Nilai Akhir -- */
+function rsSemDraw(){const d=RS.d,el=$('#rs-c2');if(!el)return;
+  const grup=RS_KEL.map(g=>({g:g,l:d.kolom.filter(c=>c.kelompok===g)})).filter(x=>x.l.length),n=Object.keys(RS.sem).filter(k=>RS.sem[k]).length;
+  el.innerHTML=`<h3 id="rs-h2" style="margin:0 0 4px">Rapor semester ${rsTag(d.tersimpan.Semester)}</h3>
+  <p style="margin:0 0 8px"><small>Centang kolom nilai yang dihitung menjadi <b>Nilai Akhir</b> di rapor semester. Nilai akhir tiap mapel = rata-rata kolom yang dicentang dan sudah terisi (tiap kolom bobotnya sama). Kolom yang dibuat guru tetapi tidak dicentang tidak ikut dihitung.</small></p>
+  ${grup.map(x=>`<fieldset style="border:1px solid var(--line);border-radius:8px;margin:0 0 8px;padding:6px 10px"><legend style="padding:0 6px"><b>${esc(x.g)}</b> <button type="button" class="btn sm ghost" data-g="${esc(x.g)}" data-v="1" onclick="rsSemKel(this)">Pilih semua</button> <button type="button" class="btn sm ghost" data-g="${esc(x.g)}" data-v="0" onclick="rsSemKel(this)">Kosongkan</button></legend>
+   <div style="display:flex;flex-wrap:wrap;gap:6px 18px">${x.l.map(c=>`<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-n="${esc(c.nama)}" ${RS.sem[c.nama]?'checked':''} onchange="rsSemCek(this)"> ${esc(c.nama)} <small style="color:#5b7083">terisi di ${c.terisi} dari ${c.mapel} mapel</small></label>`).join('')}</div></fieldset>`).join('')}
+  <p style="margin:6px 0"><small id="rs-sn">${n} kolom dipilih.</small></p>
+  <p class="row" style="gap:10px"><button type="button" class="btn" id="rs-ssv" onclick="rsSimpanSem()">Simpan rapor semester</button></p>`}
+function rsSemCek(e){RS.sem[e.dataset.n]=e.checked;const t=$('#rs-sn');if(t)t.textContent=Object.keys(RS.sem).filter(k=>RS.sem[k]).length+' kolom dipilih.'}
+function rsSemKel(b){const g=b.dataset.g,v=b.dataset.v==='1';RS.d.kolom.filter(c=>c.kelompok===g).forEach(c=>RS.sem[c.nama]=v);rsSemDraw()}
+async function rsSimpanSem(){const l=RS.d.kolom.filter(c=>RS.sem[c.nama]).map(c=>c.nama);if(!l.length)return toast('Pilih minimal satu kolom nilai');
+  await rsKirim('rs-ssv',{Jenis:'Semester',kolom:l},()=>rsSemDraw())}
+
+/* -- mapel: kelompok pada tiap jenis rapor, KKTP, urutan -- */
+function rsMap(){const d=RS.d,el=$('#rs-c3');if(!el)return;
+  el.innerHTML=`<h3 id="rs-h3" style="margin:0 0 4px">Mata pelajaran: kelompok, KKTP, urutan ${rsTag(d.tersimpan.Mapel)}</h3>
+  <p style="margin:0 0 8px"><small>Kelompok adalah judul pengelompokan di rapor (boleh berbeda untuk rapor mid dan rapor semester; kosong = tanpa kelompok). <b>KKTP</b> adalah angka ambang yang tercetak di rapor mid. <b>Urutan</b> menentukan nomor urut di rapor (kosong = urut abjad).</small></p>
+  <datalist id="rs-dl-mid"><option value="Muatan Umum"><option value="Muatan Lokal"><option value="International Class Program"></datalist>
+  <datalist id="rs-dl-sem"><option value="Muatan Nasional"><option value="Muatan Khas Al-Biruni: Muatan Lokal"><option value="International Class Program"></datalist>
+  <div class="tw"><table><tr><th>Mata pelajaran</th><th>Kelompok rapor mid</th><th>Kelompok rapor semester</th><th>KKTP</th><th>Urutan</th></tr>`+
+  d.mapel.map((m,i)=>`<tr><td>${esc(m.Mapel)}<br><small>${esc(m.Guru||'-')}</small></td>
+   <td><input id="rs-km-${i}" list="rs-dl-mid" maxlength="50" value="${esc(m.kmid)}" aria-label="Kelompok rapor mid ${esc(m.Mapel)}" style="width:190px"></td>
+   <td><input id="rs-ks-${i}" list="rs-dl-sem" maxlength="50" value="${esc(m.ksem)}" aria-label="Kelompok rapor semester ${esc(m.Mapel)}" style="width:210px"></td>
+   <td><input id="rs-kt-${i}" type="number" min="0" max="100" step="any" value="${esc(m.kktp)}" aria-label="KKTP ${esc(m.Mapel)}" style="width:80px"></td>
+   <td><input id="rs-ku-${i}" type="number" min="1" max="999" step="1" value="${esc(m.urut)}" aria-label="Urutan ${esc(m.Mapel)}" style="width:70px"></td></tr>`).join('')+
+  `</table></div><p class="row" style="gap:10px"><button type="button" class="btn" id="rs-wsv" onclick="rsSimpanMap()">Simpan mata pelajaran</button></p>`}
+async function rsSimpanMap(){const d=RS.d,l=d.mapel.map((m,i)=>({Mapel_ID:m.Mapel_ID,kmid:$('#rs-km-'+i).value,ksem:$('#rs-ks-'+i).value,kktp:$('#rs-kt-'+i).value,urut:$('#rs-ku-'+i).value}));
+  await rsKirim('rs-wsv',Object.assign({Jenis:'Mapel',mapel:l}),()=>rsMap())}
+
+/* kirim satu jenis pengaturan; setelah berhasil hanya kartu yang bersangkutan digambar ulang (kartu lain tidak kehilangan isian) */
+async function rsKirim(idTombol,data,gambar){
+  const b=$('#'+idTombol),txt=b&&b.textContent,k=WR.k,sem=WR.sem,tk=MTK;if(b){b.disabled=true;b.textContent='Menyimpan...'}
+  try{const r=await api('w.rsSimpan',Object.assign({Kelas_ID:k,Semester:sem},data));
+    if(tk!==MTK||!RS.d||WR.k!==k||WR.sem!==sem)return;
+    const sebelum={mid:RS.mid,sem:RS.sem};RS.d=r;
+    if(data.Jenis==='Mid'){RS.mid=r.mid.map(c=>({nama:c.nama,label:c.label}))}else RS.mid=sebelum.mid;
+    if(data.Jenis==='Semester'){RS.sem={};r.semester.forEach(n=>RS.sem[n]=true)}else RS.sem=sebelum.sem;
+    gambar();toast('Pengaturan tersimpan');return}
+  catch(e){fail(e)}
+  const b2=$('#'+idTombol);if(b2){b2.disabled=false;b2.textContent=txt}}
+
+
+/* ---------- Rapor Mid (R3): kop, catatan per siswa, unduh Excel ---------- */
+function rmInit(d){RM.d=d;RM.cat={};d.siswa.forEach(x=>RM.cat[x.Siswa_ID]=x.catatan||'');RM.pv='';if(!RM.kota)RM.kota=d.kop.kota||'Makassar'}
+const rmKF=[['alamat1','Alamat baris 1',120],['alamat2','Alamat baris 2',120],['telp','Telepon',40],['email','Email',80],['kota','Kota (untuk tanggal)',40],['kepsek','Nama kepala sekolah',80],['kepsekNiy','NIY kepala sekolah',30]];
+function rmDraw(){const d=RM.d,el=$('#wr-body');if(!d||!el)return;
+  const kop=d.kop,kl=d.kolom.length?d.kolom.map(esc).join(', '):'(belum dipilih)';
+  el.innerHTML=`<div class="card"><h3>Kop dan tanda tangan</h3><p><small>Berlaku untuk seluruh rapor sekolah ini. Logo ditambahkan sendiri di Excel setelah diunduh. Nama sekolah: ${esc(kop.nama)}.</small></p>
+   <div class="grid">${rmKF.map(([k,l,m])=>`<div><label for="rm-${k}">${l}</label><input id="rm-${k}" maxlength="${m}" value="${esc(kop[k])}"></div>`).join('')}</div>
+   <p><button id="rm-kop" onclick="rmKop()">Simpan kop</button></p></div>
+  <div class="card"><h3>Catatan dan unduhan</h3><p><small>Kolom nilai: ${kl} (atur di tab Pengaturan Rapor). Catatan: satu poin per baris, maksimal 8 baris.</small></p>
+   <div class="grid"><div><label for="rm-tgl">Tanggal rapor (boleh dikosongkan)</label><input id="rm-tgl" type="date" value="${esc(RM.tgl)}" onchange="RM.tgl=this.value"></div>
+   <div><label for="rm-kt">Kota tanda tangan</label><input id="rm-kt" maxlength="40" value="${esc(RM.kota)}" oninput="RM.kota=this.value"></div></div>
+   <p><button id="rm-all" onclick="rmExcel('')">Unduh semua siswa (satu lembar per siswa)</button> <button class="ghost" id="rm-sv" onclick="rmSv()">Simpan catatan</button></p>
+   ${d.siswa.length?d.siswa.map(x=>`<div class="rm-s" style="border-top:1px solid #d8e0e8;padding:10px 0"><b>${esc(x.Nama_Siswa)}</b> <small>${esc(x.NIS)}</small>
+     <textarea id="rm-c-${esc(x.Siswa_ID)}" data-s="${esc(x.Siswa_ID)}" style="min-height:90px" oninput="RM.cat[this.dataset.s]=this.value" aria-label="Catatan ${esc(x.Nama_Siswa)}">${esc(RM.cat[x.Siswa_ID])}</textarea>
+     <button class="ghost" data-s="${esc(x.Siswa_ID)}" onclick="rmPv(this.dataset.s)">Pratinjau</button> <button data-s="${esc(x.Siswa_ID)}" onclick="rmExcel(this.dataset.s)">Unduh Excel</button></div>`).join(''):'<p>Belum ada siswa di kelas ini.</p>'}
+   <div id="rm-pv"></div></div>`}
+async function rmKop(){const b=$('#rm-kop'),o={};rmKF.forEach(([k])=>o[k]=$('#rm-'+k).value);if(b)b.disabled=true;
+  try{const r=await api('w.midKop',Object.assign({Kelas_ID:WR.k,Semester:WR.sem},o));if(RM.d)RM.d.kop=r;RM.kota=r.kota;const e=$('#rm-kt');if(e)e.value=r.kota;toast('Kop tersimpan')}catch(e){fail(e)}
+  if(b)b.disabled=false}
+async function rmSimpan(){const k=WR.k,sem=WR.sem;const r=await api('w.midCatatan',{Kelas_ID:k,Semester:sem,catatan:RM.cat});return r}
+async function rmTombol(id,fn){const b=typeof id==='string'?$('#'+id):id;if(b)b.disabled=true;try{return await fn()}finally{if(b)b.disabled=false}}
+async function rmSv(){await rmTombol('rm-sv',async()=>{try{await rmSimpan();toast('Catatan tersimpan')}catch(e){fail(e)}})}
+async function rmExcel(sid){const k=WR.k,sem=WR.sem;
+  try{await rmSimpan();const r=await api('w.midExcel',{Kelas_ID:k,Semester:sem,Siswa_ID:sid,Tanggal:RM.tgl,Kota:RM.kota});dl(r);toast('File diunduh: '+r.name)}catch(e){fail(e)}}
+async function rmPv(sid){const k=WR.k,sem=WR.sem,el=$('#rm-pv');if(!el)return;
+  try{await rmSimpan();const x=await api('w.midPreview',{Kelas_ID:k,Semester:sem,Siswa_ID:sid});if(!$('#rm-pv'))return;
+   $('#rm-pv').innerHTML=`<h3>Pratinjau: ${esc(x.Nama_Siswa)}</h3><div style="overflow:auto"><table><thead><tr><th>No</th><th>Mata pelajaran</th>${x.kolom.map(c=>`<th>${esc(c)}</th>`).join('')}<th>KKTP</th></tr></thead><tbody>${x.grup.map(g=>`<tr><th>${esc(g.huruf)}</th><th colspan="${x.kolom.length+2}" style="text-align:left">${esc(g.nama)}</th></tr>`+g.baris.map(b=>`<tr><td>${esc(b.no)}</td><td>${esc(b.Mapel)}</td>${b.nilai.map(n=>`<td>${esc(n)}</td>`).join('')}<td>${esc(b.kktp)}</td></tr>`).join('')).join('')}</tbody></table></div>
+    <p><b>Catatan dari guru:</b></p>${x.catatan.length?'<ol type="a">'+x.catatan.map(c=>`<li>${esc(c)}</li>`).join('')+'</ol>':'<p><small>(kosong)</small></p>'}`;
+   $('#rm-pv').scrollIntoView&&$('#rm-pv').scrollIntoView({block:'nearest'})}catch(e){fail(e)}}
+
+ 
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{WR.cat={};WR.md=null;WR.k='';WR.sel='';WR.key='';WR.tab='rekap';RS.d=null;RS.mid=[];RS.sem={};RM.d=null;RM.cat={};RM.tgl='';RM.kota='';RM.pv=''});
 Object.assign(VIEWS,{'w-ringkasan':vWRingkasan,'w-rapor':vWRapor});
 </script>
 <style>
@@ -2004,8 +2148,8 @@ function uSoalDraw(){const c=UJ.cur,u=c.ujian,l=c.soal,lock=c.terkunci,ac=u.Acak
   MT(`<div class="row" style="justify-content:space-between"><h2>${esc(u.Judul)}</h2><button class="btn ghost" onclick="uHome()">Kembali</button></div>
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small><br><small>Acak urutan soal: ${ac.soal?'ya':'tidak'} &middot; Acak pilihan jawaban: ${ac.opsi?'ya':'tidak'}</small></p>
   <p class="row">${uTag(u.Status)}${u.Status!=='Aktif'?`<button class="btn sm" onclick="uStatus('Aktif')">Aktifkan</button>`:`<button class="btn ghost sm" onclick="uStatus('Ditutup')">Tutup ujian</button><button class="btn ghost sm" onclick="uStatus('Draft')">Kembalikan ke Draft</button>`}<button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Lihat hasil</button></p>
-  ${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button><button class="btn ghost" onclick="ujImport()">Impor soal (CSV)</button></p>`}`+
-  (l.length?`<div class="tw"><table><tr><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(q.Pertanyaan.length>140?q.Pertanyaan.slice(0,140)+'...':q.Pertanyaan):'<i>(soal berupa gambar)</i>'}<br><small>${q.Opsi.length} ${q.Jenis==='BS'?'pernyataan':'pilihan'}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
+  ${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button><button class="btn ghost" onclick="ujImport()">Impor soal</button></p>`}`+
+  (l.length?`<div class="tw"><table><tr><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(q.Pertanyaan.length>140?q.Pertanyaan.slice(0,140)+'...':q.Pertanyaan):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan')+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
 async function uStatus(st){const u=UJ.cur.ujian;
   try{const r=await api('u.save',{id:u.Ujian_ID,Kelas_ID:u.Kelas_ID,Mapel_ID:u.Mapel_ID,Judul:u.Judul,Jenis:u.Jenis,Durasi:u.Durasi,Mulai:u.Mulai_Input,Selesai:u.Selesai_Input,Status:st});
     UJ.cur.ujian=r;const l=MEM.ug||[],i=l.findIndex(x=>x.Ujian_ID===r.Ujian_ID);if(i>=0)l[i]=r;toast('Status ujian: '+st);uSoalDraw()}
@@ -2027,6 +2171,7 @@ function sForm(sid){const c=UJ.cur,l=c.soal,r=sid?l.find(x=>x.Soal_ID===sid)||{}
   ${r.Gambar?`<p class="row"><small>Soal ini sudah punya gambar.</small><button class="btn ghost sm" type="button" onclick="uShowImg('${esc(c.ujian.Ujian_ID)}','${esc(r.Soal_ID)}',this)">Lihat</button><label style="margin:0;font-weight:400"><input type="checkbox" id="shg" style="width:auto"> Hapus gambar</label></p><div id="sgcur"></div>`:''}
   <input id="sg" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="sPrev(this)"><div id="sgp"></div>
   <div id="so-box"></div><small>Bahasa Arab: pilihan yang berhuruf Arab otomatis tampil ke murid dengan huruf \u0623 \u0628 \u062c \u062f \u0647\u0640, dan soal Benar/Salah dengan \u0635\u062d / \u062e\u0637\u0623. Kunci di sini tetap A-E (atau Benar/Salah).</small>
+  <label>Pembahasan (opsional, hanya dilihat guru)</label><textarea id="sph" dir="auto" maxlength="3000" style="min-height:70px">${esc(r.Pembahasan||'')}</textarea>
   <label>Pratinjau (tampilan untuk murid)</label><div class="mxprev" id="spv"></div>
   <label>Audio (untuk Listening, opsional, maksimal 8 MB)</label>
   ${r.Media?`<p class="row"><small>Soal ini sudah punya audio.</small><button class="btn ghost sm" type="button" onclick="uPlay('${esc(c.ujian.Ujian_ID)}','${esc(r.Soal_ID)}',this)">Putar</button><label style="margin:0;font-weight:400"><input type="checkbox" id="sha" style="width:auto"> Hapus audio</label></p>`:''}
@@ -2056,7 +2201,7 @@ async function sSave(sid){const c=UJ.cur,b=$('#ssv'),j=UJX_FORM.jenis;let n=UJX_
   if(j==='BS'){for(let i=0;i<n;i++)if(!UJX_FORM.kb[i]){toast('Pilih kunci untuk pernyataan '+(i+1),1);return}kunci=UJX_FORM.kb.slice(0,n).join('')}
   else{kunci=UJX_FORM.kunci;if(!kunci){toast(j==='PGK'?'Centang minimal satu jawaban yang benar':'Pilih kunci jawaban',1);return}}
   b.disabled=true;b.textContent='Menyimpan...';
-  try{const f=$('#sf').files[0],p={Ujian_ID:c.ujian.Ujian_ID,id:sid,Jenis_Soal:j,Label:UJX_FORM.label,Pertanyaan:$('#sq').value,Opsi:UJX_FORM.op.slice(),Kunci:kunci};
+  try{const f=$('#sf').files[0],p={Ujian_ID:c.ujian.Ujian_ID,id:sid,Jenis_Soal:j,Label:UJX_FORM.label,Pertanyaan:$('#sq').value,Opsi:UJX_FORM.op.slice(),Kunci:kunci,Pembahasan:$('#sph')?$('#sph').value:undefined};
     if($('#sha')&&$('#sha').checked)p.hapusAudio=true;
     if($('#sm')&&$('#sm').value)p.Media=$('#sm').value;
     if(f){if(f.size>8*1024*1024)throw new Error('Audio maksimal 8 MB');p.audio={data:await fileB64(f),type:f.type}}
@@ -2067,14 +2212,17 @@ async function sSave(sid){const c=UJ.cur,b=$('#ssv'),j=UJX_FORM.jenis;let n=UJX_
 /* ---------- impor soal: template CSV, berkas CSV, atau tempelan dari Excel / Google Sheets ---------- */
 const UJX_IMP={rows:[],cek:null};
 const UJX_TPL=[
- ['Jenis','Pertanyaan','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Opsi_E','Kunci','Label'],
+ ['Jenis','Pertanyaan','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Opsi_E','Kunci','Label','Pembahasan'],
  ['#','PETUNJUK. Baris yang diawali tanda # diabaikan, boleh dihapus.'],
  ['#','Jenis: PG = pilihan ganda (1 jawaban benar). PGK = pilihan ganda kompleks (lebih dari 1 jawaban benar). BS = benar/salah untuk tiap pernyataan.'],
  ['#','Opsi_A sampai Opsi_E: isi berurutan dari A (PG dan PGK minimal 2, BS minimal 1). Untuk BS, kolom ini berisi PERNYATAAN.'],
  ['#','Kunci: PG = satu huruf (B). PGK = huruf dipisah koma (A,C). BS = satu huruf per pernyataan (B,S,B), B = benar/sesuai dan S = salah/tidak sesuai.'],
  ['#','Label: khusus BS, boleh kosong. BS = Benar/Salah, ST = Sesuai/Tidak sesuai.'],
  ['#','Rumus matematika ditulis di antara tanda dolar, contoh $\\frac{1}{2}$ atau $x^2+2x$. Pecahan biasa seperti 1/2 bisa berubah jadi tanggal di Excel, jadi tulis sebagai rumus. Gambar dan audio ditambahkan lewat tombol Edit pada soal.'],
- ['PG','Berapakah hasil dari $\\frac{1}{2}+\\frac{1}{3}$ ?','$\\frac{2}{5}\x24','$\\frac{5}{6}\x24','$\\frac{1}{6}\x24','$\\frac{3}{5}\x24','','B',''],
+ ['#','SESI = pembatas bagian ujian, bukan soal. Pertanyaan = petunjuk, Opsi_A = judul sesi, Opsi_B = durasi sesi (menit, 1 sampai 300). Kolom lain kosong.'],
+ ['SESI','Kerjakan dengan teliti.','Bagian 1','30','','','','','',''],
+ ['#','Pembahasan (kolom paling kanan) opsional. Hanya guru yang melihatnya.'],
+ ['PG','Berapakah hasil dari $\\frac{1}{2}+\\frac{1}{3}$ ?','$\\frac{2}{5}\x24','$\\frac{5}{6}\x24','$\\frac{1}{6}\x24','$\\frac{3}{5}\x24','','B','','Samakan penyebut: $\\frac{3}{6}+\\frac{2}{6}=\\frac{5}{6}$.'],
  ['#','Bahasa Arab: tulis langsung hurufnya (boleh dengan harakat) dan simpan dari Excel sebagai "CSV UTF-8". Pilihan berhuruf Arab otomatis tampil ke murid dengan huruf \u0623 \u0628 \u062c \u062f \u0647\u0640, dan soal benar/salah dengan \u0635\u062d / \u062e\u0637\u0623. Kunci tetap A-E atau B,S.'],
  ['PG','\u0645\u064e\u0627 \u0639\u064e\u0627\u0635\u0650\u0645\u064e\u0629\u064f \u0645\u0650\u0635\u0652\u0631\u064e\u061f','\u0627\u0644\u0642\u0627\u0647\u0631\u0629','\u0627\u0644\u0625\u0633\u0643\u0646\u062f\u0631\u064a\u0629','\u0623\u0633\u0648\u0627\u0646','\u0627\u0644\u0623\u0642\u0635\u0631','','A',''],
  ['PGK','Pilih semua bilangan prima berikut.','2','4','5','9','11','A,C,E',''],
@@ -2099,19 +2247,19 @@ function ujImpRows(txt){
   const R=ujCsv(txt).map((r,i)=>({r:r,baris:i+1})).filter(x=>x.r.some(c=>String(c).trim()));
   if(!R.length)throw new Error('Belum ada data. Pilih berkas atau tempel isi tabel, termasuk baris judul.');
   const nm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,''),H=R[0].r.map(nm),al=(...k)=>{for(const x of k){const i=H.indexOf(x);if(i>=0)return i}};
-  const cJ=al('jenis','tipe','bentuk'),cQ=al('pertanyaan','soal'),cK=al('kunci','kuncijawaban'),cL=al('label'),cO=['a','b','c','d','e'].map((h,i)=>al('opsi'+h,'pilihan'+h,'opsi'+(i+1),'pernyataan'+(i+1),h));
+  const cJ=al('jenis','tipe','bentuk'),cQ=al('pertanyaan','soal'),cK=al('kunci','kuncijawaban'),cL=al('label'),cP=al('pembahasan','penjelasan'),cO=['a','b','c','d','e'].map((h,i)=>al('opsi'+h,'pilihan'+h,'opsi'+(i+1),'pernyataan'+(i+1),h));
   if(cQ===undefined||cK===undefined||cO[0]===undefined)throw new Error('Baris judul tidak dikenali. Pakai template: kolom Jenis, Pertanyaan, Opsi_A sampai Opsi_E, Kunci, Label.');
-  const out=R.slice(1).filter(x=>!String(x.r[0]||'').trim().startsWith('#')).map(x=>({baris:x.baris,Jenis:cJ==null?'':x.r[cJ]||'',Pertanyaan:x.r[cQ]||'',Opsi:cO.map(i=>i==null?'':x.r[i]||''),Kunci:x.r[cK]||'',Label:cL==null?'':x.r[cL]||''}));
+  const out=R.slice(1).filter(x=>!String(x.r[0]||'').trim().startsWith('#')).map(x=>({baris:x.baris+(+(($('#sit')||{dataset:{}}).dataset.off)||0),Jenis:cJ==null?'':x.r[cJ]||'',Pertanyaan:x.r[cQ]||'',Opsi:cO.map(i=>i==null?'':x.r[i]||''),Kunci:x.r[cK]||'',Label:cL==null?'':x.r[cL]||'',Pembahasan:cP==null?'':x.r[cP]||''}));
   if(!out.length)throw new Error('Tidak ada baris soal di bawah baris judul.');
   return out}
 function ujImport(){const c=UJ.cur;UJX_IMP.rows=[];UJX_IMP.cek=null;
   MT(`<div class="row" style="justify-content:space-between"><h2>Impor soal</h2><button class="btn ghost" onclick="uSoalDraw()">Kembali</button></div>
   <p><small>${esc(c.ujian.Judul)}</small></p>
-  <div style="max-width:780px"><ol style="padding-left:20px;line-height:1.6"><li>Unduh template, lalu isi di Excel atau Google Sheets. Satu baris = satu soal.</li><li>Simpan sebagai CSV, lalu pilih berkas di bawah. Atau salin sel-selnya dan tempel di kotak teks.</li><li>Klik Periksa. Soal baru masuk hanya bila semua baris benar.</li></ol>
-  <p class="row"><button class="btn" type="button" onclick="ujTemplate()">Unduh template (CSV)</button><button class="btn ghost" type="button" onclick="ujTemplateTeks()">Salin template sebagai teks</button></p>
+  <div style="max-width:780px"><ol style="padding-left:20px;line-height:1.6"><li>Unduh template, lalu isi di Excel atau Google Sheets. Satu baris = satu soal.</li><li>Pilih berkas XLSX atau CSV di bawah. Atau salin sel-selnya dan tempel di kotak teks.</li><li>Klik Periksa. Soal baru masuk hanya bila semua baris benar.</li></ol>
+  <p class="row"><button class="btn" type="button" onclick="ujTemplateXlsx()">Unduh template (XLSX)</button><button class="btn ghost" type="button" onclick="ujTemplate()">Unduh template (CSV)</button><button class="btn ghost" type="button" onclick="ujTemplateTeks()">Salin template sebagai teks</button></p>
   <textarea id="stt" readonly style="display:none;min-height:90px" aria-label="Template sebagai teks"></textarea>
-  <p><small>Bentuk soal: PG, PGK, atau BS. Maksimal 5 pilihan atau pernyataan per soal, 200 soal per ujian. Gambar dan audio tidak bisa diimpor, tambahkan lewat Edit soal. Soal bahasa Arab: simpan berkas sebagai CSV UTF-8.</small></p>
-  <label>Pilih berkas CSV yang sudah diisi</label><input id="sif" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onchange="ujImpBaca(this)">
+  <p><small>Bentuk soal: PG, PGK, BS, atau baris SESI. Maksimal 5 pilihan atau pernyataan per soal, 200 soal per ujian. Gambar dan audio tidak bisa diimpor, tambahkan lewat Edit soal. Soal bahasa Arab: simpan berkas sebagai CSV UTF-8.</small></p>
+  <label>Pilih berkas XLSX atau CSV yang sudah diisi</label><input id="sif" type="file" accept=".xlsx,.csv,.tsv,.txt,text/csv,text/plain" onchange="ujImpBaca(this)">
   <label>Atau tempel isi tabel dari Excel / Google Sheets (termasuk baris judul)</label><textarea id="sit" style="min-height:120px" placeholder="Jenis	Pertanyaan	Opsi_A	..."></textarea>
   <p><button class="btn" id="sib" type="button" onclick="ujImpCek()">Periksa</button></p><div id="sir"></div></div>`)}
 function ujTemplate(){
@@ -2120,11 +2268,11 @@ function ujTemplate(){
 async function ujTemplateTeks(){const t=ujTplText('\t');
   try{await navigator.clipboard.writeText(t);toast('Template disalin. Tempel di Excel atau Google Sheets mulai dari sel A1.');return}catch(e){}
   const el=$('#stt');if(!el)return;el.style.display='';el.value=t;el.focus();el.select();toast('Tekan Ctrl+C untuk menyalin, lalu tempel di Excel atau Google Sheets.')}
-async function ujImpBaca(inp){const f=inp.files[0];if(!f)return;
+async function ujImpBaca(inp){const f=inp.files[0];if(!f)return;if(/\.xlsx$/i.test(f.name))return ujXlsxBaca(f);$('#sit').dataset.off='0';
   try{if(f.size>3*1024*1024)throw new Error('Berkas terlalu besar (maksimal 3 MB)');
     const buf=await f.arrayBuffer();let t,note='';
     try{t=new TextDecoder('utf-8',{fatal:true}).decode(buf)}
-    catch(e){   
+    catch(e){   // CSV "ANSI" dari Excel lama: huruf Arab disimpan sebagai windows-1256, selain itu windows-1252
       t=new TextDecoder('windows-1252').decode(buf);
       try{const a=new TextDecoder('windows-1256').decode(buf),na=(a.match(/[^\x00-\x7f]/g)||[]).length,ar=(a.match(/[\u0600-\u06FF]/g)||[]).length;
         if(ar>0&&ar*2>=na){t=a;note='Berkas dibaca dengan kode Arab (windows-1256). Lebih aman simpan sebagai CSV UTF-8.'}}catch(x){}}
@@ -2155,7 +2303,7 @@ async function uPlay(uid,sid,b){const t=b.textContent;b.disabled=true;b.textCont
   try{const r=await api('audio.get',{Ujian_ID:uid,Soal_ID:sid});if(window._ua)window._ua.pause();window._ua=new Audio(blobUrl(r));window._ua.play()}catch(e){fail(e)}
   b.disabled=false;b.textContent=t}
 
- 
+/* ---------- GURU / WALI KELAS: hasil & salin skor ---------- */
 async function uHasil(id){UJ.hid=id;MT(uSkel);
   try{UJ.res=await api('u.hasil',{id,Semester:UJ.sem});uHasilDraw()}catch(e){fail(e);uHome()}}
 function uHasilDraw(){const r=UJ.res,u=r.ujian;
@@ -2200,14 +2348,14 @@ const fmtT=s=>{const h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60,p=n=>St
 async function exStart(id,b){const u=exFind(id);
   if(u&&u.State==='Siap'&&!await ask('Mulai ujian "'+u.Judul+'"? Waktu '+u.Durasi+' menit langsung berjalan dan tidak bisa dihentikan.',{title:'Mulai ujian',ok:'Mulai ujian',no:'Nanti dulu'}))return;
   const t=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Memuat...'}
-  try{const d=await api('um.mulai',{id}),t0=performance.now();if(typeof mxWait==='function'&&/\$/.test(JSON.stringify(d.soal)))await mxWait(2500);exStop(false);   
+  try{const d=await api('um.mulai',{id}),t0=performance.now();if(typeof mxWait==='function'&&/\$/.test(JSON.stringify(d.soal)))await mxWait(2500);exStop(false);   // hanya soal berisi rumus yang menunggu KaTeX (maks. 2,5 detik); soal biasa langsung tampil
     Object.assign(EX,{u:d,jw:d.jawaban||{},i:0,dirty:0,busy:0,fin:0,done:0,hold:0,aud:{},audKey:'',res:null,img:{},imgBusy:{},end:t0+d.sisa*1000,tk:exTok()});
     exRun();exDraw()}
   catch(e){fail(e);if(e.message==='SESI_HABIS')return;if(b){b.disabled=false;b.textContent=t}exBack()}}
 function exRun(){clearInterval(EX.t1);clearInterval(EX.t2);EX.t1=setInterval(exTick,1000);EX.t2=setInterval(exSave,20000);
   window.onbeforeunload=()=>EX.u&&!EX.done?'Ujian sedang berjalan. Yakin keluar?':undefined}
 function exStop(save){if(save&&EX.u&&!EX.done)exSave();clearInterval(EX.t1);clearInterval(EX.t2);window.onbeforeunload=null;if(save)EX.u=null}
-function exTick(){if(EX.u&&EX.tk!==(exTok())){exStop(false);EX.u=null;return}   
+function exTick(){if(EX.u&&EX.tk!==(exTok())){exStop(false);EX.u=null;return}   // akun berganti: hentikan timer ujian milik akun lama
 if(!EX.u||EX.done)return;const s=Math.max(0,Math.ceil((EX.end-performance.now())/1000)),el=$('#ex-t');
   if(el){el.textContent=fmtT(s);el.style.color=s<=60?'var(--bad)':''}
   if(s<=0&&Date.now()>=EX.hold)exFinish(true)}
@@ -2241,9 +2389,9 @@ function exPal(){const u=EX.u,n=u.soal.filter(exAns).length;
 function exPick(h){const q=EX.u.soal[EX.i];EX.jw[q.Soal_ID]=h;EX.dirty=1;exQ()}
 // PG kompleks: klik untuk memilih, klik lagi untuk membatalkan; jawaban = huruf terurut, mis. "AC"
 function exTog(h){const q=EX.u.soal[EX.i],id=q.Soal_ID,s=(EX.jw[id]||'').split('').filter(Boolean),k=s.indexOf(h);if(k>=0)s.splice(k,1);else s.push(h);s.sort();if(s.length)EX.jw[id]=s.join('');else delete EX.jw[id];EX.dirty=1;exQ()}
-
+// Benar/Salah: jawaban = satu huruf per pernyataan (B, S, atau - bila belum dijawab), mis. "BS-B"
 function exBS(k,v){const q=EX.u.soal[EX.i],id=q.Soal_ID,n=q.Opsi.length,a=(EX.jw[id]||'').split('');while(a.length<n)a.push('-');a.length=n;a[k]=a[k]===v?'-':v;const s=a.join('');if(/^-+$/.test(s))delete EX.jw[id];else EX.jw[id]=s;EX.dirty=1;exQ()}
-
+// audio: dimuat saat diminta, satu pemutar dipakai terus bila soal berikutnya memakai audio yang sama
 function exAud(q){const el=$('#ex-au');if(!q.Media){el.style.display='none';return}
   el.style.display='';if(EX.audKey===q.Media)return;EX.audKey=q.Media;
   el.innerHTML=EX.aud[q.Media]?`<audio controls controlsList="nodownload" style="width:100%" src="${EX.aud[q.Media]}"></audio>`:`<button type="button" class="btn sm" id="ex-ab" onclick="exLoadAud()">Muat audio</button> <small>Audio dimuat dulu, lalu bisa diputar.</small>`}
@@ -2263,19 +2411,89 @@ function exPre(){const n=EX.u&&EX.u.soal[EX.i+1];if(n&&n.Gambar&&!EX.img[n.Soal_
 async function exFinish(auto){if(!EX.u||EX.done||EX.fin)return;
   if(!auto){const n=EX.u.soal.filter(q=>!exAns(q)).length;
     if(!await ask(n?'Masih ada '+n+' soal belum dijawab. Kumpulkan sekarang?':'Kumpulkan jawaban sekarang? Setelah dikumpulkan tidak bisa diubah.',{title:'Kumpulkan jawaban',ok:'Kumpulkan',no:'Kembali ke soal',bad:n>0}))return;
-    if(!EX.u||EX.done||EX.fin)return}   
+    if(!EX.u||EX.done||EX.fin)return}   // waktu bisa habis saat dialog terbuka: jangan kumpulkan dua kali
   else askClose(false);
   EX.fin=1;const bt=$('#ex-fin');if(bt){bt.disabled=true;bt.textContent='Mengumpulkan...'}
   try{const r=await api('um.selesai',{id:EX.u.Ujian_ID,jawaban:EX.jw});EX.done=1;EX.res=r;exStop(false);
     exMark(EX.u.Ujian_ID,r.skor);
     exResult()}
   catch(e){EX.fin=0;EX.hold=Date.now()+5000;if(bt){bt.disabled=false;bt.textContent='Kumpulkan'}fail(e)}}
-function exResult(){const r=EX.res;if(!$('#ex-root')){if($('#dmain'))toast('Waktu ujian habis. Jawaban Anda sudah dikumpulkan.');return}   
+function exResult(){const r=EX.res;if(!$('#ex-root')){if($('#dmain'))toast('Waktu ujian habis. Jawaban Anda sudah dikumpulkan.');return}   // jangan menimpa halaman lain
   M(`<div class="exwrap"><h2>Ujian selesai</h2><div class="stat" style="max-width:320px"><b>${esc(r.skor)}</b>Skor Anda (perolehan ${esc(r.benar)} dari ${esc(r.total)} soal)</div><p><button class="btn" onclick="exBack()">${esc(EXB.label)}</button></p></div>`)}
 
 Object.assign(VIEWS,{'g-ujian':vGUjian,'m-ujian':vMUjian});
-
+// keluar atau ganti akun: hentikan timer dan buang state ujian milik akun lama (clearSess di Index memanggil LOGOUT_HOOKS)
 (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{try{exStop(false);EX.u=null;EX.done=0;EX.dirty=0}catch(e){}});
+</script>
+<script>
+ 
+const UJX_XLSX_MAX=3*1024*1024;
+function ujXmlDec(s){return String(s).replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g,(m,e)=>{
+  if(e[0]==='#'){const n=e[1]==='x'||e[1]==='X'?parseInt(e.slice(2),16):parseInt(e.slice(1),10);try{return String.fromCodePoint(n)}catch(x){return ''}}
+  return {amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"}[e]})}
+function ujXAttr(s){const o={},re=/([\w:.-]+)\s*=\s*"([^"]*)"/g;let m;while((m=re.exec(s)))o[m[1]]=ujXmlDec(m[2]);return o}
+function ujXTexts(s){s=String(s).replace(/<rPh\b[\s\S]*?<\/rPh>/g,'');let o='',m;const re=/<t\b[^>]*>([\s\S]*?)<\/t>/g;while((m=re.exec(s)))o+=ujXmlDec(m[1]);return o}
+async function ujZip(buf){
+  const v=new DataView(buf),u8=new Uint8Array(buf),n=u8.length;let e=-1;
+  for(let i=n-22;i>=Math.max(0,n-65557);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
+  if(e<0)throw new Error('Berkas ini bukan XLSX yang valid');
+  const cnt=v.getUint16(e+10,true),dec=new TextDecoder('utf-8'),ent={};let p=v.getUint32(e+16,true);
+  for(let k=0;k<cnt;k++){
+    if(p+46>n||v.getUint32(p,true)!==0x02014b50)throw new Error('Berkas XLSX rusak');
+    const met=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),us=v.getUint32(p+24,true),nl=v.getUint16(p+28,true),el=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),off=v.getUint32(p+42,true);
+    ent[dec.decode(u8.subarray(p+46,p+46+nl))]={met,cs,us,off};p+=46+nl+el+cl}
+  return {u8,v,ent,dec}}
+async function ujZipRead(z,name){
+  const f=z.ent[name];if(!f)return null;
+  if(f.us>20*1024*1024)throw new Error('Isi berkas XLSX terlalu besar');
+  const o=f.off;if(z.v.getUint32(o,true)!==0x04034b50)throw new Error('Berkas XLSX rusak');
+  const s=o+30+z.v.getUint16(o+26,true)+z.v.getUint16(o+28,true),raw=z.u8.subarray(s,s+f.cs);
+  if(f.met===0)return z.dec.decode(raw);
+  if(f.met!==8)throw new Error('Format kompresi XLSX tidak didukung');
+  if(typeof DecompressionStream==='undefined')throw new Error('Peramban ini belum bisa membaca XLSX. Simpan berkas sebagai CSV UTF-8.');
+  const out=await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+  return z.dec.decode(out)}
+function ujSheetRows(xml,ss){
+  const rows={};let maxR=0,m;const re=/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  while((m=re.exec(xml))){
+    const a=ujXAttr(m[1]),ref=/^([A-Z]+)(\d+)$/.exec(a.r||'');if(!ref)continue;
+    let ci=0;for(const ch of ref[1])ci=ci*26+ch.charCodeAt(0)-64;ci--;const ri=+ref[2],inner=m[2]||'';let val='';
+    if(a.t==='inlineStr')val=ujXTexts(inner);
+    else{const x=/<v>([\s\S]*?)<\/v>/.exec(inner);
+      if(x)val=a.t==='s'?(ss[+x[1]]||''):ujXmlDec(x[1]);
+      if(a.t==='b'&&x)val=x[1]==='1'?'TRUE':'FALSE'}
+    if(val==='')continue;
+    (rows[ri]=rows[ri]||[])[ci]=val;if(ri>maxR)maxR=ri}
+  return {rows,maxR}}
+
+async function ujXlsxTeks(buf){
+  const z=await ujZip(buf),wb=await ujZipRead(z,'xl/workbook.xml');
+  if(!wb)throw new Error('Berkas ini bukan XLSX dari Excel atau Google Sheets');
+  const rel=await ujZipRead(z,'xl/_rels/workbook.xml.rels')||'',tg={};
+  (rel.match(/<Relationship\b[^>]*>/g)||[]).forEach(t=>{const a=ujXAttr(t);if(a.Id)tg[a.Id]=a.Target});
+  const nm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  let sheets=(wb.match(/<sheet\b[^>]*>/g)||[]).map(t=>{const a=ujXAttr(t);let p=(tg[a['r:id']]||'').replace(/^\//,'');if(p&&!/^xl\//.test(p))p='xl/'+p;return {nama:a.name||'',path:p}}).filter(s=>s.path);
+  sheets=sheets.filter(s=>nm(s.nama)==='soal').concat(sheets.filter(s=>nm(s.nama)!=='soal'));
+  const sst=await ujZipRead(z,'xl/sharedStrings.xml'),ss=sst?(sst.match(/<si\b[^>]*?(?:\/>|>[\s\S]*?<\/si>)/g)||[]).map(ujXTexts):[];
+  for(const sh of sheets){
+    const xml=await ujZipRead(z,sh.path);if(!xml)continue;
+    const d=ujSheetRows(xml,ss);let h=0;
+    for(let r=1;r<=Math.min(d.maxR,60);r++){const c=(d.rows[r]||[]).map(nm);if((c.indexOf('pertanyaan')>=0||c.indexOf('soal')>=0)&&(c.indexOf('kunci')>=0||c.indexOf('kuncijawaban')>=0)){h=r;break}}
+    if(!h)continue;
+    let w=0;for(let r=h;r<=d.maxR;r++)w=Math.max(w,(d.rows[r]||[]).length);
+    const lines=[];for(let r=h;r<=d.maxR;r++){const row=d.rows[r]||[];lines.push(Array.from({length:w},(_,i)=>ujCsvCell(row[i]||'')).join('\t'))}
+    return {teks:lines.join('\r\n'),off:h-1}}
+  throw new Error('Baris judul tidak ditemukan. Pakai template: kolom Jenis, Pertanyaan, Opsi_A sampai Opsi_E, Kunci, Label, Pembahasan.')}
+async function ujXlsxBaca(f){
+  try{if(f.size>UJX_XLSX_MAX)throw new Error('Berkas terlalu besar (maksimal 3 MB)');
+    const r=await ujXlsxTeks(await f.arrayBuffer()),ta=$('#sit');
+    ta.value=r.teks;ta.dataset.off=String(r.off);
+    ta.addEventListener('input',()=>{ta.dataset.off='0'},{once:true});
+    ujImpCek()}
+  catch(e){toast(e.message,1)}}
+function ujTemplateXlsx(){
+  try{const a=document.createElement('a');a.href=new URL('template_soal_ujian.xlsx',location.href).href;a.download='template_soal_ujian.xlsx';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),1500);toast('Template diunduh')}
+  catch(e){toast('Unduhan gagal. Pakai template CSV.',1)}}
 </script>
 <style>
 .mkchip{display:inline-block;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--mist);color:var(--ink);margin:2px 4px 2px 0}
@@ -3143,7 +3361,7 @@ Object.assign(VIEWS,{sert:vSert,'g-sert':vSert});
 <script>
 
 
-const SV={tab:'',jenis:[],sek:[],tpl:[],sid:'',tid:'',sekEdit:null,p:null,lapis:[],pilih:-1,ada:false,kotor:false,rz:0};
+const SV={off:[],tab:'',jenis:[],sek:[],tpl:[],sid:'',tid:'',sekEdit:null,p:null,lapis:[],pilih:-1,ada:false,kotor:false,rz:0};
 const SV_GBR_MAX=46000;   
 const SV_PRESET={
  logo:{label:'Logo kiri',jangkar:'kop',x:9,y:50,w:14,o:100,z:'depan',s0:300,min:80},
@@ -3339,7 +3557,7 @@ const svTplDi=sid=>SV.tpl.filter(t=>t.sekolah===sid);
 async function svLepas(){return !SV.kotor||await ask('Ada perubahan yang belum disimpan. Tetap pindah dan buang perubahan itu?',{title:'Perubahan belum disimpan',ok:'Buang perubahan',bad:true})}
 async function vSurat(){svCssPasang();
   M(`<h2>Surat</h2><div class="row" id="svt" style="margin-bottom:6px"></div><div id="svb"><div class="skel"></div></div>`);
-  try{const d=await api('surat.data',{});SV.jenis=d.jenis;SV.sek=d.sekolah;SV.tpl=d.template;
+  try{const d=await api('surat.data',{});SV.jenis=d.jenis;SV.off=d.nonaktif||[];SV.sek=d.sekolah;SV.tpl=d.template;
     if(!SV.sek.some(x=>x.id===SV.sid))SV.sid=SV.sek[0]?SV.sek[0].id:'';
     SV.sekEdit=SV.sek.length?null:{id:'',nama:'',nama_lengkap:''};
     if(SV.sid){const ada=svTplDi(SV.sid),id=ada.some(t=>t.id===SV.tid)?SV.tid:(ada[0]?ada[0].id:'');
@@ -3348,12 +3566,12 @@ async function vSurat(){svCssPasang();
     SV.tab=SV.tpl.length?(SV.tab||'buat'):'tpl';svTampil()}
   catch(e){fail(e)}}
 function svTampil(){
-  $('#svt').innerHTML=[['buat','Buat surat'],['arsip','Arsip surat'],['tpl','Sekolah dan template kop']].map(x=>`<button class="btn${SV.tab===x[0]?'':' ghost'} sm" id="svt_${x[0]}" onclick="svTab('${x[0]}')">${x[1]}</button>`).join('');
-  if(SV.tab==='buat')svBuat();else if(SV.tab==='arsip')svArsip();else svForm()}
+  $('#svt').innerHTML=[['buat','Buat surat'],['arsip','Arsip surat'],['jenis','Jenis surat yang dipakai'],['tpl','Sekolah dan template kop']].map(x=>`<button class="btn${SV.tab===x[0]?'':' ghost'} sm" id="svt_${x[0]}" onclick="svTab('${x[0]}')">${x[1]}</button>`).join('');
+  if(SV.tab==='buat')svBuat();else if(SV.tab==='arsip')svArsip();else if(SV.tab==='jenis')svJenisUi();else svForm()}
 async function svTab(k){if(k===SV.tab)return;
   if(SV.tab==='tpl'&&!await svLepas())return;
   if(SV.tab==='tpl')SV.kotor=false;
-  try{if(k==='buat'||k==='arsip'){const d=await api('surat.data',{});SV.jenis=d.jenis;SV.sek=d.sekolah;SV.tpl=d.template;SB.t=null}}catch(e){fail(e);return}
+  try{if(k==='buat'||k==='arsip'||k==='jenis'){const d=await api('surat.data',{});SV.jenis=d.jenis;SV.off=d.nonaktif||[];SV.sek=d.sekolah;SV.tpl=d.template;SB.t=null}}catch(e){fail(e);return}
   SV.tab=k;svTampil()}
 async function svPilihSek(id){if(id===SV.sid)return;
   if(!await svLepas()){svForm();return}
@@ -3458,6 +3676,8 @@ function svKelasTeks(tingkat,nama){const s=String(tingkat||'').trim();let d='';f
   let n=d?+d:SV_ROM.indexOf(s.toUpperCase());if(n>=1&&n<=12)return SV_ROM[n]+' ('+SV_TERB[n]+')';return String(nama||s)}
 const svHariIni=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
 const svTglIso=v=>{const a=String(v||'').split('-');if(a.length!==3)return svTgl(new Date());return svTgl(new Date(+a[0],+a[1]-1,+a[2]))};
+
+const svJenisPakai=pilih=>SV.jenis.filter(j=>(SV.off||[]).indexOf(j.id)<0||j.id===pilih);
 const svBSpec=()=>svJenis(SB.f.jenis)||SV.jenis[0];
 const svBBaris=f=>{const o={};if(f.sumber)o.sid='';f.kol.forEach(c=>{o[c.k]=''});return o};
 const svBIsi=(f,r)=>f.kol.some(c=>String(r[c.k]||'').trim());
@@ -3501,12 +3721,13 @@ async function svBuat(){
   if(!SV.sek.some(x=>x.id===SV.sid))SV.sid=SV.sek[0].id;
   const ada=svTplDi(SV.sid);if(!ada.length){b.innerHTML=svBAtas()+'<div class="sv-box">Sekolah ini belum punya template kop. Buat dulu di tab <b>Sekolah dan template kop</b>.</div>';return}
   try{if(!SB.t||!ada.some(t=>t.id===SB.tid))await svBMuat((ada.find(t=>t.id===SB.want)||ada[0]).id);SB.want=''}catch(e){fail(e);return}
+  if(!SB.arsipId&&(SV.off||[]).indexOf(SB.f.jenis)>=0){const j=svJenisPakai('')[0];if(j){SB.f.jenis=j.id;SB.f.v={}}}
   const f=SB.f,sp=svBSpec(),now=new Date();f.jenis=sp.id;if(!f.tgl)f.tgl=svHariIni();if(!f.bln)f.bln=now.getMonth()+1;if(!f.thn)f.thn=now.getFullYear();
   if(!Object.keys(f.v).length)f.v=svBV0(sp);
   const th=[];for(let y=now.getFullYear()-3;y<=now.getFullYear()+1;y++)th.push(y);if(th.indexOf(+f.thn)<0)th.push(+f.thn);
   const sk=svSek();
   b.innerHTML=svBAtas()+`<div class="sv-g" style="margin-top:6px"><div>
-   <label for="sb_jenis" style="margin-top:0">Jenis surat</label><select id="sb_jenis" onchange="svBJenis(this.value)">${SV.jenis.map(j=>`<option value="${esc(j.id)}"${j.id===sp.id?' selected':''}>${esc(j.nama)}</option>`).join('')}</select>
+   <label for="sb_jenis" style="margin-top:0">Jenis surat</label><select id="sb_jenis" onchange="svBJenis(this.value)">${svJenisPakai(sp.id).map(j=>`<option value="${esc(j.id)}"${j.id===sp.id?' selected':''}>${esc(j.nama)}</option>`).join('')}</select>
    <div id="sb_massal"></div>
    <h3 class="sv-h">Nomor surat</h3>
    <div class="row" style="align-items:flex-end"><div style="flex:1;min-width:90px"><label for="sb_no" id="sb_no_l" style="margin-top:0">Nomor urut</label><input id="sb_no" maxlength="10" placeholder="022" value="${esc(f.no)}" oninput="svBF('no',this.value)"></div>
@@ -3642,6 +3863,17 @@ async function svBCetak(){if(svBMas())return svBCetakMas();const f=SB.f,t=SB.t,s
   finally{b.disabled=false;b.textContent=teks}}
 
  
+function svJenisUi(){const b=$('#svb');
+  b.innerHTML=`<div class="sv-box" style="max-width:640px"><b>Jenis surat yang dipakai di cabang ini</b>
+   <p style="margin:6px 0"><small>Jenis yang tidak dicentang disembunyikan dari pilihan "Jenis surat" saat membuat surat baru. Surat lama dari jenis itu tetap ada di arsip dan bisa dibuka atau dicetak ulang. Jenis baru yang ditambahkan ke sistem otomatis aktif.</small></p>
+   ${SV.jenis.map(j=>`<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:6px 0"><input type="checkbox" class="sv_jn_c" value="${esc(j.id)}" style="width:auto" ${(SV.off||[]).indexOf(j.id)<0?'checked':''}> ${esc(j.nama)}</label>`).join('')}
+   <p class="row" style="margin-top:12px"><button class="btn" id="sv_jn_simpan" onclick="svJenisSimpan()">Simpan</button></p></div>`}
+async function svJenisSimpan(){const aktif=[...document.querySelectorAll('.sv_jn_c:checked')].map(x=>x.value);
+  if(!aktif.length){toast('Pilih minimal satu jenis surat',1);return}
+  const b=$('#sv_jn_simpan');b.disabled=true;
+  try{const r=await api('surat.jenis.simpan',{aktif:aktif});SV.off=r.nonaktif||[];toast('Tersimpan. '+(SV.off.length?SV.off.length+' jenis disembunyikan.':'Semua jenis aktif.'))}
+  catch(e){fail(e)}finally{if($('#sv_jn_simpan'))$('#sv_jn_simpan').disabled=false}}
+/* ---------- arsip surat ---------- */
 const SA={q:'',sek:'',jns:'',st:'',dari:'',sampai:'',tm:0,n:0,buka:''};
 const svSaring=()=>({q:SA.q,sekolah:SA.sek,jenis:SA.jns,status:SA.st,dari:SA.dari,sampai:SA.sampai});
 function svArsip(){const b=$('#svb');
@@ -3659,14 +3891,14 @@ function svArsipCari(q,cepat){SA.q=q;clearTimeout(SA.tm);const n=++SA.n;
     $('#sa_hasil').innerHTML=r.surat.length?r.surat.map(svArsipKartu).join('')
       +(r.total>r.surat.length?`<small>Menampilkan ${r.surat.length} dari ${r.total} surat terbaru. Persempit pencarian.</small>`:''):'<div class="sv-box">Belum ada surat'+(q?' yang cocok':' di arsip')+'.</div>'}
     catch(e){fail(e)}},cepat?0:250)}
-
+// ---- rekap: ringkasan jumlah dan unduh CSV (mengikuti saringan yang sedang dipilih) ----
 const svBulanId=b=>{const a=String(b).split('-');if(a.length!==2)return b;const n=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][+a[1]-1];return n?n+' '+a[0]:b};
 async function svRingkas(){const e=$('#sa_rk');if(!e)return;e.textContent='Memuat...';
   try{const r=await api('surat.arsip.rekap',svSaring());if(!$('#sa_rk'))return;
     const t=(h,l)=>l.length?`<table class="sv-tb" style="width:100%;border-collapse:collapse;margin:4px 0"><tr><th style="text-align:left">${h}</th><th style="text-align:right;width:70px">Jumlah</th></tr>${l.map(x=>`<tr><td>${esc(x[0])}</td><td style="text-align:right">${x[1]}</td></tr>`).join('')}</table>`:'';
     e.innerHTML=r.total?`<b>${r.total} surat</b> sesuai saringan${r.terpotong?' (CSV memuat 2.000 surat pertama; persempit tanggal untuk sisanya)':''}`+t('Jenis surat',r.ringkasan.perJenis.map(x=>[x.nama,x.jumlah]))+t('Bulan (tanggal surat)',r.ringkasan.perBulan.map(x=>[svBulanId(x.bulan),x.jumlah])):'Tidak ada surat yang sesuai saringan.'}
   catch(x){if($('#sa_rk'))$('#sa_rk').textContent='';fail(x)}}
-
+// sel CSV: kutip ganda, dan awalan = + - @ diberi tanda ' agar tidak dijalankan sebagai rumus di Excel/Sheets
 const svSel=v=>{let s=String(v==null?'':v).replace(/[\r\n]+/g,' ');if(/^[=+\-@\t]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
 function svCsv(baris){const kep=['No','Nomor surat','Jenis surat','Sekolah','Tanggal surat','Penerima','Jumlah penerima','Status','Keterangan pencabutan'];
   return '\uFEFF'+[kep.map(svSel).join(';')].concat(baris.map((b,i)=>[i+1,b.nomor,b.jenis,b.sekolah,b.tanggal,b.penerima,b.jumlah,b.status,b.keterangan].map(svSel).join(';'))).join('\r\n')+'\r\n'}
@@ -3691,6 +3923,7 @@ async function svPulihkan(id){
 
 async function svBuka(id,serupa){try{const g=await api('surat.arsip.get',{id:id}),sp=svJenis(g.jenis);
     if(!sp){toast('Jenis surat ini tidak dikenal',1);return}
+    if(serupa&&(SV.off||[]).indexOf(g.jenis)>=0){toast('Jenis surat ini sedang dimatikan di cabang ini. Aktifkan dulu di tab Jenis surat yang dipakai.',1);return}
     if(!SV.sek.some(x=>x.id===g.sekolah)){toast('Sekolah surat ini sudah tidak ada',1);return}
     SV.sid=g.sekolah;SB.t=null;SB.want=g.tpl;SB.arsipId=serupa?'':g.id;SB.massal=false;
     const v=svBV0(sp);sp.f.forEach(f=>{const x=g.v[f.k];if(x===undefined)return;
