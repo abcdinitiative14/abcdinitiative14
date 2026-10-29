@@ -962,12 +962,6 @@ function vGTugas(){
     $('#gp').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
     gDraw()})}
 function gTab(t){GS.tab=t;gDraw()}
-const gKartuMateri=x=>{const sn=x.Ringkas!==undefined?x.Ringkas:kcPotong(x.Isi,160),tl=okUrl(x.File_URL);
-  return `<div class="kc" role="button" tabindex="0" data-id="${esc(x.Materi_ID)}" onclick="gMateriBuka(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">${esc(x.Tanggal_Teks)}</div>${sn?`<div class="kcs">${esc(sn)}</div>`:''}<div class="kcf">${x.Lampiran?kcChip('&#128206; '+esc(x.Lampiran)):''}${tl?kcChip('&#128279; Tautan'):''}${!sn&&!x.Lampiran&&!tl?kcChip('Tanpa isi'):''}</div><div class="kcgo">Buka materi &rarr;</div></div>`};
-const gKartuTugas=x=>{const tg=kcTenggat(x.Tenggat),belum=Math.max(0,(x.Kumpul||0)-(x.Dinilai||0)),pct=x.Siswa?Math.round(100*(x.Kumpul||0)/x.Siswa):0;
-  return `<div class="kc" role="button" tabindex="0" style="--kc:${belum?'var(--bad)':'var(--teal)'}" data-id="${esc(x.Tugas_ID)}" onclick="gPeriksa(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">Tenggat: ${esc(x.Tenggat_Teks||'-')}</div><div class="kcs">${esc(kcPotong(x.Deskripsi,200))}</div>
-   <div><div class="kbar" role="img" aria-label="${x.Kumpul} dari ${x.Siswa} siswa mengumpulkan"><i style="width:${pct}%"></i></div><small style="color:#5b7083">Terkumpul ${x.Kumpul}/${x.Siswa} &middot; Dinilai ${x.Dinilai}</small></div>
-   <div class="kcf">${kcChip(tg.t,tg.c)}${belum?kcChip(belum+' perlu dinilai','w'):''}${x.Lampiran?kcChip('&#128206; Lampiran'):''}${x.Gambar?kcChip('Gambar'):''}</div><div class="kcgo">Buka &amp; nilai &rarr;</div></div>`};
 const gTombolStatus=(tipe,id,draft)=>`<button type="button" class="btn ${draft?'':'ghost '}sm" data-id="${esc(id)}" onclick="event.stopPropagation();gStatus('${tipe}',this.dataset.id)">${draft?'Aktifkan':'Jadikan draft'}</button>`;
 const gKartuMateri=x=>{const sn=x.Ringkas!==undefined?x.Ringkas:kcPotong(x.Isi,160),tl=okUrl(x.File_URL),dr=x.Status==='Draft';
   return `<div class="kc${dr?' draft':''}" role="button" tabindex="0" style="--kc:${dr?'#9aa8b3':'var(--teal)'}" data-id="${esc(x.Materi_ID)}" onclick="gMateriBuka(this.dataset.id)" onkeydown="kcKey(event,this)"><div class="kcf" style="margin:0">${kcStat(x)}</div><h3>${esc(x.Judul)}</h3><div class="kcm">${esc(x.Tanggal_Teks)}</div>${sn?`<div class="kcs">${esc(sn)}</div>`:''}<div class="kcf">${x.Lampiran?kcChip('&#128206; '+esc(x.Lampiran)):''}${tl?kcChip('&#128279; Tautan'):''}${!sn&&!x.Lampiran&&!tl?kcChip('Tanpa isi'):''}</div><div class="kcbar"><span class="kcgo">Buka materi &rarr;</span>${gTombolStatus('materi',x.Materi_ID,dr)}</div></div>`};
@@ -1012,23 +1006,11 @@ async function gMateriBuka(id){const d=MEM.gd,r=d&&d.materi.find(x=>x.Materi_ID=
   ${r.Lampiran||tl?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${r.Lampiran?tgBerkas('materi',id,r.Lampiran):''}${tl?`<p style="margin:8px 0 0"><a class="btn ghost sm" href="${esc(tl)}" target="_blank" rel="noopener">Buka tautan</a></p>`:''}</div>`:''}</div>`);
   tgAuto()}
 
- 
-async function gMateriBuka(id){const d=MEM.gd,r=d&&d.materi.find(x=>x.Materi_ID===id);if(!r)return;
-  if(r.Isi===undefined){MT('<div class="skel"></div><br><div class="skel"></div>');
-    try{r.Isi=(await api('materi.get',{id})).Isi}catch(e){fail(e);gHome();return}}
-  const tl=okUrl(r.File_URL);
-  MT(`<p><button class="btn ghost sm" onclick="GS.tab='materi';gHome()">&larr; Semua materi</button></p>
-  <div class="kd-head"><span class="kcm">${esc(pairLabel())} &middot; ${esc(r.Tanggal_Teks)}</span><h2>${esc(r.Judul)}</h2>
-   <div class="row"><button class="btn ghost sm" data-id="${esc(id)}" onclick="gFormMateri(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(id)}" onclick="gDelMateri(this.dataset.id,1)">Hapus</button></div></div>
-  <div class="kd ${r.Lampiran||tl?'dua':''}"><div class="kp"><h3>PEMBAHASAN</h3>${paras(r.Isi)||'<small style="color:#5b7083">Tidak ada teks pembahasan. Isi materi ada di berkas atau tautan.</small>'}</div>
-  ${r.Lampiran||tl?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${r.Lampiran?tgBerkas('materi',id,r.Lampiran):''}${tl?`<p style="margin:8px 0 0"><a class="btn ghost sm" href="${esc(tl)}" target="_blank" rel="noopener">Buka tautan</a></p>`:''}</div>`:''}</div>`);
-  tgAuto()}
-
 async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi_ID===id)||{}:{};
-  if(id&&r.Isi===undefined){   // g.data tidak membawa isi materi: ambil dulu satu materi ini
+  if(id&&r.Isi===undefined){   
     MT('<div id="gfm-wait"><div class="skel"></div></div>');
     try{const x=await api('materi.get',{id});r=Object.assign({},r,{Isi:x.Isi})}catch(e){if($('#gfm-wait')){fail(e);gHome()}return}
-    if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
+    if(!$('#gfm-wait'))return}   
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" value="${esc(r.Judul)}">
   <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan; Enter = paragraf baru)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
@@ -1042,13 +1024,6 @@ async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi
 async function gSaveMateri(id){const [k,m]=GS.pair.split('|'),b=$('#msv');b.disabled=true;b.textContent='Menyimpan...';
   try{const fl=await tgBaca($('#mf'));if(fl)b.textContent='Mengunggah...';
     const r=await api('materi.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#mj').value,Isi:$('#mi').value,File_URL:$('#ml').value,Status:$('#mst').value,file:fl,hapusLampiran:!!($('#mhf')&&$('#mhf').checked)});
-    const l=MEM.gd.materi,i=l.findIndex(x=>x.Materi_ID===r.Materi_ID);if(i>=0)l[i]=r;else l.push(r);toast('Materi tersimpan');GS.tab='materi';gHome()}
-  catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
-async function gDelMateri(id,dariDetail){if(!await ask('Hapus materi ini?',{title:'Hapus materi',ok:'Hapus',bad:true}))return;
-  try{await api('materi.delete',{id});MEM.gd.materi=MEM.gd.materi.filter(x=>x.Materi_ID!==id);toast('Materi dihapus');if(dariDetail){GS.tab='materi';gHome()}else gDraw()}catch(e){fail(e)}}
-async function gSaveMateri(id){const [k,m]=GS.pair.split('|'),b=$('#msv');b.disabled=true;b.textContent='Menyimpan...';
-  try{const fl=await tgBaca($('#mf'));if(fl)b.textContent='Mengunggah...';
-    const r=await api('materi.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#mj').value,Isi:$('#mi').value,File_URL:$('#ml').value,file:fl,hapusLampiran:!!($('#mhf')&&$('#mhf').checked)});
     const l=MEM.gd.materi,i=l.findIndex(x=>x.Materi_ID===r.Materi_ID);if(i>=0)l[i]=r;else l.push(r);toast('Materi tersimpan');GS.tab='materi';gHome()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
 async function gDelMateri(id,dariDetail){if(!await ask('Hapus materi ini?',{title:'Hapus materi',ok:'Hapus',bad:true}))return;
@@ -1087,43 +1062,18 @@ async function tgGambar(id,el){if(!el)return;const key=(S&&S.token||'')+'|'+id;
 /* ---------- kartu & pratinjau berkas ---------- */
 const kcPotong=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).replace(/\s+\S*$/,'')+'\u2026':t};
 const kcChip=(t,c)=>`<span class="kchip ${c||''}">${t}</span>`;
-const kcKey=(e,el)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
-const kcEks=n=>({pdf:'PDF',doc:'DOC',docx:'DOC',xls:'XLS',xlsx:'XLS',ppt:'PPT',pptx:'PPT',jpg:'IMG',jpeg:'IMG',png:'IMG',txt:'TXT',csv:'CSV'}[(String(n).split('.').pop()||'').toLowerCase()]||'FILE');
-function kcTenggat(iso){if(!iso)return{t:'Tanpa tenggat',c:''};const d=new Date(iso).getTime();if(!isFinite(d))return{t:'Tanpa tenggat',c:''};
-  const sel=d-Date.now();if(sel<0)return{t:'Lewat tenggat',c:'w'};if(sel<86400000)return{t:'Kurang dari 24 jam',c:'w'};
-  const h=Math.ceil(sel/86400000);return{t:h===1?'Besok':h+' hari lagi',c:h<=2?'w':''}}
-const TG_BL={};   
-async function tgBlob(tipe,id){const key=(S&&S.token||'')+'|'+tipe+'|'+id;
-  if(!TG_BL[key]){const r=await api('tugas.file',{tipe,id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-    TG_BL[key]={url:URL.createObjectURL(new Blob([u],{type:r.mime})),mime:r.mime}}
-  return TG_BL[key]}
- 
-function tgBerkas(tipe,id,nama){const k='bf'+Math.random().toString(36).slice(2,9),eks=(String(nama).split('.').pop()||'').toLowerCase(),lihat=/^(pdf|jpg|jpeg|png)$/.test(eks);
-  return `<div class="kb-file"><span class="kb-ext">${kcEks(nama)}</span><span class="kb-nm">${esc(nama)}</span>${lihat?`<button type="button" class="btn sm" data-tipe="${tipe}" data-id="${esc(id)}" data-v="${k}" ${eks==='pdf'?'':'data-auto="1" '}onclick="tgLihat(this)">Pratinjau</button>`:''}<button type="button" class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">Unduh</button></div><div class="kb-view" id="${k}"></div>`}
-async function tgLihat(b,auto){const v=document.getElementById(b.dataset.v);if(!v)return;
-  if(v.firstChild){if(!auto){v.innerHTML='';b.textContent='Pratinjau'}return}
-  v.innerHTML='<div class="skel"></div>';
-  try{const f=await tgBlob(b.dataset.tipe,b.dataset.id);if(!document.body.contains(v))return;
-    v.innerHTML=/^image\//.test(f.mime)?`<img src="${f.url}" alt="Pratinjau berkas">`:`<iframe src="${f.url}" title="Pratinjau berkas"></iframe><small style="opacity:.75">Jika pratinjau tidak tampil di perangkat ini, gunakan tombol Unduh.</small>`;
-    b.textContent='Tutup pratinjau'}
-  catch(e){if(document.body.contains(v))v.innerHTML='<small style="color:var(--bad)">Pratinjau tidak bisa dimuat. Gunakan tombol Unduh.</small>'}}
-const tgAuto=()=>document.querySelectorAll('button[data-auto]').forEach(b=>tgLihat(b,true));
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{for(const k in TG_BL){try{URL.revokeObjectURL(TG_BL[k].url)}catch(e){}delete TG_BL[k]}});
- 
-const kcPotong=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).replace(/\s+\S*$/,'')+'\u2026':t};
-const kcChip=(t,c)=>`<span class="kchip ${c||''}">${t}</span>`;
 const kcStat=x=>x.Status==='Draft'?kcChip('Draft','dr'):kcChip('Aktif','ok');
 const kcKey=(e,el)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}};
 const kcEks=n=>({pdf:'PDF',doc:'DOC',docx:'DOC',xls:'XLS',xlsx:'XLS',ppt:'PPT',pptx:'PPT',jpg:'IMG',jpeg:'IMG',png:'IMG',txt:'TXT',csv:'CSV'}[(String(n).split('.').pop()||'').toLowerCase()]||'FILE');
 function kcTenggat(iso){if(!iso)return{t:'Tanpa tenggat',c:''};const d=new Date(iso).getTime();if(!isFinite(d))return{t:'Tanpa tenggat',c:''};
   const sel=d-Date.now();if(sel<0)return{t:'Lewat tenggat',c:'w'};if(sel<86400000)return{t:'Kurang dari 24 jam',c:'w'};
   const h=Math.ceil(sel/86400000);return{t:h===1?'Besok':h+' hari lagi',c:h<=2?'w':''}}
-const TG_BL={};   
+const TG_BL={};   // blob berkas (kunci memuat token sesi)
 async function tgBlob(tipe,id){const key=(S&&S.token||'')+'|'+tipe+'|'+id;
   if(!TG_BL[key]){const r=await api('tugas.file',{tipe,id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     TG_BL[key]={url:URL.createObjectURL(new Blob([u],{type:r.mime})),mime:r.mime}}
   return TG_BL[key]}
- 
+/* satu baris berkas: ikon jenis, nama, tombol Pratinjau (PDF/gambar; gambar tampil otomatis) dan Unduh */
 function tgBerkas(tipe,id,nama){const k='bf'+Math.random().toString(36).slice(2,9),eks=(String(nama).split('.').pop()||'').toLowerCase(),lihat=/^(pdf|jpg|jpeg|png)$/.test(eks);
   return `<div class="kb-file"><span class="kb-ext">${kcEks(nama)}</span><span class="kb-nm">${esc(nama)}</span>${lihat?`<button type="button" class="btn sm" data-tipe="${tipe}" data-id="${esc(id)}" data-v="${k}" ${eks==='pdf'?'':'data-auto="1" '}onclick="tgLihat(this)">Pratinjau</button>`:''}<button type="button" class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">Unduh</button></div><div class="kb-view" id="${k}"></div>`}
 async function tgLihat(b,auto){const v=document.getElementById(b.dataset.v);if(!v)return;
@@ -1153,14 +1103,6 @@ function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}
 async function gSaveTugas(id){const [k,m]=GS.pair.split('|'),b=$('#tsv');b.disabled=true;b.textContent='Menyimpan...';
   try{const fl=await tgBaca($('#tf')),gm=await tgBacaGambar($('#tg'));if(fl||gm)b.textContent='Mengunggah...';
     const r=await api('tugas.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#tj').value,Deskripsi:$('#td').value,Tenggat:$('#tt').value,Status:$('#tst').value,file:fl,hapusLampiran:!!($('#thl')&&$('#thl').checked),gambar:gm,hapusGambar:!!($('#thg')&&$('#thg').checked)});
-    if(gm||$('#thg')&&$('#thg').checked){const kk=(S&&S.token||'')+'|'+r.Tugas_ID;if(TG_IMG[kk]){try{URL.revokeObjectURL(TG_IMG[kk])}catch(e){}delete TG_IMG[kk]}}
-    const l=MEM.gd.tugas,i=l.findIndex(x=>x.Tugas_ID===r.Tugas_ID);if(i>=0)l[i]=r;else l.push(r);toast('Tugas tersimpan');GS.tab='tugas';gHome()}
-  catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
-async function gDelTugas(id,dariDetail){if(!await ask('Hapus tugas ini?',{title:'Hapus tugas',ok:'Hapus',bad:true}))return;
-  try{await api('tugas.delete',{id});MEM.gd.tugas=MEM.gd.tugas.filter(x=>x.Tugas_ID!==id);toast('Tugas dihapus');if(dariDetail){GS.tab='tugas';gHome()}else gDraw()}catch(e){fail(e)}}
-async function gSaveTugas(id){const [k,m]=GS.pair.split('|'),b=$('#tsv');b.disabled=true;b.textContent='Menyimpan...';
-  try{const fl=await tgBaca($('#tf')),gm=await tgBacaGambar($('#tg'));if(fl||gm)b.textContent='Mengunggah...';
-    const r=await api('tugas.save',{id,Kelas_ID:k,Mapel_ID:m,Judul:$('#tj').value,Deskripsi:$('#td').value,Tenggat:$('#tt').value,file:fl,hapusLampiran:!!($('#thl')&&$('#thl').checked),gambar:gm,hapusGambar:!!($('#thg')&&$('#thg').checked)});
     if(gm||$('#thg')&&$('#thg').checked){const kk=(S&&S.token||'')+'|'+r.Tugas_ID;if(TG_IMG[kk]){try{URL.revokeObjectURL(TG_IMG[kk])}catch(e){}delete TG_IMG[kk]}}
     const l=MEM.gd.tugas,i=l.findIndex(x=>x.Tugas_ID===r.Tugas_ID);if(i>=0)l[i]=r;else l.push(r);toast('Tugas tersimpan');GS.tab='tugas';gHome()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
@@ -4583,6 +4525,21 @@ if(Array.isArray(BOOT.jumbo))jbxApply(BOOT.jumbo);else api('public.jumbo').then(
  
 #side .rail a{position:relative}
 #side .gmbadge{position:absolute;top:1px;right:1px;min-width:16px;height:16px;line-height:16px;font-size:10px;padding:0 4px;display:inline-block;background:var(--bad);color:#fff;font-weight:700;text-align:center;border-radius:99px}
+
+ 
+.bk-bab{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.bk-bab button{font:inherit;font-size:13px;padding:4px 12px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.bk-bab button.on{background:var(--ink);color:#fff;border-color:var(--ink)}.bk-bab button.pen{border-color:var(--bad);color:var(--bad)}.bk-bab button.pen.on{background:var(--bad);color:#fff}
+.bk-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}.bk-f select,.bk-f input{width:100%;margin:0}
+.bk-k{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;margin:8px 0;background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:var(--r,14px)}
+.bk-k.dr{border-left-color:#9aa8b3;background:#fafbfc}.bk-k.ar{border-left-color:#c9d3d9;opacity:.75}
+.bk-k input[type=checkbox]{width:18px;height:18px;margin:3px 0 0;flex:none}.bk-k .bk-q{flex:1;min-width:0}.bk-t{white-space:pre-wrap;word-break:break-word}
+.bk-c{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:var(--mist);color:var(--ink);margin:0 4px 4px 0}.bk-c.ok{background:#e3f6f3;color:var(--teal);font-weight:600}.bk-c.dr{background:#eef1f4;color:#4d5b67;border:1px dashed #9aa8b3}
+.bk-a{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bk-bar{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin:10px 0;background:var(--ink);color:#fff;border-radius:12px}
+.bk-bar .btn{margin:0}.bk-p{display:flex;gap:10px;align-items:center;justify-content:center;margin:14px 0}
+.bk-o{display:flex;gap:8px;align-items:center;margin:6px 0}.bk-o b{width:22px;flex:none;text-align:center}.bk-o input[type=text]{flex:1;margin:0}.bk-o input[type=checkbox],.bk-o input[type=radio]{width:20px;height:20px;margin:0;flex:none}
+.bk-pr{position:fixed;inset:0;z-index:9999;background:#fff;color:#000;overflow:auto;padding:24px 28px}.bk-pt{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.bk-pq{display:flex;gap:8px;margin:0 0 14px;break-inside:avoid;page-break-inside:avoid}.bk-pn{width:28px;flex:none;font-weight:700}.bk-pb{flex:1;min-width:0}.bk-po{margin:3px 0 0 6px}.bk-po.k{font-weight:700}
+@media print{body>*:not(.bk-pr){display:none!important}.bk-pr{position:static;overflow:visible;padding:0}.bk-no{display:none!important}}
 </style>
 <script>
 
@@ -4592,7 +4549,7 @@ const MP_TABS=[['siswa','Siswa'],['materi','Materi'],['tugas','Tugas'],['ujian',
 const mpP=a=>a.Kelas_ID+'|'+a.Mapel_ID;
 const mpChip=(t,c)=>`<span class="mkchip ${c||''}">${t}</span>`;
 function mpStat(d,a){const k=a.Kelas_ID,m=a.Mapel_ID,tg=d.tugas.filter(x=>x.Kelas_ID===k&&x.Mapel_ID===m);
-    const mt=d.materi.filter(x=>x.Kelas_ID===k&&x.Mapel_ID===m);return {materi:mt.length,draft:mt.filter(x=>x.Status==='Draft').length+tg.filter(x=>x.Status==='Draft').length,tugas:tg.length,belum:tg.reduce((s,x)=>s+Math.max(0,(x.Kumpul||0)-(x.Dinilai||0)),0)}}
+  const mt=d.materi.filter(x=>x.Kelas_ID===k&&x.Mapel_ID===m);return {materi:mt.length,draft:mt.filter(x=>x.Status==='Draft').length+tg.filter(x=>x.Status==='Draft').length,tugas:tg.length,belum:tg.reduce((s,x)=>s+Math.max(0,(x.Kumpul||0)-(x.Dinilai||0)),0)}}
 /* SUBR sudah didekode oleh route(); dekode kedua hanya bila aman (tanda % mentah tidak boleh membuat halaman kosong) */
 const mpDec=t=>{try{return decodeURIComponent(t)}catch(e){return t}};
 function vGMapel(){if(SUBR)mpDetail(mpDec(SUBR));else mpList()}
@@ -4682,6 +4639,241 @@ function gmKe(tab){return()=>{const p=GS.pair,d=MEM.gd;
 /* dipanggil Index.html saat keluar/ganti akun */
 (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{MP.pair='';MP.kelas='';MP.sig='';GMB.busy=0;document.querySelectorAll('.gmbadge').forEach(e=>e.remove())});
 Object.assign(VIEWS,{'g-mapel':vGMapel,'g-kelas':gmKe(''),'g-tugas':gmKe('*'),'g-ujian':gmKe('ujian'),'g-nilai':gmKe('nilai')});
+
+/* ===== BANK SOAL - Tahap 1 (rute server: BankSoal.gs) =====
+   #/dashboard/g-bank : daftar soal per mapel (30 per halaman), filter bab/tingkat/jenis/status, cari, pilih banyak lalu arsipkan/aktifkan/hapus.
+   Form tambah/ubah soal (PG, PG kompleks, Benar/Salah). Admin: melihat dan mengelola status/hapus, tidak menulis soal.
+   Menu "Bank Soal" ditambahkan ke MENU Guru, Wali Kelas, dan Admin dari sini (tanpa mengubah Index.html). */
+const BK={d:null,mapel:'',st:'berjalan',bab:'',tg:'',jn:'',q:'',hal:1,sel:{},list:null,n:0,tmr:0};
+const BK_JN={PG:'Pilihan ganda',PGK:'PG kompleks',BS:'Benar/Salah'},BK_WK=['','5','10','20','30','60','90','120','240'];
+const bkCur=()=>BK.d&&BK.d.mapel.find(m=>m.Mapel_ID===BK.mapel);
+function bkMenu(){try{if(typeof MENU!=='object')return;['Guru','Wali Kelas','Admin'].forEach(r=>{const a=MENU[r];if(a&&!a.some(x=>x[0]==='g-bank')){const i=a.findIndex(x=>x[0]==='g-mapel'||x[0]==='mapel');a.splice(i>=0?i+1:a.length,0,['g-bank','Bank Soal'])}})}catch(e){}}
+bkMenu();
+function vGBank(){BK.sel={};MT('<div class="skel"></div><br><div class="skel"></div>');
+  api('bank.mapel').then(d=>{BK.d=d;if(!d.mapel.length){MT('<h2>Bank Soal</h2><p>Belum ada mata pelajaran yang Anda ampu. Hubungi admin sekolah.</p>');return}
+    if(!bkCur())BK.mapel=d.mapel[0].Mapel_ID;bkDraw()}).catch(e=>{fail(e);MT('<h2>Bank Soal</h2><p>Gagal memuat. Coba muat ulang halaman.</p>')})}
+function bkDraw(){const d=BK.d,m=bkCur(),adm=d.admin;if(!m)return;
+  const babs=m.Bab.map(b=>`<button type="button" class="${BK.bab.toLowerCase()===b.Bab.toLowerCase()?'on ':''}${b.n>=d.maks?'pen':''}" data-b="${esc(b.Bab)}">${esc(b.Bab)} <small>${b.n}/${d.maks}</small></button>`).join('');
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Soal</h2><span class="row" style="gap:8px;flex-wrap:wrap">${adm?'':'<button class="btn ghost" id="bk-imp">Impor</button>'}<button class="btn ghost" id="bk-unduh">Unduh / Cetak</button>${adm?'':'<button class="btn" id="bk-baru">+ Soal baru</button>'}</span></div>
+  <p><small>Gudang soal milik ${adm?'semua guru':'Anda'}. Maksimal ${d.maks} soal aktif/draft per bab; soal lama bisa diarsipkan. Murid tidak bisa melihat bank ini.</small></p>
+  <div class="bk-f"><select id="bk-m" aria-label="Mata pelajaran">${d.mapel.map(x=>`<option value="${esc(x.Mapel_ID)}" ${x.Mapel_ID===BK.mapel?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select>
+  <select id="bk-st" aria-label="Status"><option value="berjalan">Aktif dan Draft</option><option value="Aktif">Hanya Aktif</option><option value="Draft">Hanya Draft</option><option value="Arsip">Arsip</option><option value="semua">Semua</option></select>
+  <select id="bk-tg" aria-label="Tingkat"><option value="">Semua tingkat</option><option>Mudah</option><option>Sedang</option><option>Sulit</option></select>
+  <select id="bk-jn" aria-label="Jenis soal"><option value="">Semua jenis</option>${Object.keys(BK_JN).map(k=>`<option value="${k}">${BK_JN[k]}</option>`).join('')}</select>
+  <input id="bk-q" type="search" placeholder="Cari soal / tag" aria-label="Cari" value="${esc(BK.q)}"></div>
+  <p><small>Ringkasan ${esc(m.Nama)}: ${m.Aktif} aktif, ${m.Draft} draft, ${m.Arsip} arsip.</small></p>
+  <div class="bk-bab" id="bk-bab">${babs?`<button type="button" class="${BK.bab?'':'on'}" data-b="">Semua bab</button>`+babs:'<small>Belum ada soal. Mulai dengan "+ Soal baru".</small>'}</div>
+  <div id="bk-l"><div class="skel"></div></div><div id="bk-bar"></div>`);
+  $('#bk-st').value=BK.st;$('#bk-tg').value=BK.tg;$('#bk-jn').value=BK.jn;
+  const nw=$('#bk-baru');if(nw)nw.onclick=()=>bkForm('');
+  const im=$('#bk-imp');if(im)im.onclick=bkImpor;$('#bk-unduh').onclick=bkUnduh;
+  $('#bk-m').onchange=e=>{BK.mapel=e.target.value;BK.bab='';BK.hal=1;BK.sel={};bkDraw()};
+  [['bk-st','st'],['bk-tg','tg'],['bk-jn','jn']].forEach(([i,k])=>$('#'+i).onchange=e=>{BK[k]=e.target.value;BK.hal=1;BK.sel={};bkLoad()});
+  $('#bk-q').oninput=e=>{BK.q=e.target.value;clearTimeout(BK.tmr);BK.tmr=setTimeout(()=>{BK.hal=1;BK.sel={};bkLoad()},350)};
+  $('#bk-bab').onclick=e=>{const b=e.target.closest('button[data-b]');if(!b)return;BK.bab=b.dataset.b;BK.hal=1;BK.sel={};bkDraw()};
+  bkLoad()}
+function bkLoad(){const my=++BK.n;
+  api('bank.list',{Mapel_ID:BK.mapel,Status:BK.st,Bab:BK.bab,Tingkat:BK.tg,Jenis_Soal:BK.jn,q:BK.q,hal:BK.hal}).then(r=>{if(my!==BK.n||!$('#bk-l'))return;BK.list=r;BK.hal=r.hal;bkList()}).catch(e=>{if(my===BK.n&&$('#bk-l')){fail(e);$('#bk-l').innerHTML='<p>Gagal memuat daftar soal.</p>'}})}
+function bkList(){const r=BK.list,el=$('#bk-l');if(!el)return;
+  if(!r.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Tidak ada soal yang cocok.</p>';bkBar();return}
+  el.innerHTML=r.items.map(x=>`<div class="bk-k ${x.Status==='Draft'?'dr':x.Status==='Arsip'?'ar':''}"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BK.sel[x.Bank_ID]?'checked':''} aria-label="Pilih soal">
+    <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">${BK_JN[x.Jenis_Soal]||esc(x.Jenis_Soal)}</span><span class="bk-c">${esc(x.Tingkat)}</span><span class="bk-c ${x.Status==='Aktif'?'ok':x.Status==='Draft'?'dr':''}">${esc(x.Status)}</span>${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div><div class="bk-t">${esc(x.Ringkas)||'<i>(tanpa teks)</i>'}</div>
+    <div class="bk-a">${BK.d.admin?'':`<button class="btn ghost sm" data-e="${esc(x.Bank_ID)}">Ubah</button>`}${x.Status==='Arsip'?`<button class="btn ghost sm" data-s="Aktif" data-i1="${esc(x.Bank_ID)}">Pulihkan</button>`:`<button class="btn ghost sm" data-s="Arsip" data-i1="${esc(x.Bank_ID)}">Arsipkan</button>`}<button class="btn ghost sm" data-h="${esc(x.Bank_ID)}">Hapus</button></div></div></div>`).join('')+
+    `<div class="bk-p"><button class="btn ghost sm" id="bk-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} soal)</small></span><button class="btn ghost sm" id="bk-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
+  el.onclick=e=>{const t=e.target;
+    if(t.dataset&&t.dataset.e){bkForm(t.dataset.e)}
+    else if(t.dataset&&t.dataset.s){bkStatus([t.dataset.i1],t.dataset.s)}
+    else if(t.dataset&&t.dataset.h){bkHapus([t.dataset.h])}
+    else if(t.id==='bk-pv'){BK.hal--;BK.sel={};bkLoad()}else if(t.id==='bk-nx'){BK.hal++;BK.sel={};bkLoad()}
+    else if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BK.sel[t.dataset.i]=1;else delete BK.sel[t.dataset.i];bkBar()}};
+  bkBar()}
+function bkBar(){const n=Object.keys(BK.sel).length,el=$('#bk-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" data-a="Aktif">Aktifkan</button><button class="btn ghost sm" data-a="Draft">Jadikan draft</button><button class="btn ghost sm" data-a="Arsip">Arsipkan</button><button class="btn ghost sm" data-a="hapus">Hapus</button></div>`:'';
+  el.onclick=e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;const ids=Object.keys(BK.sel);if(a==='hapus')bkHapus(ids);else bkStatus(ids,a)}}
+async function bkSegar(){try{BK.d=await api('bank.mapel')}catch(e){}BK.sel={};if($('#bk-l'))bkDraw()}
+async function bkStatus(ids,st){try{const r=await api('bank.status',{ids,Status:st});toast(r.jumlah+' soal menjadi '+st);bkSegar()}catch(e){fail(e)}}
+async function bkHapus(ids){if(!await ask('Hapus '+ids.length+' soal terpilih? Soal yang sudah disalin ke ujian tetap aman di ujian itu. Pilihan lain: arsipkan.',{title:'Hapus soal',ok:'Hapus',bad:true}))return;
+  try{const r=await api('bank.delete',{ids});toast(r.jumlah+' soal dihapus');bkSegar()}catch(e){fail(e)}}
+/* ---------- form soal ---------- */
+async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft',Opsi:['','','',''],Kunci:'',Bab:BK.bab,Pertanyaan:'',Waktu:'',Tag:''};
+  if(id){MT('<div class="skel"></div>');try{r=await api('bank.get',{id})}catch(e){fail(e);vGBank();return}}
+  BK.f={id:id||'',jn:r.Jenis_Soal,op:r.Jenis_Soal==='BS'?['','','','']:(r.Opsi.length?r.Opsi.slice():['','','','']),kn:String(r.Kunci||'').split(',').filter(Boolean)};
+  const m=bkCur(),babs=m?m.Bab.map(b=>`<option value="${esc(b.Bab)}">`).join(''):'';
+  MT(`<h2>${id?'Ubah':'Soal baru'}</h2><div style="max-width:680px"><p><small>${esc(m?m.Nama:'')}</small></p>
+  <label for="bkf-b">Bab / topik</label><input id="bkf-b" list="bkf-bl" maxlength="60" value="${esc(r.Bab)}" placeholder="Contoh: Bab 3"><datalist id="bkf-bl">${babs}</datalist>
+  <div class="bk-f" style="margin-top:0"><div><label for="bkf-j">Jenis soal</label><select id="bkf-j">${Object.keys(BK_JN).map(k=>`<option value="${k}" ${k===r.Jenis_Soal?'selected':''}>${BK_JN[k]}</option>`).join('')}</select></div>
+  <div><label for="bkf-t">Tingkat</label><select id="bkf-t">${['Mudah','Sedang','Sulit'].map(k=>`<option ${k===r.Tingkat?'selected':''}>${k}</option>`).join('')}</select></div>
+  <div><label for="bkf-w">Batas waktu (detik)</label><select id="bkf-w">${BK_WK.map(k=>`<option value="${k}" ${k===String(r.Waktu||'')?'selected':''}>${k||'Ikut ujian'}</option>`).join('')}</select></div></div>
+  <label for="bkf-q">Pertanyaan</label><textarea id="bkf-q" style="min-height:120px">${esc(r.Pertanyaan)}</textarea>
+  <label>Pilihan jawaban dan kunci</label><div id="bkf-o"></div><p id="bkf-ad"></p>
+  <label for="bkf-g">Tag (opsional)</label><input id="bkf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: UTS, 2026">
+  <label for="bkf-s">Status</label><select id="bkf-s">${['Draft','Aktif','Arsip'].map(k=>`<option ${k===r.Status?'selected':''}>${k}</option>`).join('')}</select>
+  <small>Draft = masih disusun. Aktif = siap dipakai ke ujian. Arsip = disimpan sebagai referensi.</small>
+  <p class="row"><button class="btn" id="bkf-sv">Simpan</button><button class="btn ghost" id="bkf-bt">Batal</button></p></div>`);
+  $('#bkf-j').onchange=e=>{bkOpsiBaca();BK.f.jn=e.target.value;BK.f.kn=[];if(BK.f.jn!=='BS'&&BK.f.op.length<2)BK.f.op=['','','',''];bkOpsi()};
+  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi()}
+function bkOpsiBaca(){const f=BK.f;if(f.jn==='BS')return;const o=[...document.querySelectorAll('#bkf-o input[type=text]')];if(o.length)f.op=o.map(i=>i.value)}
+function bkOpsi(){const f=BK.f,el=$('#bkf-o');if(!el)return;
+  if(f.jn==='BS'){el.innerHTML=['Benar','Salah'].map((t,i)=>`<label class="bk-o" style="font-weight:400"><input type="radio" name="bkk" value="${'AB'[i]}" ${f.kn[0]==='AB'[i]?'checked':''}><span>${t}</span></label>`).join('');$('#bkf-ad').innerHTML='';
+    el.onchange=e=>{f.kn=[e.target.value]};return}
+  const mul=f.jn==='PGK';
+  el.innerHTML=f.op.map((t,i)=>{const h='ABCDE'[i];return `<div class="bk-o"><input type="${mul?'checkbox':'radio'}" name="bkk" value="${h}" ${f.kn.indexOf(h)>=0?'checked':''} aria-label="Kunci ${h}"><b>${h}</b><input type="text" maxlength="300" value="${esc(t)}" aria-label="Pilihan ${h}">${f.op.length>2?`<button class="btn ghost sm" type="button" data-d="${i}" aria-label="Hapus pilihan ${h}">x</button>`:''}</div>`}).join('');
+  $('#bkf-ad').innerHTML=(f.op.length<5?'<button class="btn ghost sm" type="button" id="bkf-pl">+ Pilihan</button> ':'')+'<small>'+(mul?'Centang semua jawaban yang benar (minimal dua).':'Pilih satu jawaban yang benar.')+'</small>';
+  el.onchange=e=>{if(e.target.type==='text')return;f.kn=[...el.querySelectorAll('input[name=bkk]:checked')].map(i=>i.value)};
+  el.onclick=e=>{const d=e.target.dataset&&e.target.dataset.d;if(d===undefined)return;bkOpsiBaca();const i=Number(d);f.op.splice(i,1);f.kn=f.kn.map(k=>'ABCDE'.indexOf(k)).filter(k=>k!==i).map(k=>k>i?k-1:k).map(k=>'ABCDE'[k]);bkOpsi()};
+  const pl=$('#bkf-pl');if(pl)pl.onclick=()=>{bkOpsiBaca();f.op.push('');bkOpsi()}}
+async function bkSimpan(){const f=BK.f,b=$('#bkf-sv');bkOpsiBaca();b.disabled=true;b.textContent='Menyimpan...';
+  let op=f.op,kn=f.kn;if(f.jn!=='BS'){const pet=[];op=[];f.op.forEach((t,i)=>{if(String(t).trim()){pet[i]=op.length;op.push(t)}});kn=f.kn.map(k=>pet['ABCDE'.indexOf(k)]).filter(k=>k!==undefined).map(k=>'ABCDE'[k])}   // pilihan kosong dibuang, kunci disesuaikan
+  try{await api('bank.save',{id:f.id,Mapel_ID:BK.mapel,Bab:$('#bkf-b').value,Jenis_Soal:f.jn,Tingkat:$('#bkf-t').value,Waktu:$('#bkf-w').value,Pertanyaan:$('#bkf-q').value,Opsi:f.jn==='BS'?[]:op,Kunci:kn.join(','),Tag:$('#bkf-g').value,Status:$('#bkf-s').value});
+    toast('Soal tersimpan');BK.sel={};BK.d=await api('bank.mapel');BK.bab='';bkDraw()}
+  catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
+/* ===== BANK SOAL - Tahap 2: IMPOR dan UNDUH (template model Kahoot; tanpa pustaka luar) =====
+   Berkas .xlsx dibaca dan dibuat langsung di peramban (zip sederhana + DecompressionStream). CSV juga didukung. PDF = jendela cetak peramban (Simpan sebagai PDF).
+   Kolom template: No | Pertanyaan | Jawaban 1-4 | Waktu | Jawaban benar | Bab | Tingkat | Tag | Jawaban 5. Server memeriksa ulang semua baris (bank.impor). */
+/* BKX_X: awalan XML ditulis terpisah supaya tidak terbaca sebagai tag skrip kurung-tanya oleh pembuat halaman Apps Script (ekspor) */
+const BKX_X='<'+'?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const BKX_HEAD=['','Pertanyaan','Jawaban 1','Jawaban 2','Jawaban 3','Jawaban 4','Batas waktu (detik): 5, 10, 20, 30, 60, 90, 120, atau 240 (boleh kosong)','Jawaban benar (nomor jawaban; jika lebih dari satu pisahkan dengan koma)','Bab','Tingkat (Mudah / Sedang / Sulit)','Tag (boleh kosong)','Jawaban 5 (boleh kosong)'];
+const BKX_NOTE=['Template impor Bank Soal','Isi satu soal per baris mulai baris 7. Kolom Pertanyaan dan Jawaban 1 sampai 2 wajib; Jawaban 3 sampai 5 boleh kosong.','Kolom "Jawaban benar" berisi NOMOR jawaban yang benar, misalnya 2. Jika benar lebih dari satu (PG kompleks), pisahkan dengan koma, misalnya 1,3.','Soal Benar/Salah: isi Jawaban 1 = Benar dan Jawaban 2 = Salah, lalu isi nomor jawaban yang benar.','Bab boleh dikosongkan jika Anda mengisi "Bab bawaan" saat impor. Maksimal 20 soal per bab. Baris contoh di bawah akan diabaikan.'];
+const bkxCrcT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const bkxCrc=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=bkxCrcT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function bkxZip(files){const te=new TextEncoder(),parts=[],cd=[];let off=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  Object.keys(files).forEach(nm=>{const nb=te.encode(nm),d=te.encode(files[nm]),crc=bkxCrc(d);
+    const lh=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(nb.length),...u16(0)]);
+    parts.push(lh,nb,d);
+    cd.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(nb.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nb);
+    off+=lh.length+nb.length+d.length});
+  const cdLen=cd.reduce((a,x)=>a+x.length,0),n=Object.keys(files).length;
+  return new Blob([...parts,...cd,new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(n),...u16(n),...u32(cdLen),...u32(off),0,0])],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+async function bkxUnzip(buf){const u=new Uint8Array(buf),dv=new DataView(buf);let e=-1;
+  for(let i=u.length-22;i>=Math.max(0,u.length-70000);i--)if(dv.getUint32(i,true)===0x06054b50){e=i;break}
+  if(e<0)throw new Error('Berkas bukan .xlsx yang valid');
+  const n=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);const out={},td=new TextDecoder();
+  for(let k=0;k<n;k++){if(dv.getUint32(p,true)!==0x02014b50)break;
+    const meth=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true),nm=td.decode(u.subarray(p+46,p+46+nl));
+    p+=46+nl+el+cl;
+    if(!/^xl\/(worksheets\/sheet\d+\.xml|sharedStrings\.xml|workbook\.xml|_rels\/workbook\.xml\.rels)$/.test(nm))continue;
+    const ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),comp=u.subarray(ds,ds+cs);
+    if(meth===0)out[nm]=td.decode(comp);
+    else if(meth===8){if(typeof DecompressionStream==='undefined')throw new Error('Peramban Anda belum bisa membuka .xlsx. Simpan berkas sebagai CSV lalu coba lagi.');
+      out[nm]=td.decode(await new Response(new Blob([comp]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}
+    else throw new Error('Format kompresi .xlsx tidak dikenal')}
+  return out}
+const bkxCol=r=>{let n=0;const m=/^[A-Z]+/i.exec(r||'');if(!m)return -1;for(const ch of m[0].toUpperCase())n=n*26+ch.charCodeAt(0)-64;return n-1};
+async function bkxBacaXlsx(buf){const f=await bkxUnzip(buf),dp=new DOMParser(),xml=s=>dp.parseFromString(s,'application/xml');
+  const nms=Object.keys(f).filter(k=>/worksheets\/sheet\d+\.xml$/.test(k)).sort((a,b)=>parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,'')));
+  if(!nms.length)throw new Error('Tidak ada lembar kerja di berkas');
+  const ss=[];if(f['xl/sharedStrings.xml']){[...xml(f['xl/sharedStrings.xml']).getElementsByTagName('si')].forEach(si=>{ss.push([...si.getElementsByTagName('t')].filter(t=>!t.closest('rPh')).map(t=>t.textContent).join(''))})}
+  const rows=[];[...xml(f[nms[0]]).getElementsByTagName('row')].forEach(r=>{const ri=Number(r.getAttribute('r'))-1,row=[];
+    [...r.getElementsByTagName('c')].forEach(c=>{const ci=bkxCol(c.getAttribute('r'));if(ci<0)return;const t=c.getAttribute('t'),v=c.getElementsByTagName('v')[0];let val='';
+      if(t==='s')val=ss[Number(v&&v.textContent)]||'';else if(t==='inlineStr')val=[...c.getElementsByTagName('t')].map(x=>x.textContent).join('');else if(v)val=v.textContent;
+      row[ci]=val});
+    rows[ri>=0?ri:rows.length]=row});
+  return rows}
+function bkxCsv(txt){txt=String(txt).replace(/^\uFEFF/,'');const l1=txt.split(/\r?\n/)[0]||'',d=[',',';','\t'].map(c=>[c,l1.split(c).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<txt.length;i++){const ch=txt[i];
+    if(q){if(ch==='"'){if(txt[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}
+    else if(ch==='"')q=true;else if(ch===d){row.push(cur);cur=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&txt[i+1]==='\n')i++;row.push(cur);rows.push(row);row=[];cur=''}
+    else cur+=ch}
+  if(cur!==''||row.length){row.push(cur);rows.push(row)}return rows}
+function bkxTulisCsv(aoa){return '\uFEFF'+aoa.map(r=>r.map(c=>{c=c==null?'':String(c);return /[",\r\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(',')).join('\r\n')}
+ 
+function bkxSoal(aoa){let h=-1;
+  for(let i=0;i<aoa.length&&i<30;i++){if((aoa[i]||[]).some(c=>/^\s*(pertanyaan|question)/i.test(String(c==null?'':c)))){h=i;break}}
+  if(h<0)throw new Error('Judul kolom "Pertanyaan" tidak ditemukan. Gunakan template dari tombol Unduh.');
+  const hd=(aoa[h]||[]).map(c=>String(c==null?'':c).toLowerCase().trim()),f=re=>hd.findIndex(x=>re.test(x));
+  const iq=f(/^(pertanyaan|question)/),ia=[1,2,3,4,5].map(n=>f(new RegExp('^(jawaban|answer)\\s*'+n+'\\b'))),iw=f(/^(batas waktu|waktu|time limit)/),ik=f(/^(jawaban benar|correct)/),ib=f(/^bab/),it=f(/^tingkat/),ig=f(/^tag/);
+  const g=(r,i)=>i<0||r[i]==null?'':String(r[i]).trim(),out=[];
+  for(let i=h+1;i<aoa.length;i++){const r=aoa[i]||[],q=g(r,iq);if(!q||/^contoh\b/i.test(q))continue;
+    out.push({no:i+1,Pertanyaan:q,Opsi:ia.map(x=>g(r,x)),Kunci:g(r,ik),Waktu:g(r,iw),Bab:g(r,ib),Tingkat:g(r,it),Tag:g(r,ig)})}
+  return out}
+ 
+function bkxBaris(it,i){const o=it.Opsi||[];return [i+1,it.Pertanyaan,o[0]||'',o[1]||'',o[2]||'',o[3]||'',it.Waktu===''||it.Waktu==null?'':Number(it.Waktu),String(it.Kunci||''),it.Bab||'',it.Tingkat||'',it.Tag||'',o[4]||'']}
+const bkxXe=s=>String(s).replace(/[&<>"\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,c=>c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'');
+function bkxXlsx(aoa,hRow){const L=n=>{let s='';n++;while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
+  let sd='';aoa.forEach((r,ri)=>{let cs='';(r||[]).forEach((v,ci)=>{if(v===''||v==null)return;const ref=L(ci)+(ri+1),st=ri===hRow?' s="2"':ri===0?' s="1"':ci===1?' s="3"':'';
+    cs+=typeof v==='number'?`<c r="${ref}"${st}><v>${v}</v></c>`:`<c r="${ref}" t="inlineStr"${st}><is><t xml:space="preserve">${bkxXe(v)}</t></is></c>`});
+    sd+=`<row r="${ri+1}">${cs}</row>`});
+  const W=[5,60,22,22,22,22,24,30,14,18,14,22];
+  return bkxZip({'[Content_Types].xml':BKX_X+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+    '_rels/.rels':BKX_X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    'xl/workbook.xml':BKX_X+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Soal" sheetId="1" r:id="rId1"/></sheets></workbook>',
+    'xl/_rels/workbook.xml.rels':BKX_X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+    'xl/styles.xml':BKX_X+'<style'+'Sheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><color rgb="FF0A2540"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0A8F9D"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="4"><xf/><xf fontId="1" applyFont="1"/><xf fontId="2" fillId="2" applyFont="1" applyFill="1" applyAlignment="1"><alignment wrapText="1" vertical="center"/></xf><xf applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs></style'+'Sheet>',
+    'xl/worksheets/sheet1.xml':BKX_X+'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>'+W.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols><sheetData>'+sd+'</sheetData></worksheet>'})}
+function bkxTemplat(items){const a=[];BKX_NOTE.forEach((t,i)=>{const r=[];r[1]=t;a.push(r)});a.push(BKX_HEAD);
+  if(items&&items.length)items.forEach((it,i)=>a.push(bkxBaris(it,i)));
+  else{a.push([1,'CONTOH (hapus atau timpa baris ini): 2 + 3 = ?','4','5','6','7',30,'2','Bab 1','Mudah','UTS','']);for(let i=2;i<=100;i++)a.push([i])}
+  return a}
+function bkxSimpanBerkas(blob,nama){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nama;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+const bkxNama=(...p)=>p.filter(Boolean).join('_').replace(/[^\w\-]+/g,'_').replace(/_+/g,'_').slice(0,80);
+ 
+function bkxCetak(items,mapel,judul,kunci){const old=document.querySelector('.bk-pr');if(old)old.remove();
+  const L='ABCDE',tg=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const body=items.map((it,i)=>{const ks=String(it.Kunci||'').split(',').filter(Boolean).map(Number),o=it.Opsi||[];
+    return `<div class="bk-pq"><div class="bk-pn">${i+1}.</div><div class="bk-pb"><div style="white-space:pre-wrap">${esc(it.Pertanyaan)}</div>${o.map((t,j)=>`<div class="bk-po${kunci&&ks.indexOf(j+1)>=0?' k':''}">${L[j]}. ${esc(t)}${kunci&&ks.indexOf(j+1)>=0?' &#10003;':''}</div>`).join('')}</div></div>`}).join('');
+  const d=document.createElement('div');d.className='bk-pr';
+  d.innerHTML=`<div class="bk-no bk-pt"><button class="btn" id="bkp-c">Cetak / Simpan PDF</button><button class="btn ghost" id="bkp-x">Tutup</button><small> Pada jendela cetak, pilih tujuan "Simpan sebagai PDF".</small></div><h2 style="margin:0 0 4px">${esc(judul)}</h2><p style="margin:0 0 14px"><small>${esc(mapel)} &middot; ${items.length} soal &middot; ${tg}${kunci?' &middot; dengan kunci jawaban':''}</small></p>${body}`;
+  document.body.appendChild(d);$('#bkp-x').onclick=()=>d.remove();$('#bkp-c').onclick=()=>{try{window.print()}catch(e){toast('Cetak diblokir peramban. Tekan Ctrl+P.',1)}};d.scrollTop=0}
+/* ---------- halaman Unduh ---------- */
+function bkUnduh(){const m=bkCur(),d=BK.d;if(!m)return;
+  MT(`<h2>Unduh soal</h2><div style="max-width:640px"><p><small>${esc(m.Nama)}. Berkas memakai kolom yang sama dengan template impor, jadi soal bisa disalin-tempel ke template atau ke bank lain.</small></p>
+  <div class="bk-f" style="grid-template-columns:1fr 1fr"><div><label for="bku-b">Bab</label><select id="bku-b"><option value="">Semua bab</option>${m.Bab.map(b=>`<option ${b.Bab.toLowerCase()===BK.bab.toLowerCase()?'selected':''}>${esc(b.Bab)}</option>`).join('')}</select></div>
+  <div><label for="bku-s">Status</label><select id="bku-s"><option value="berjalan">Aktif dan Draft</option><option value="Aktif">Hanya Aktif</option><option value="Draft">Hanya Draft</option><option value="Arsip">Arsip</option><option value="semua">Semua</option></select></div></div>
+  <p class="row" style="flex-wrap:wrap;gap:8px"><button class="btn" data-u="xlsx">Excel (.xlsx)</button><button class="btn ghost" data-u="csv">CSV</button><button class="btn ghost" data-u="pdf1">PDF dengan kunci</button><button class="btn ghost" data-u="pdf0">PDF tanpa kunci</button></p>
+  ${d.admin?'':'<hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><p><b>Template kosong</b><br><small>Untuk mengisi soal di Excel lalu mengimpornya.</small></p><button class="btn ghost" data-u="tpl">Unduh template (.xlsx)</button>'}
+  <p style="margin-top:18px"><button class="btn ghost" id="bku-x">Kembali</button></p></div>`);
+  $('#bku-s').value=BK.st==='berjalan'||['Aktif','Draft','Arsip','semua'].indexOf(BK.st)>=0?BK.st:'berjalan';
+  $('#bku-x').onclick=()=>bkDraw();
+  document.querySelector('[data-u]').parentNode.parentNode.onclick=async e=>{const t=e.target.dataset&&e.target.dataset.u;if(!t)return;const b=e.target;
+    if(t==='tpl'){bkxSimpanBerkas(bkxXlsx(bkxTemplat(),5),'Template_Impor_Bank_Soal.xlsx');return}
+    b.disabled=true;const tx=b.textContent;b.textContent='Menyiapkan...';
+    try{const r=await api('bank.unduh',{Mapel_ID:BK.mapel,Bab:$('#bku-b').value,Status:$('#bku-s').value});
+      if(!r.items.length){toast('Tidak ada soal pada pilihan itu',1);return}
+      const nm=bkxNama('Bank_Soal',r.mapel,$('#bku-b').value||'semua');
+      if(t==='xlsx')bkxSimpanBerkas(bkxXlsx(bkxTemplat(r.items),5),nm+'.xlsx');
+      else if(t==='csv')bkxSimpanBerkas(new Blob([bkxTulisCsv([BKX_HEAD].concat(r.items.map(bkxBaris)))],{type:'text/csv;charset=utf-8'}),nm+'.csv');
+      else bkxCetak(r.items,r.mapel,'Bank Soal'+($('#bku-b').value?' - '+$('#bku-b').value:''),t==='pdf1');
+      if(t==='xlsx'||t==='csv')toast(r.items.length+' soal diunduh')}
+    catch(er){fail(er)}finally{b.disabled=false;b.textContent=tx}}}
+ 
+const BKI={rows:null,res:null};
+function bkImpor(){const m=bkCur();if(!m)return;BKI.rows=null;BKI.res=null;
+  MT(`<h2>Impor soal</h2><div style="max-width:700px"><p><small>${esc(m.Nama)}. Isi soal di template (mirip template Kahoot), lalu pilih berkasnya di sini. Soal diperiksa dulu; belum ada yang tersimpan sebelum Anda menekan Simpan.</small></p>
+  <ol style="padding-left:20px"><li><button class="btn ghost sm" id="bki-t">Unduh template (.xlsx)</button></li><li>Isi satu soal per baris. Kolom "Jawaban benar" berisi nomor jawaban (contoh 2, atau 1,3 bila lebih dari satu).</li><li>Pilih berkas di bawah (.xlsx atau .csv, maksimal 200 soal).</li></ol>
+  <div class="bk-f" style="grid-template-columns:1fr 1fr"><div><label for="bki-b">Bab bawaan (dipakai bila kolom Bab kosong)</label><input id="bki-b" list="bki-bl" maxlength="60" value="${esc(BK.bab)}" placeholder="Contoh: Bab 3"><datalist id="bki-bl">${m.Bab.map(b=>`<option value="${esc(b.Bab)}">`).join('')}</datalist></div>
+  <div><label for="bki-s">Status soal yang diimpor</label><select id="bki-s"><option value="Draft">Draft (disarankan)</option><option value="Aktif">Aktif</option></select></div></div>
+  <label for="bki-f">Berkas soal</label><input id="bki-f" type="file" accept=".xlsx,.csv,.txt">
+  <div id="bki-h" style="margin-top:14px"></div>
+  <p style="margin-top:14px"><button class="btn ghost" id="bki-x">Kembali</button></p></div>`);
+  $('#bki-t').onclick=()=>bkxSimpanBerkas(bkxXlsx(bkxTemplat(),5),'Template_Impor_Bank_Soal.xlsx');
+  $('#bki-x').onclick=()=>bkDraw();
+  $('#bki-f').onchange=async e=>{const f=e.target.files&&e.target.files[0];BKI.rows=null;BKI.res=null;$('#bki-h').innerHTML='';if(!f)return;
+    try{if(f.size>4*1024*1024)throw new Error('Berkas terlalu besar (maksimal 4 MB)');
+      const buf=await f.arrayBuffer(),ext=(f.name.split('.').pop()||'').toLowerCase();
+      const aoa=ext==='xlsx'?await bkxBacaXlsx(buf):bkxCsv(new TextDecoder().decode(buf));
+      BKI.rows=bkxSoal(aoa);if(!BKI.rows.length)throw new Error('Tidak ada soal terbaca. Pastikan soal diisi mulai di bawah baris judul kolom.');
+      if(BKI.rows.length>200)throw new Error('Berkas berisi '+BKI.rows.length+' soal. Maksimal 200 soal sekali impor; bagi menjadi beberapa berkas.');
+      bkiPeriksa()}
+    catch(er){BKI.rows=null;$('#bki-h').innerHTML='<div class="bk-k" style="border-left-color:var(--bad)"><div class="bk-q">'+esc(er.message)+'</div></div>'}};
+  $('#bki-b').oninput=()=>{if(BKI.rows){clearTimeout(BK.tmr);BK.tmr=setTimeout(bkiPeriksa,500)}};
+  $('#bki-s').onchange=()=>{if(BKI.rows)bkiPeriksa()}}
+async function bkiPeriksa(){const h=$('#bki-h');if(!h||!BKI.rows)return;h.innerHTML='<div class="skel"></div>';
+  try{const r=await api('bank.impor',{Mapel_ID:BK.mapel,Bab:$('#bki-b').value,Status:$('#bki-s').value,rows:BKI.rows});BKI.res=r;if(!$('#bki-h'))return;
+    const bab=r.perBab.map(b=>`<span class="bk-c">${esc(b.Bab)}: ${b.n}</span>`).join('');
+    h.innerHTML=`<p><b>${r.total} baris terbaca: ${r.valid} siap disimpan${r.gagalJumlah?`, ${r.gagalJumlah} bermasalah`:''}.</b></p>${bab?`<div>${bab}</div>`:''}
+    ${r.gagalJumlah?`<div style="max-height:260px;overflow:auto;margin:10px 0">${r.gagal.map(x=>`<div class="bk-k" style="border-left-color:var(--bad);margin:4px 0"><div class="bk-q"><b>Baris ${x.baris}</b>: ${esc(x.pesan)}</div></div>`).join('')}${r.gagalJumlah>r.gagal.length?`<small>dan ${r.gagalJumlah-r.gagal.length} lainnya</small>`:''}</div><p><small>Perbaiki baris itu di berkas lalu pilih berkas lagi. Nomor baris sama dengan nomor baris di Excel.</small></p>`:''}
+    <p class="row">${r.valid?`<button class="btn" id="bki-sv">${r.gagalJumlah?'Simpan hanya '+r.valid+' soal yang benar':'Simpan '+r.valid+' soal'}</button>`:''}</p>`;
+    const sv=$('#bki-sv');if(sv)sv.onclick=bkiSimpan}
+  catch(er){fail(er);if($('#bki-h'))$('#bki-h').innerHTML=''}}
+async function bkiSimpan(){const b=$('#bki-sv');b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('bank.impor',{Mapel_ID:BK.mapel,Bab:$('#bki-b').value,Status:$('#bki-s').value,rows:BKI.rows,simpan:true});
+    toast(r.valid+' soal diimpor'+(r.gagalJumlah?', '+r.gagalJumlah+' dilewati':''));BKI.rows=null;BK.sel={};BK.d=await api('bank.mapel');bkDraw()}
+  catch(er){fail(er);b.disabled=false;b.textContent='Coba simpan lagi'}}
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
+Object.assign(VIEWS,{'g-bank':vGBank});
 </script>
 <style>
  
