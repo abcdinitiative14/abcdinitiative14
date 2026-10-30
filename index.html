@@ -1684,13 +1684,14 @@ Object.assign(VIEWS,{'g-nilai':vGNilai,'w-siswa':vWSiswa,'w-nilai':vWNilai});
 
 const WR={view:'g',tab:'rekap',k:'',sem:'Ganjil',batas:70,req:0,key:'',md:null,sel:'',cat:{}};
 const RS={d:null,mid:[],sem:{},ver:0};   
+const SM={d:null,u:{fase:'',kokur:''},kp:{},sw:{},dirty:{u:0,k:{},s:{}},tgl:'',kota:''};   
 const RM={d:null,cat:{},tgl:'',kota:'',pv:''};   
 const wrIc=n=>typeof dsI==='function'?dsI(n):'';
 const wrSkel='<div class="skel"></div><br><div class="skel"></div>';
 const wrSem=()=>SEMS.map(x=>`<option ${x===WR.sem?'selected':''}>${x}</option>`).join('');
 
 function wrFrame(judul,ket){
-  const v=WR.view;WR.key='';WR.md=null;WR.sel='';RS.d=null;RM.d=null;
+  const v=WR.view;WR.key='';WR.md=null;WR.sel='';RS.d=null;RM.d=null;SM.d=null;
   MT(`<h2 style="margin-bottom:4px">${judul}</h2><p style="margin-top:0"><small>${ket}</small></p>${v==='r'?'<div class="tabs" id="wr-tabs"></div>':''}
   <div class="row" style="margin:10px 0;align-items:flex-end;gap:12px;flex-wrap:wrap">
    <div><label for="wr-k">Kelas</label><select id="wr-k" style="max-width:300px" onchange="WR.k=this.value;wrLoad()"></select></div>
@@ -1714,8 +1715,10 @@ function wrBatas(v){
 
 async function wrLoad(tk=MTK){
   const k=WR.k,sem=WR.sem,v=WR.view,id=++WR.req;if(tk!==MTK||!k||!$('#wr-body'))return;
-  WR.key=k+'|'+sem;WR.md=null;WR.sel='';RS.d=null;RM.d=null;RM.pv='';$('#wr-body').innerHTML=wrSkel;
+  WR.key=k+'|'+sem;WR.md=null;WR.sel='';RS.d=null;RM.d=null;SM.d=null;RM.pv='';$('#wr-body').innerHTML=wrSkel;
   try{
+    if(v==='r'&&WR.tab==='sem'){const r=await api('w.semData',{Kelas_ID:k,Semester:sem});
+      if(tk!==MTK||id!==WR.req||!$('#wr-body'))return;smInit(r);smDraw();return}
     if(v==='r'&&WR.tab==='mid'){const r=await api('w.midData',{Kelas_ID:k,Semester:sem});
       if(tk!==MTK||id!==WR.req||!$('#wr-body'))return;rmInit(r);rmDraw();return}
     if(v==='r'&&WR.tab==='set'){const r=await api('w.rsGet',{Kelas_ID:k,Semester:sem});
@@ -1747,7 +1750,7 @@ function wrRingDraw(d){
 
  
 function wrTabs(){const el=$('#wr-tabs');if(!el)return;
-  el.innerHTML=[['rekap','Rekap dan Rapor PDF'],['set','Pengaturan Rapor'],['mid','Rapor Mid (Excel)']].map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===WR.tab}" onclick="wrTab('${k}')" class="${k===WR.tab?'on':''}">${l}</a>`).join('')}
+  el.innerHTML=[['rekap','Rekap dan Rapor PDF'],['set','Pengaturan Rapor'],['mid','Rapor Mid (Excel)'],['sem','Rapor Semester (Excel)']].map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===WR.tab}" onclick="wrTab('${k}')" class="${k===WR.tab?'on':''}">${l}</a>`).join('')}
 function wrTab(t){if(WR.tab===t)return;WR.tab=t;wrTabs();wrLoad()}
 function vWRapor(){WR.view='r';WR.tab='rekap';wrFrame('Rapor Kelas Binaan','Rekap nilai semua mapel per siswa. Unduh rapor PDF per siswa atau rekap kelas dalam Excel. Dibuat dari nilai saat ini.')}
 
@@ -1869,7 +1872,7 @@ function rmDraw(){const d=RM.d,el=$('#wr-body');if(!d||!el)return;
   <div class="card"><h3>Catatan dan unduhan</h3><p><small>Kolom nilai: ${kl} (atur di tab Pengaturan Rapor). Catatan: satu poin per baris, maksimal 8 baris.</small></p>
    <div class="grid"><div><label for="rm-tgl">Tanggal rapor (boleh dikosongkan)</label><input id="rm-tgl" type="date" value="${esc(RM.tgl)}" onchange="RM.tgl=this.value"></div>
    <div><label for="rm-kt">Kota tanda tangan</label><input id="rm-kt" maxlength="40" value="${esc(RM.kota)}" oninput="RM.kota=this.value"></div></div>
-   <p><button id="rm-all" onclick="rmExcel('')">Unduh semua siswa (satu lembar per siswa)</button> <button class="ghost" id="rm-sv" onclick="rmSv()">Simpan catatan</button></p>
+   <p><button id="rm-all" onclick="rmExcel('')">Unduh semua siswa (satu lembar per siswa)</button> <button class="ghost" id="rm-sv" onclick="rmSv()">Simpan catatan</button> <button class="ghost" onclick="ckRapor('mid')">Cek kelengkapan</button></p><div id="rm-ck"></div>
    ${d.siswa.length?d.siswa.map(x=>`<div class="rm-s" style="border-top:1px solid #d8e0e8;padding:10px 0"><b>${esc(x.Nama_Siswa)}</b> <small>${esc(x.NIS)}</small>
      <textarea id="rm-c-${esc(x.Siswa_ID)}" data-s="${esc(x.Siswa_ID)}" style="min-height:90px" oninput="RM.cat[this.dataset.s]=this.value" aria-label="Catatan ${esc(x.Nama_Siswa)}">${esc(RM.cat[x.Siswa_ID])}</textarea>
      <button class="ghost" data-s="${esc(x.Siswa_ID)}" onclick="rmPv(this.dataset.s)">Pratinjau</button> <button data-s="${esc(x.Siswa_ID)}" onclick="rmExcel(this.dataset.s)">Unduh Excel</button></div>`).join(''):'<p>Belum ada siswa di kelas ini.</p>'}
@@ -1888,8 +1891,69 @@ async function rmPv(sid){const k=WR.k,sem=WR.sem,el=$('#rm-pv');if(!el)return;
     <p><b>Catatan dari guru:</b></p>${x.catatan.length?'<ol type="a">'+x.catatan.map(c=>`<li>${esc(c)}</li>`).join('')+'</ol>':'<p><small>(kosong)</small></p>'}`;
    $('#rm-pv').scrollIntoView&&$('#rm-pv').scrollIntoView({block:'nearest'})}catch(e){fail(e)}}
 
+
  
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{WR.cat={};WR.md=null;WR.k='';WR.sel='';WR.key='';WR.tab='rekap';RS.d=null;RS.mid=[];RS.sem={};RM.d=null;RM.cat={};RM.tgl='';RM.kota='';RM.pv=''});
+function smInit(d){SM.d=d;SM.u={fase:d.fase,kokur:d.kokur};SM.kp={};SM.sw={};SM.dirty={u:0,k:{},s:{}};
+  d.mapel.forEach(m=>SM.kp[m.Mapel_ID]={all:m.all,per:Object.assign({},m.per)});
+  d.siswa.forEach(x=>SM.sw[x.Siswa_ID]={kokur:x.kokur,ekskul:x.ekskul.map(e=>({n:e.n,k:e.k})),s:x.s,i:x.i,a:x.a,c:x.c});
+  if(!SM.kota)SM.kota=d.kop.kota||'Makassar'}
+const smU=(f,v)=>{SM.u[f]=v;SM.dirty.u=1};
+const smK=(m,s,v)=>{const o=SM.kp[m];if(s==='')o.all=v;else o.per[s]=v;SM.dirty.k[m]=1};
+const smS=(s,f,v)=>{SM.sw[s][f]=v;SM.dirty.s[s]=1};
+const smE=(s,i,f,v)=>{SM.sw[s].ekskul[i][f]=v;SM.dirty.s[s]=1};
+function smEk(sid){const w=SM.sw[sid],el=$('#sm-ek-'+SM.d.siswa.findIndex(x=>x.Siswa_ID===sid));if(!el)return;
+  el.innerHTML=w.ekskul.map((e,i)=>`<div class="grid"><div><label>Ekstrakurikuler ${i+1}</label><input maxlength="60" value="${esc(e.n)}" data-s="${esc(sid)}" data-i="${i}" oninput="smE(this.dataset.s,Number(this.dataset.i),'n',this.value)"></div>
+   <div><label>Keterangan</label><textarea maxlength="400" style="min-height:60px" data-s="${esc(sid)}" data-i="${i}" oninput="smE(this.dataset.s,Number(this.dataset.i),'k',this.value)">${esc(e.k)}</textarea></div></div>`).join('')+
+   (w.ekskul.length<5?`<p><button class="ghost" data-s="${esc(sid)}" onclick="smEkTambah(this.dataset.s)">+ Tambah ekstrakurikuler</button></p>`:'')}
+function smEkTambah(sid){SM.sw[sid].ekskul.push({n:'',k:''});smEk(sid)}
+function smDraw(){const d=SM.d,el=$('#wr-body');if(!d||!el)return;
+  el.innerHTML=`<div class="card"><h3>Umum untuk seluruh kelas</h3><p><small>Nilai Akhir dihitung otomatis: rata-rata kolom nilai yang dipilih di tab Pengaturan Rapor (${d.kolom.map(esc).join(', ')}), dibulatkan. Kop dan kepala sekolah diatur di tab Rapor Mid.</small></p>
+   <div class="grid"><div><label for="sm-fase">Fase</label><input id="sm-fase" maxlength="4" style="max-width:100px" value="${esc(SM.u.fase)}" oninput="smU('fase',this.value)"></div></div>
+   <label for="sm-kokur">Kokurikuler (untuk semua siswa; bisa diganti khusus per siswa)</label><textarea id="sm-kokur" maxlength="800" style="min-height:90px" oninput="smU('kokur',this.value)">${esc(SM.u.kokur)}</textarea></div>
+  <div class="card"><h3>Capaian kompetensi per mata pelajaran</h3><p><small>Tulis satu teks untuk seluruh kelas. Bila ada siswa yang berbeda, isi di bagian "Khusus siswa" (kosong = memakai teks umum).</small></p>
+   ${d.mapel.map((m,mi)=>`<details style="border-top:1px solid #d8e0e8;padding:8px 0"><summary><b>${esc(m.Mapel)}</b> <small>${esc(m.grup||'')}</small></summary>
+     <label>Teks untuk semua siswa</label><textarea maxlength="1500" style="min-height:110px" data-m="${esc(m.Mapel_ID)}" oninput="smK(this.dataset.m,'',this.value)">${esc(SM.kp[m.Mapel_ID].all)}</textarea>
+     <details><summary><small>Khusus siswa</small></summary>${d.siswa.map(x=>`<label>${esc(x.Nama_Siswa)}</label><textarea maxlength="1500" style="min-height:60px" data-m="${esc(m.Mapel_ID)}" data-s="${esc(x.Siswa_ID)}" oninput="smK(this.dataset.m,this.dataset.s,this.value)">${esc(SM.kp[m.Mapel_ID].per[x.Siswa_ID]||'')}</textarea>`).join('')}</details></details>`).join('')||'<p>Belum ada mata pelajaran di kelas ini.</p>'}</div>
+  <div class="card"><h3>Data per siswa</h3>
+   ${d.siswa.map((x,xi)=>{const w=SM.sw[x.Siswa_ID];return `<details style="border-top:1px solid #d8e0e8;padding:8px 0"><summary><b>${esc(x.Nama_Siswa)}</b> <small>${esc(x.NIS)}</small></summary>
+     <div class="grid"><div><label>Sakit (hari)</label><input type="number" min="0" max="366" value="${esc(w.s)}" data-s="${esc(x.Siswa_ID)}" oninput="smS(this.dataset.s,'s',this.value)"></div>
+      <div><label>Izin (hari)</label><input type="number" min="0" max="366" value="${esc(w.i)}" data-s="${esc(x.Siswa_ID)}" oninput="smS(this.dataset.s,'i',this.value)"></div>
+      <div><label>Tanpa keterangan (hari)</label><input type="number" min="0" max="366" value="${esc(w.a)}" data-s="${esc(x.Siswa_ID)}" oninput="smS(this.dataset.s,'a',this.value)"></div></div>
+     <div id="sm-ek-${xi}"></div>
+     <label>Kokurikuler khusus siswa (kosong = memakai teks kelas)</label><textarea maxlength="800" style="min-height:60px" data-s="${esc(x.Siswa_ID)}" oninput="smS(this.dataset.s,'kokur',this.value)">${esc(w.kokur)}</textarea>
+     <label>Catatan wali kelas</label><textarea maxlength="1200" style="min-height:110px" data-s="${esc(x.Siswa_ID)}" oninput="smS(this.dataset.s,'c',this.value)">${esc(w.c)}</textarea>
+     <p><button class="ghost" data-s="${esc(x.Siswa_ID)}" onclick="smPv(this.dataset.s)">Pratinjau</button> <button data-s="${esc(x.Siswa_ID)}" onclick="smExcel(this.dataset.s)">Unduh Excel</button></p></details>`}).join('')||'<p>Belum ada siswa di kelas ini.</p>'}
+   <div id="sm-pv"></div></div>
+  <div class="card"><h3>Simpan dan unduh</h3><div class="grid"><div><label for="sm-tgl">Tanggal rapor (boleh dikosongkan)</label><input id="sm-tgl" type="date" value="${esc(SM.tgl)}" onchange="SM.tgl=this.value"></div>
+   <div><label for="sm-kt">Kota tanda tangan</label><input id="sm-kt" maxlength="40" value="${esc(SM.kota)}" oninput="SM.kota=this.value"></div></div>
+   <p><button id="sm-sv" onclick="smSv()">Simpan semua isian</button> <button class="ghost" id="sm-all" onclick="smExcel('')">Unduh semua siswa (satu lembar per siswa)</button> <button class="ghost" onclick="ckRapor('sem')">Cek kelengkapan</button></p><div id="sm-ck"></div></div>`;
+  d.siswa.forEach(x=>smEk(x.Siswa_ID))}
+async function smSimpan(){const k=WR.k,sem=WR.sem,b={Kelas_ID:k,Semester:sem};
+  if(SM.dirty.u){await api('w.semUmum',Object.assign({fase:SM.u.fase,kokur:SM.u.kokur},b));SM.dirty.u=0}
+  for(const m of Object.keys(SM.dirty.k)){const o=SM.kp[m];await api('w.semKompetensi',Object.assign({Mapel_ID:m,all:o.all,per:o.per},b));delete SM.dirty.k[m]}
+  const ids=Object.keys(SM.dirty.s);
+  if(ids.length){const sw={};ids.forEach(i=>sw[i]=SM.sw[i]);await api('w.semSiswa',Object.assign({siswa:sw},b));SM.dirty.s={}}}
+async function smSv(){const b=$('#sm-sv');if(b)b.disabled=true;try{await smSimpan();toast('Isian tersimpan')}catch(e){fail(e)}if(b)b.disabled=false}
+async function smExcel(sid){const k=WR.k,sem=WR.sem;
+  try{await smSimpan();const r=await api('w.semExcel',{Kelas_ID:k,Semester:sem,Siswa_ID:sid,Tanggal:SM.tgl,Kota:SM.kota});dl(r);toast('File diunduh: '+r.name)}catch(e){fail(e)}}
+async function smPv(sid){const k=WR.k,sem=WR.sem;
+  try{await smSimpan();const x=await api('w.semPreview',{Kelas_ID:k,Semester:sem,Siswa_ID:sid});const el=$('#sm-pv');if(!el)return;
+   el.innerHTML=`<h3>Pratinjau: ${esc(x.Nama_Siswa)}</h3><p><small>NISN ${esc(x.NIS)} | Fase ${esc(x.fase)} | Semester ${esc(x.Semester)} ${esc(x.Tahun_Ajaran)}</small></p><div style="overflow:auto"><table><thead><tr><th>No</th><th>Mata pelajaran</th><th>Nilai akhir</th><th>Capaian kompetensi</th></tr></thead><tbody>${x.grup.map(g=>(g.nama?`<tr><th colspan="4" style="text-align:left">${esc(g.nama)}</th></tr>`:'')+g.baris.map(b=>`<tr><td>${esc(b.no)}</td><td>${esc(b.Mapel)}</td><td>${esc(b.nilai)}</td><td style="white-space:pre-wrap">${esc(b.capaian)}</td></tr>`).join('')).join('')}</tbody></table></div>
+    <p><b>Kokurikuler</b></p><p style="white-space:pre-wrap">${esc(x.kokur)||'-'}</p>
+    <p><b>Ekstrakurikuler</b></p>${x.ekskul.length?'<ol>'+x.ekskul.map(e=>`<li><b>${esc(e.n)}</b>: ${esc(e.k)}</li>`).join('')+'</ol>':'<p>-</p>'}
+    <p><b>Ketidakhadiran</b>: Sakit ${esc(x.s===''?'...':x.s)} hari, Izin ${esc(x.i===''?'...':x.i)} hari, Tanpa keterangan ${esc(x.a===''?'...':x.a)} hari</p>
+    <p><b>Catatan wali kelas</b></p><p style="white-space:pre-wrap">${esc(x.c)||'-'}</p>`;
+   el.scrollIntoView&&el.scrollIntoView({block:'nearest'})}catch(e){fail(e)}}
+
+
+ 
+async function ckRapor(jenis){const k=WR.k,sem=WR.sem,el=$(jenis==='mid'?'#rm-ck':'#sm-ck');if(!el)return;
+  try{await (jenis==='mid'?rmSimpan():smSimpan());const r=await api('w.cekRapor',{Kelas_ID:k,Semester:sem});const e2=$(jenis==='mid'?'#rm-ck':'#sm-ck');if(!e2)return;
+   const d=jenis==='mid'?r.mid:r.sem,l=r.kop.concat(d.galat?[d.galat]:[],d.items);
+   e2.innerHTML=l.length?`<p><b>Yang masih perlu dilengkapi:</b></p><ul>${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p>Semua isian sudah lengkap.</p>'}catch(e){fail(e)}}
+
+ 
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{WR.cat={};WR.md=null;WR.k='';WR.sel='';WR.key='';WR.tab='rekap';RS.d=null;RS.mid=[];RS.sem={};RM.d=null;RM.cat={};RM.tgl='';RM.kota='';RM.pv='';SM.d=null;SM.kp={};SM.sw={};SM.tgl='';SM.kota=''});
 Object.assign(VIEWS,{'w-ringkasan':vWRingkasan,'w-rapor':vWRapor});
 </script>
 <style>
