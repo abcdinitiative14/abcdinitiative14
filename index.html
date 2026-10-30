@@ -211,7 +211,21 @@ footer{background:var(--ink);color:#b9d0da;padding:22px 0;font-size:14px}
 </form></div>
 <div id="toast"></div>
 
-<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";(function(){var x=new XMLHttpRequest();x.open('GET',window.API_URL+'?aksi=boot',false);x.send();try{window.BOOT=JSON.parse(x.responseText)}catch(e){window.BOOT={articles:[],school:'Sekolah'}}})();</script>
+<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
+  window.addEventListener('load', function () {
+    fetch(window.API_URL + '?aksi=boot').then(function (r) { return r.json(); }).then(function (b) {
+      if (!b || !Array.isArray(b.articles)) return;
+      var beda = JSON.stringify(b.articles) !== JSON.stringify(BOOT.articles) ||
+        b.school !== BOOT.school || JSON.stringify(b.profil || null) !== JSON.stringify(BOOT.profil || null);
+      if (!beda) return;
+      BOOT.articles = b.articles; BOOT.school = b.school; BOOT.profil = b.profil;
+      try { renderProfil(); } catch (e) { }
+      try { var g = document.getElementById('homeGrid'); if (g) g.innerHTML = gridHtml(BOOT.articles.slice(0, 6)); } catch (e) { }
+      try { HS.sig = ''; homeInit(); } catch (e) { }
+      try { if (/^#\/kategori\//.test(location.hash)) route(); } catch (e) { }
+    }).catch(function () { });
+  });
+})();</script>
 <script>
 const $=s=>document.querySelector(s),
 esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
@@ -3411,6 +3425,16 @@ const SV_CSS=`.sv-paper{position:relative;z-index:0;background:#fff;color:#000;f
 .sv-paper .vq{display:flex;align-items:center;gap:3mm;margin:6mm 0 0;page-break-inside:avoid;font-size:8pt;line-height:1.3}
 .sv-paper .vq svg{width:20mm;height:20mm;flex:none}
 .sv-contoh{background:#fff8d6;padding:0 1mm}`;
+
+const SV_IK={file:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',arsip:'<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/>',daftar:'<path d="M4 7h16M4 12h16M4 17h10"/>',sekolah:'<path d="M3 10l9-6 9 6M5 10v9h14v-9M10 19v-5h4v5"/>',
+ idcard:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.5-1.5 5.5-1.5 6 0M14 10h4M14 14h4"/>',tabel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>',
+ shield:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',award:'<circle cx="12" cy="9" r="5"/><path d="M8.5 13.500L7 21l5-3 5 3-1.5-7.5"/>',
+ cek:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',panah:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 8l4 4-4 4"/>',piala:'<path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>',tas:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 13h18"/>'};
+const svIkon=(k,w)=>`<svg viewBox="0 0 24 24" width="${w||22}" height="${w||22}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SV_IK[k]||SV_IK.file}</svg>`;
+const SV_JT={aktif:['Aktif belajar (tabel)','tabel'],aktif1:['Aktif belajar','idcard'],baik:['Berperilaku baik','shield'],peringkat:['Peringkat kelas','award'],diterima:['Diterima sekolah','cek'],pindah:['Pindah sekolah','panah'],lomba:['Rekomendasi lomba','piala'],tugas:['Surat tugas guru','tas']};
+// ubin pilihan jenis surat (menggantikan dropdown); yang dimatikan di cabang ini disembunyikan
+function svBJenisTile(){const e=$('#sb_jt');if(!e)return;const sp=svBSpec();
+  e.innerHTML=svJenisPakai(sp.id).map(j=>{const m=SV_JT[j.id]||[j.nama,'file'];return `<button type="button" class="sv-jt${j.id===sp.id?' on':''}" id="sb_jt_${esc(j.id)}" title="${esc(j.nama)}" aria-pressed="${j.id===sp.id}" onclick="svBJenis('${esc(j.id)}')"><span class="ic">${svIkon(m[1],24)}</span><span>${esc(m[0])}</span></button>`}).join('')}
 function svCssPasang(){if(document.getElementById('sv_css'))return;const s=document.createElement('style');s.id='sv_css';
   s.textContent=SV_CSS+`.sv-g{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;align-items:start}
 .sv-wrap{border:1px solid var(--line);border-radius:10px;background:var(--mist);overflow:hidden;position:relative}
@@ -3424,11 +3448,33 @@ function svCssPasang(){if(document.getElementById('sv_css'))return;const s=docum
 .sv-it.on{background:#0b6b78;color:#fff;border-color:#0b6b78}
 .sv-sl{display:grid;grid-template-columns:110px minmax(0,1fr) 46px;gap:8px;align-items:center;margin-top:6px}
 .sv-sl input[type=range]{width:100%;padding:0}
-@media(max-width:900px){.sv-g{grid-template-columns:minmax(0,1fr)}}`;
+@media(max-width:900px){.sv-g{grid-template-columns:minmax(0,1fr)}}
+/* tampilan lebih lapang: kartu bulat, ubin ikon, tab pil. Warna tetap memakai palet aplikasi (var(--teal), --g, --mist, --line, --ink) */
+#svt{background:var(--mist);border-radius:999px;padding:5px;display:inline-flex;gap:4px;flex-wrap:wrap}
+.sv-tab{display:inline-flex;align-items:center;gap:7px;border:0;background:none;color:var(--ink);padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.sv-tab.on{background:var(--g);color:#fff;box-shadow:0 8px 16px -10px rgba(10,80,110,.8)}
+#svb .sv-box{border-radius:18px;padding:14px 16px;margin-top:10px;box-shadow:0 12px 26px -20px rgba(10,37,64,.45)}
+#svb .sv-wrap{border-radius:18px;box-shadow:0 12px 26px -20px rgba(10,37,64,.45)}
+#svb .sv-h{display:flex;align-items:center;gap:8px;font-size:1.05rem;margin:22px 0 4px}
+#svb .sv-h:before{content:"";width:5px;height:18px;border-radius:3px;background:var(--g)}
+#svb input:not([type=checkbox]):not([type=radio]):not([type=range]),#svb select,#svb textarea{border-radius:12px}
+#svb label{font-weight:600}
+#svb .btn{border-radius:999px;padding:11px 22px}
+#svb .btn.sm{padding:6px 14px}
+#sb_cetak{padding:13px 28px;font-size:16px;box-shadow:0 14px 24px -14px rgba(10,80,110,.9)}
+.sv-jts{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:6px 0 4px}
+.sv-jt{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;line-height:1.25;transition:transform .15s,box-shadow .15s}
+.sv-jt:hover{transform:translateY(-2px);box-shadow:0 12px 20px -14px rgba(10,37,64,.5)}
+.sv-jt .ic{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;background:var(--mist);color:var(--teal)}
+.sv-jt.on{background:var(--g);color:#fff;border-color:transparent;box-shadow:0 14px 24px -14px rgba(10,80,110,.9)}
+.sv-jt.on .ic{background:rgba(255,255,255,.22);color:#fff}
+#svb .sv-box[data-id]{border-left:5px solid var(--teal)}
+#svb .sv-st{display:inline-block;padding:1px 10px;border-radius:999px;background:var(--mist);font-size:12px;margin-left:4px}
+@media(prefers-reduced-motion:reduce){.sv-jt{transition:none}.sv-jt:hover{transform:none}}`;
   document.head.appendChild(s)}
 
- 
-
+/* ---------- potongan surat (dipakai ulang di S2 dst.) ---------- */
+// gambar pada satu jangkar ('kop' | 'ttd' | 'halaman'). z (opsional) = hanya yang 'depan' atau 'belakang'. edit = tampilkan tanda pilihan.
 function svLayers(lapis,jangkar,edit,z){return (lapis||[]).map((l,i)=>({l:l,i:i})).filter(x=>x.l.jangkar===jangkar&&x.l.img&&(!z||x.l.z===z))
   .map(x=>`<img class="sv-l${edit&&x.i===SV.pilih?' on':''}" data-i="${x.i}" src="${esc(x.l.img)}" alt="" draggable="false" style="left:${+x.l.x}%;top:${+x.l.y}%;width:${+x.l.w}%;opacity:${(+x.l.o)/100};z-index:${x.l.z==='belakang'?-1:1}">`).join('')}
 function svKop(t,lapis,edit){
@@ -3572,7 +3618,7 @@ async function vSurat(){svCssPasang();
     SV.tab=SV.tpl.length?(SV.tab||'buat'):'tpl';svTampil()}
   catch(e){fail(e)}}
 function svTampil(){
-  $('#svt').innerHTML=[['buat','Buat surat'],['arsip','Arsip surat'],['jenis','Jenis surat yang dipakai'],['tpl','Sekolah dan template kop']].map(x=>`<button class="btn${SV.tab===x[0]?'':' ghost'} sm" id="svt_${x[0]}" onclick="svTab('${x[0]}')">${x[1]}</button>`).join('');
+  $('#svt').innerHTML=[['buat','Buat surat'],['arsip','Arsip surat'],['jenis','Jenis surat yang dipakai'],['tpl','Sekolah dan template kop']].map(x=>`<button class="sv-tab${SV.tab===x[0]?' on':''}" id="svt_${x[0]}" onclick="svTab('${x[0]}')">${svIkon({buat:'file',arsip:'arsip',jenis:'daftar',tpl:'sekolah'}[x[0]],18)}${x[1]}</button>`).join('');
   if(SV.tab==='buat')svBuat();else if(SV.tab==='arsip')svArsip();else if(SV.tab==='jenis')svJenisUi();else svForm()}
 async function svTab(k){if(k===SV.tab)return;
   if(SV.tab==='tpl'&&!await svLepas())return;
@@ -3675,7 +3721,7 @@ async function svSimpan(){const b=$('#sv_sv'),t=b.textContent;b.disabled=true;b.
  
 
 
-const SB={massal:false,mode:'urut',tid:'',want:'',arsipId:'',cekN:0,cekTm:0,t:null,lapis:[],hasil:{},imp:{},tm:0,f:{jenis:'aktif',no:'',bln:0,thn:0,tgl:'',v:{}}};
+const SB={massal:false,mode:'urut',tid:'',want:'',arsipId:'',cekN:0,cekTm:0,t:null,lapis:[],hasil:{},imp:{},kl:{},klList:[],tm:0,f:{jenis:'aktif',no:'',bln:0,thn:0,tgl:'',v:{}}};
 const SV_ROM=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'],SV_TERB=['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh','Sebelas','Dua Belas'];
 
 function svKelasTeks(tingkat,nama){const s=String(tingkat||'').trim();let d='';for(const ch of s){if(ch>='0'&&ch<='9')d+=ch}
@@ -3737,7 +3783,7 @@ async function svBuat(){
   const th=[];for(let y=now.getFullYear()-3;y<=now.getFullYear()+1;y++)th.push(y);if(th.indexOf(+f.thn)<0)th.push(+f.thn);
   const sk=svSek();
   b.innerHTML=svBAtas()+`<div class="sv-g" style="margin-top:6px"><div>
-   <label for="sb_jenis" style="margin-top:0">Jenis surat</label><select id="sb_jenis" onchange="svBJenis(this.value)">${svJenisPakai(sp.id).map(j=>`<option value="${esc(j.id)}"${j.id===sp.id?' selected':''}>${esc(j.nama)}</option>`).join('')}</select>
+   <h3 class="sv-h" style="margin-top:0">Jenis surat</h3><div class="sv-jts" id="sb_jt"></div>
    <div id="sb_massal"></div>
    <h3 class="sv-h">Nomor surat</h3>
    <div class="row" style="align-items:flex-end"><div style="flex:1;min-width:90px"><label for="sb_no" id="sb_no_l" style="margin-top:0">Nomor urut</label><input id="sb_no" maxlength="10" placeholder="022" value="${esc(f.no)}" oninput="svBF('no',this.value)"></div>
@@ -3753,20 +3799,20 @@ async function svBuat(){
    <small id="sb_st" style="display:block"></small>
   </div>
   <div style="position:sticky;top:8px"><h3 class="sv-h" style="margin-top:0">Pratinjau</h3><div id="sb_wrap" class="sv-wrap"></div></div></div>`;
-  svBMasUi();svBIsiForm();svBPrev();svBCek();svBSt();if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
+  svBJenisTile();svBMasUi();svBIsiForm();svBPrev();svBCek();svBSt();if(!SV.rz){SV.rz=1;addEventListener('resize',svFit)}}
 function svBAtas(){
   const ada=svTplDi(SV.sid);
   return `<div class="sv-box" style="max-width:560px"><label for="sb_sek" style="margin-top:0">Sekolah</label><select id="sb_sek" onchange="svBSek(this.value)">${SV.sek.map(x=>`<option value="${esc(x.id)}"${x.id===SV.sid?' selected':''}>${esc(x.nama)}</option>`).join('')}</select>
    <label for="sb_tpl">Template kop</label><select id="sb_tpl" onchange="svBTpl(this.value)">${ada.map(t=>`<option value="${esc(t.id)}"${t.id===SB.tid?' selected':''}>${esc(t.nama||'Template')}</option>`).join('')}</select></div>`}
 async function svBSek(id){SV.sid=id;SB.t=null;SB.arsipId='';await svBuat()}
 async function svBTpl(id){try{await svBMuat(id);await svBuat()}catch(e){fail(e)}}
-function svBJenis(id){const sp=svJenis(id);if(!sp)return;SB.f.v=svBV0(sp,SB.f.v);SB.f.jenis=id;SB.arsipId='';SB.hasil={};svBMasUi();svBIsiForm();svBPrev();svBCek();svBSt()}
+function svBJenis(id){const sp=svJenis(id);if(!sp)return;SB.f.v=svBV0(sp,SB.f.v);SB.f.jenis=id;SB.arsipId='';SB.hasil={};svBJenisTile();svBMasUi();svBIsiForm();svBPrev();svBCek();svBSt()}
 function svBF(k,v){SB.f[k]=v;svBPrev();if(k==='no'||k==='thn')svBCek()}
 function svBV(k,v){SB.f.v[k]=v;svBPrev()}
 
 // ---- formulir isian dari spesifikasi (dibuat ulang hanya saat jenis/baris berubah, bukan saat mengetik, supaya kursor tidak lompat)
 function svBIsiForm(){const e=$('#sb_isi');if(!e)return;const sp=svBSpec(),v=SB.f.v,q={};
-  sp.f.forEach(f=>{const i=$('#sb_q_'+f.k);if(i)q[f.k]=i.value});   // kata pencarian dipertahankan walau formulir digambar ulang
+  sp.f.forEach(f=>{const i=$('#sb_q_'+f.k);if(i)q[f.k]=i.value});   
   e.innerHTML=sp.f.map(f=>f.t==='daftar'?svBDaftarHtml(svBEf(f)):svBFldHtml(f,v)).join('');
   sp.f.filter(f=>f.t==='daftar'&&f.sumber).forEach(f=>{const i=$('#sb_q_'+f.k);if(i&&q[f.k])i.value=q[f.k];svBCari(f.k,q[f.k]||'')})}
 function svBFldHtml(f,v){const id='sb_f_'+f.k,x=String(v[f.k]==null?'':v[f.k]),h=(f.opsional?' <small>(boleh kosong)</small>':'')+(f.orang&&SB.massal?' <small>(isian bersama; dipakai bila isian orangnya kosong)</small>':''),lb=`<label for="${id}">${esc(f.l)}${h}</label>`,on=`oninput="svBV('${f.k}',this.value)"`;
@@ -3778,7 +3824,7 @@ function svBFldHtml(f,v){const id='sb_f_'+f.k,x=String(v[f.k]==null?'':v[f.k]),h
       :lb+`<input id="${id}" maxlength="20" placeholder="2026-2027" value="${esc(x)}" ${on}><small>Daftar tahun ajaran bisa diisi di template, supaya tinggal dipilih.</small>`}
   return lb+`<input id="${id}" ${f.t==='angka'?'inputmode="numeric" maxlength="4"':`maxlength="${f.maks||100}"`} placeholder="${esc(f.ph||'')}" value="${esc(x)}" ${on}>`}
 function svBDaftarHtml(f){const r=SB.f.v[f.k]||[],banyak=f.maks>1,sat=f.sumber==='guru'?'guru':'siswa';
-  return `<h3 class="sv-h">${esc(f.l)}</h3>`+svIKotak(f)+(f.sumber?`<label for="sb_q_${f.k}" style="margin-top:0">Cari dari data ${sat} (nama${f.sumber==='siswa'?' atau NIS':''}), klik untuk ${banyak?'menambahkan':'mengisi'}</label><input id="sb_q_${f.k}" type="search" maxlength="60" autocomplete="off" placeholder="Ketik nama" oninput="svBCari('${f.k}',this.value)"><div id="sb_h_${f.k}" class="sv-box" style="padding:4px;max-height:190px;overflow:auto"></div>`:'')
+  return `<h3 class="sv-h">${esc(f.l)}</h3>`+svIKotak(f)+(f.sumber==='siswa'?`<label for="sb_kl_${f.k}" style="margin-top:0">1. Pilih kelas <small>(mempersempit daftar siswa)</small></label><select id="sb_kl_${f.k}" onchange="svBKelas('${f.k}',this.value)"><option value="">Semua kelas</option></select>`:'')+(f.sumber?`<label for="sb_q_${f.k}" style="margin-top:${f.sumber==='siswa'?'8px':'0'}">${f.sumber==='siswa'?'2. ':''}Cari dari data ${sat} (nama${f.sumber==='siswa'?' atau NIS':''}), klik untuk ${banyak?'menambahkan':'mengisi'}</label><input id="sb_q_${f.k}" type="search" maxlength="60" autocomplete="off" placeholder="Ketik nama" oninput="svBCari('${f.k}',this.value)"><div id="sb_h_${f.k}" class="sv-box" style="padding:4px;max-height:300px;overflow:auto"></div>`:'')
    +r.map((x,i)=>`<div class="sv-box"><div class="row" style="justify-content:space-between;align-items:center"><b>${banyak?esc(f.l)+' '+(i+1):'Data '+esc(sat)}</b>${banyak&&r.length>1?`<button class="btn bad sm" type="button" onclick="svBHapus('${f.k}',${i})">Hapus</button>`:''}</div>
      <div class="row">${f._massal&&SB.mode==='ketik'?`<div style="flex:1 1 100%"><label for="sb_l_${f.k}_${i}__no">Nomor urut surat <small>(angka, tanpa garis miring)</small></label><input id="sb_l_${f.k}_${i}__no" maxlength="10" inputmode="numeric" placeholder="022" value="${esc(x._no)}" oninput="svBR('${f.k}',${i},'_no',this.value)"></div>`:''}${f.kol.map((c,j)=>`<div style="flex:${j===0||c.k==='ttl'?'1 1 100%':'1 1 120px'};min-width:120px"><label for="sb_l_${f.k}_${i}_${c.k}">${esc(c.l)}${c.k==='nama'||c.wajib?'':' <small>(boleh kosong)</small>'}</label>${c.t==='pilih'
         ?`<select id="sb_l_${f.k}_${i}_${c.k}" onchange="svBR('${f.k}',${i},'${c.k}',this.value)"><option value=""></option>${c.opsi.map(o=>`<option${x[c.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`
@@ -3789,28 +3835,41 @@ function svBR(k,i,c,val){const r=SB.f.v[k];if(r&&r[i]){r[i][c]=val;svBPrev()}}
 function svBTambah(k){const f=svBFld(k),r=SB.f.v[k];if(r.length>=f.maks){toast('Maksimal '+f.maks+' baris per surat',1);return}
   r.push(svBBaris(f));svBIsiForm();svBPrev();const e=$('#sb_l_'+k+'_'+(r.length-1)+'_nama');if(e)e.focus()}
 function svBHapus(k,i){const r=SB.f.v[k];if(r.length<2)return;r.splice(i,1);svBIsiForm();svBPrev()}
-
-
+// pencarian dari data sekolah (siswa atau guru)
+// isian per orang pada kartu penerima (cetak massal): kosong = ikut isian bersama di atas
 function svBOrangHtml(f,i,x){const fs=svBSpec().f.filter(y=>y.orang&&y.t!=='daftar');if(!fs.length)return '';
   return '<div class="row" style="margin-top:4px">'+fs.map(y=>{const id='sb_o_'+f.k+'_'+i+'_'+y.k,val=String((x._v&&x._v[y.k])||''),ph=String(SB.f.v[y.k]||''),lb=`<label for="${id}">${esc(y.l)} <small>(khusus orang ini; kosong = ikut isian bersama${ph?': '+esc(ph.slice(0,30)):''})</small></label>`,on=`oninput="svBRV('${f.k}',${i},'${y.k}',this.value)"`;
     return `<div style="flex:1 1 ${y.t==='area'?'100%':'140px'};min-width:120px">`+lb+(y.t==='area'?`<textarea id="${id}" maxlength="${y.maks||250}" style="min-height:48px" ${on}>${esc(val)}</textarea>`:`<input id="${id}" ${y.t==='angka'?'inputmode="numeric" maxlength="4"':`maxlength="${y.maks||100}"`} value="${esc(val)}" ${on}>`)+'</div>'}).join('')+'</div>'}
 function svBRV(k,i,fk,val){const r=SB.f.v[k];if(r&&r[i]){r[i]._v=r[i]._v||{};r[i]._v[fk]=val;svBPrev()}}
 function svBCari(k,q){clearTimeout(SB.tm);SB.tm=setTimeout(async()=>{const f=svBFld(k);if(!f)return;
-  try{const r=await api(f.sumber==='guru'?'surat.guru.cari':'surat.siswa.cari',{q:q});if(!$('#sb_h_'+k))return;SB.hasil[k]={l:f.sumber==='guru'?r.guru:r.siswa,total:r.total};svBHasil(k)}catch(e){fail(e)}},q?250:0)}
-function svBHasil(k){const h=$('#sb_h_'+k),d=SB.hasil[k];if(!h||!d)return;
-  h.innerHTML=d.l.length?d.l.map((x,i)=>`<button class="btn ghost sm" style="display:block;width:100%;text-align:left;margin:2px 0" onclick="svBPilih('${k}',${i})">${esc(x.nama)} <small>${esc(x.nis||'')}${x.kelas?' &middot; '+esc(x.kelas):''}</small></button>`).join('')+(d.total>d.l.length?`<small style="display:block;padding:4px">Menampilkan ${d.l.length} dari ${d.total}. Persempit pencarian.</small>`:''):'<small style="display:block;padding:6px">Tidak ada yang cocok.</small>'}
+  try{const r=await api(f.sumber==='guru'?'surat.guru.cari':'surat.siswa.cari',{q:q,kelas:f.sumber==='guru'?'':(SB.kl[k]||'')});if(!$('#sb_h_'+k))return;if(r.kelas){SB.klList=r.kelas;svBKelasOpsi(k)}SB.hasil[k]={l:f.sumber==='guru'?r.guru:r.siswa,total:r.total};svBHasil(k)}catch(e){fail(e)}},q?250:0)}
+function svBHasil(k){const h=$('#sb_h_'+k),d=SB.hasil[k];if(!h||!d)return;const f=svBFld(k),kl=SB.klList.find(x=>x.id===SB.kl[k]);
+  const semua=kl&&f.sumber==='siswa'&&f.maks>1&&d.l.length&&!$('#sb_q_'+k).value?`<button class="btn sm" type="button" id="sb_all_${k}" style="margin:2px 0 6px" onclick="svBPilihSemua('${k}')">Tambahkan semua siswa kelas ${esc(kl.nama)} (${d.l.length})</button>`:'';
+  h.innerHTML=semua+(d.l.length?d.l.map((x,i)=>`<button class="btn ghost sm" style="display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;margin:3px 0;padding:8px 10px;font-size:15px" onclick="svBPilih('${k}',${i})"><b>${esc(x.nama)}</b><small>${esc(x.nis||'')}${x.kelas&&!kl?' &middot; '+esc(x.kelas):''}</small></button>`).join('')+(d.total>d.l.length?`<small style="display:block;padding:4px">Menampilkan ${d.l.length} dari ${d.total}. Pilih kelas atau persempit pencarian.</small>`:''):'<small style="display:block;padding:6px">'+(kl?'Tidak ada siswa yang cocok di kelas ini.':'Tidak ada yang cocok.')+'</small>')}
+// pilihan Kelas: mempersempit seleksi siswa lebih dulu, baru nama
+function svBKelasOpsi(k){const e=$('#sb_kl_'+k);if(!e)return;const cur=SB.kl[k]||'';
+  e.innerHTML='<option value="">Semua kelas</option>'+SB.klList.map(x=>`<option value="${esc(x.id)}"${x.id===cur?' selected':''}>${esc(x.nama)}${x.ta?' ('+esc(x.ta)+')':''} - ${x.jumlah} siswa</option>`).join('')}
+function svBKelas(k,v){SB.kl[k]=v;const q=$('#sb_q_'+k);if(q)q.value='';svBCari(k,'')}
+// mengisi baris dari data. Hanya kolom yang ada di jenis ini yang diisi. TTL, NISN, NIY, jabatan tidak ada di data, jadi diketik admin.
 
-function svBPilih(k,i){const f=svBFld(k),x=(SB.hasil[k]||{}).l&&SB.hasil[k].l[i];if(!f||!x)return;const r=SB.f.v[k];
-  if(r.some(y=>y.sid===x.id)){toast('Itu sudah ada di daftar',1);return}
+function svBIsiBaris(f,x){const r=SB.f.v[f.k];
+  if(r.some(y=>y.sid===x.id))return 'ada';
   const isi={sid:x.id,nama:x.nama},has=n=>f.kol.some(c=>c.k===n);
   if(f.sumber==='siswa'){if(has('nis'))isi.nis=x.nis;if(has('nisn'))isi.nisn=x.nis;if(has('kelas'))isi.kelas=svKelasTeks(x.tingkat,x.kelas)}
   const sat=f.maks===1,last=r[r.length-1];
   if(sat)Object.assign(r[0],svBBaris(f),isi);
   else if(!svBIsi(f,last))Object.assign(last,isi);
-  else{if(r.length>=f.maks){toast('Maksimal '+f.maks+' baris per surat',1);return}r.push(Object.assign(svBBaris(f),isi))}
+  else{if(r.length>=f.maks)return 'penuh';r.push(Object.assign(svBBaris(f),isi))}
   const ta=svBSpec().f.find(y=>y.t==='ta');
   if(f.sumber==='siswa'&&x.ta&&ta&&!SB.f.v[ta.k]&&!(SB.t.ta_list||[]).length)SB.f.v[ta.k]=x.ta;
+  return 'ok'}
+function svBPilih(k,i){const f=svBFld(k),x=(SB.hasil[k]||{}).l&&SB.hasil[k].l[i];if(!f||!x)return;
+  const h=svBIsiBaris(f,x);if(h==='ada'){toast('Itu sudah ada di daftar',1);return}if(h==='penuh'){toast('Maksimal '+f.maks+' baris per surat',1);return}
   svBIsiForm();svBPrev();toast(f.sumber==='guru'?'Guru ditambahkan. Lengkapi NIY dan jabatan.':'Siswa ditambahkan. Lengkapi data yang kosong.')}
+
+function svBPilihSemua(k){const f=svBFld(k),l=(SB.hasil[k]||{}).l||[];if(!f||!l.length)return;let n=0,penuh=false;
+  for(const x of l){const h=svBIsiBaris(f,x);if(h==='ok')n++;else if(h==='penuh'){penuh=true;break}}
+  svBIsiForm();svBPrev();toast(n+' siswa ditambahkan'+(penuh?'. Batas '+f.maks+' tercapai, sisanya tidak dimasukkan.':'.'),penuh&&!n)}
 
 
 function svBCek(){clearTimeout(SB.cekTm);const n=++SB.cekN;if(SB.massal&&SB.mode==='ketik'){const e=$('#sb_cek');if(e){e.style.color='';e.textContent='Nomor diperiksa saat menyimpan.'}return}
@@ -4105,7 +4164,7 @@ const svBulanId=b=>{const a=String(b).split('-');if(a.length!==2)return b;const 
 async function svRingkas(){const e=$('#sa_rk');if(!e)return;e.textContent='Memuat...';
   try{const r=await api('surat.arsip.rekap',svSaring());if(!$('#sa_rk'))return;
     const t=(h,l)=>l.length?`<table class="sv-tb" style="width:100%;border-collapse:collapse;margin:4px 0"><tr><th style="text-align:left">${h}</th><th style="text-align:right;width:70px">Jumlah</th></tr>${l.map(x=>`<tr><td>${esc(x[0])}</td><td style="text-align:right">${x[1]}</td></tr>`).join('')}</table>`:'';
-    e.innerHTML=r.total?`<b>${r.total} surat</b> sesuai saringan${r.terpotong?' (CSV memuat 2.000 surat pertama; persempit tanggal untuk sisanya)':''}`+t('Jenis surat',r.ringkasan.perJenis.map(x=>[x.nama,x.jumlah]))+t('Bulan (tanggal surat)',r.ringkasan.perBulan.map(x=>[svBulanId(x.bulan),x.jumlah])):'Tidak ada surat yang sesuai saringan.'}
+    e.innerHTML=r.total?`<b>${r.total} surat</b> sesuai saringan${r.terpotong?' (CSV memuat 2.0 surat pertama; persempit tanggal untuk sisanya)':''}`+t('Jenis surat',r.ringkasan.perJenis.map(x=>[x.nama,x.jumlah]))+t('Bulan (tanggal surat)',r.ringkasan.perBulan.map(x=>[svBulanId(x.bulan),x.jumlah])):'Tidak ada surat yang sesuai saringan.'}
   catch(x){if($('#sa_rk'))$('#sa_rk').textContent='';fail(x)}}
 
 const svSel=v=>{let s=String(v==null?'':v).replace(/[\r\n]+/g,' ');if(/^[=+\-@\t]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
@@ -4115,7 +4174,7 @@ async function svUnduhCsv(){const bt=$('#sa_csv');if(bt)bt.disabled=true;
   try{const r=await api('surat.arsip.rekap',svSaring());if(!r.baris.length){toast('Tidak ada surat yang sesuai saringan',1);return}
     const a=document.createElement('a'),d=new Date(),z=n=>String(n).padStart(2,'0');a.href=URL.createObjectURL(new Blob([svCsv(r.baris)],{type:'text/csv;charset=utf-8'}));
     a.download='arsip-surat-'+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
-    toast(r.baris.length+' surat diunduh'+(r.terpotong?' (dibatasi 2.000; persempit tanggal untuk sisanya)':''))}
+    toast(r.baris.length+' surat diunduh'+(r.terpotong?' (dibatasi 2.0; persempit tanggal untuk sisanya)':''))}
   catch(e){fail(e)}finally{if($('#sa_csv'))$('#sa_csv').disabled=false}}
 function svArsipKartu(x){const c=x.status==='dicabut',lain=x.status==='lain',id=esc(x.id);
   const lencana=c?'<span class="sv-st" style="color:#b3261e;font-weight:700">DICABUT</span>':lain?'<span class="sv-st" style="color:#8a6d00;font-weight:700">STATUS TIDAK DIKENAL</span>':'<span class="sv-st" style="color:#1b6e3c;font-weight:700">SAH</span>';
@@ -4259,13 +4318,41 @@ async function verifPublik(kode,id){
 })();
 </script>
 <style id="msk-css">
-#dmain .msk-chip{padding:6px 14px;border:1px solid var(--line);border-radius:99px;background:#fff;cursor:pointer;font:inherit}
-#dmain .msk-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-#dmain .msk-jenis{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--mist);font-size:12px}
-#dmain .msk-lama{color:var(--bad);font-weight:600;font-size:12px}
-#dmain .msk-ket{color:#51606f;font-size:13px;white-space:pre-line}
-#dmain table select{width:auto;padding:4px 6px;font-size:13px}
-#dmain .msk-box{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:12px;margin-top:10px}
+/* Gaya kartu dan ubin (warna tetap dari palet aplikasi: --g, --teal, --ink, --mist, --line, --bad) */
+#dmain .msk-jenis{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--mist);font-size:12px;font-weight:600}
+#dmain .msk-lama{color:var(--bad);font-weight:700;font-size:12px}
+#dmain .msk-ket{color:#51606f;font-size:13px;white-space:pre-line;margin-top:4px}
+#dmain .msk-box{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px 16px;margin-top:10px;box-shadow:0 12px 26px -20px rgba(10,37,64,.45)}
+#dmain .msk-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;margin-bottom:12px;box-shadow:0 12px 26px -20px rgba(10,37,64,.45)}
+#dmain .msk-bar input,#dmain .msk-bar select,#dmain #mskb input:not([type=checkbox]):not([type=radio]),#dmain #mskb select,#dmain #mskb textarea{border-radius:12px}
+#dmain .msk-bar .btn{border-radius:999px;padding:11px 22px}
+#dmain .msk-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:12px}
+#dmain .msk-stat{border-radius:22px;padding:16px 20px;color:#fff;background:var(--g);box-shadow:0 18px 30px -22px rgba(10,80,110,.9)}
+#dmain .msk-stat.k{background:var(--ink)}
+#dmain .msk-stat small{opacity:.85;color:inherit;display:block}
+#dmain .msk-stat b{display:block;font-size:34px;line-height:1.1;margin:2px 0 4px}
+#dmain .msk-per{font-weight:700;margin:0 0 8px}
+#dmain .msk-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+#dmain .msk-chip{display:flex;flex-direction:column;align-items:center;padding:10px 6px;border:1px solid var(--line);border-radius:18px;background:#fff;cursor:pointer;font:inherit;color:var(--ink)}
+#dmain .msk-chip b{font-size:22px;line-height:1.1}
+#dmain .msk-chip span{font-size:13px;font-weight:600}
+#dmain .msk-chip.on{background:var(--g);color:#fff;border-color:transparent;box-shadow:0 14px 24px -14px rgba(10,80,110,.9)}
+#dmain .msk-it{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:start;background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 12px 26px -22px rgba(10,37,64,.5)}
+#dmain .msk-it.Selesai{border-left-color:#9fb7bf}
+#dmain .msk-it.Baru{border-left-color:var(--bad)}
+#dmain .msk-cal{text-align:center;border-radius:16px;background:var(--mist);padding:8px 4px;line-height:1.15}
+#dmain .msk-cal b{display:block;font-size:24px}
+#dmain .msk-cal small{display:block;font-weight:600}
+#dmain .msk-it h4{margin:0 0 2px;font-size:16px}
+#dmain .msk-aksi{display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:150px}
+#dmain .msk-aksi select{width:100%;padding:6px 8px;font-size:13px}
+#dmain .msk-aksi .row{flex-wrap:nowrap}
+#dmain .msk-aksi .btn{border-radius:999px}
+#dmain .msk-tile{display:flex;gap:8px;align-items:center;font-weight:600;margin:6px 0;padding:10px 14px;border:1px solid var(--line);border-radius:16px;cursor:pointer;background:#fff}
+#dmain .msk-tile:has(input:checked){background:var(--mist);border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+#dmain .msk-tile input{width:auto;margin:0}
+#dmain #mskb .btn.ghost.sm,#dmain #mskb .btn.sm{border-radius:999px}
+@media(max-width:700px){#dmain .msk-it{grid-template-columns:52px minmax(0,1fr)}#dmain .msk-aksi{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0}}
 </style>
 <script id="msk-js">
 /* ===== SURAT MASUK (S8): menu Admin 'masuk'. Memakai: M, $, esc, api, ask, toast, fail, VIEWS (Index). Berdiri sendiri. =====
@@ -4291,32 +4378,34 @@ function mskHal(n){MSK.hal=n;mskMuat()}
 function mskGambar(){
   const d=MEM.masuk,el=$('#mskb');if(!d||!el)return;
   if(!$('#msk_q')){
-    el.innerHTML=`<div class="row" style="margin-bottom:10px;align-items:flex-end">
+    el.innerHTML=`<div class="msk-bar">
       <button class="btn" onclick="mskForm('')">+ Catat surat masuk</button>
       <input id="msk_q" placeholder="Cari pengirim, perihal, nomor, keterangan..." style="max-width:320px" value="${esc(MSK.q)}" oninput="mskCari(this.value)" aria-label="Cari surat masuk">
       <select id="msk_jn" style="max-width:170px" onchange="mskSaring('jn',this.value)" aria-label="Saring jenis"><option value="">Semua jenis</option>${mskOpt(MSK_JENIS,MSK.jn)}</select>
       <select id="msk_sek" style="max-width:200px" onchange="mskSaring('sek',this.value)" aria-label="Saring tujuan"></select>
       <select id="msk_tp" style="max-width:150px" onchange="mskSaring('tp',this.value)" aria-label="Saring tipe"><option value="">Semua tipe</option>${mskOpt(MSK_TIPE,MSK.tp)}</select>
-      <select id="msk_thn" style="max-width:130px" onchange="mskSaring('thn',this.value)" aria-label="Saring tahun"><option value="">Semua tahun</option>${Array.from({length:7},(_,i)=>String(new Date().getFullYear()+1-i)).map(y=>`<option${y===MSK.thn?' selected':''}>${y}</option>`).join('')}</select>
-      <select id="msk_bln" style="max-width:140px" onchange="mskSaring('bln',this.value)" aria-label="Saring bulan"><option value="">Semua bulan</option>${MSK_BLN_PENUH.map((m,i)=>`<option value="${i+1}"${String(i+1)===MSK.bln?' selected':''}>${m}</option>`).join('')}</select></div>
-      <div class="msk-box" id="msk_rk" style="margin:0 0 10px"></div>
-      <div class="row" id="msk_h" style="margin-bottom:12px"></div><div id="msk_l"></div>`}
+      <select id="msk_thn" style="max-width:165px" onchange="mskSaring('thn',this.value)" aria-label="Saring tahun"><option value="">Semua tahun</option>${Array.from({length:7},(_,i)=>String(new Date().getFullYear()+1-i)).map(y=>`<option${y===MSK.thn?' selected':''}>${y}</option>`).join('')}</select>
+      <select id="msk_bln" style="max-width:175px" onchange="mskSaring('bln',this.value)" aria-label="Saring bulan"><option value="">Semua bulan</option>${MSK_BLN_PENUH.map((m,i)=>`<option value="${i+1}"${String(i+1)===MSK.bln?' selected':''}>${m}</option>`).join('')}</select></div>
+      <div id="msk_rk"></div>
+      <div class="msk-tiles" id="msk_h"></div><div id="msk_l"></div>`}
   $('#msk_sek').innerHTML='<option value="">Semua tujuan</option><option value="-"'+(MSK.sek==='-'?' selected':'')+'>Umum</option>'+(d.sekolah||[]).map(x=>`<option value="${esc(x.id)}"${MSK.sek===x.id?' selected':''}>${esc(x.nama)}</option>`).join('');
   const rk=d.rekap||{},per=rk.thn?((rk.bln?MSK_BLN_PENUH[rk.bln-1]+' ':'')+rk.thn):'Semua periode';
-  $('#msk_rk').innerHTML=`<b>${esc(per)}</b> &nbsp; Surat masuk: <b id="msk_rk_m">${rk.masuk||0}</b> <small>(digital ${rk.digital||0}, non digital ${rk.nonDigital||0}${(rk.masuk||0)>(rk.digital||0)+(rk.nonDigital||0)?', tipe belum diisi '+((rk.masuk||0)-(rk.digital||0)-(rk.nonDigital||0)):''})</small> &nbsp; Surat keluar: <b id="msk_rk_k">${rk.keluar||0}</b> <small>(surat sah di Arsip surat)</small>`;
+  const tb=(rk.masuk||0)-(rk.digital||0)-(rk.nonDigital||0);
+  $('#msk_rk').innerHTML=`<p class="msk-per">${esc(per)}</p><div class="msk-stats"><div class="msk-stat"><small>Surat masuk</small><b id="msk_rk_m">${rk.masuk||0}</b><small>Digital ${rk.digital||0} &middot; Non digital ${rk.nonDigital||0}${tb>0?' &middot; Tipe belum diisi '+tb:''}</small></div>
+    <div class="msk-stat k"><small>Surat keluar</small><b id="msk_rk_k">${rk.keluar||0}</b><small>Surat sah di Arsip surat</small></div></div>`;
   const h=d.hitung||{},tot=(h.Baru||0)+(h.Direview||0)+(h.Selesai||0);
-  $('#msk_h').innerHTML=[['','Semua',tot]].concat(MSK_STATUS.map(s=>[s,s,h[s]||0])).map(([k,l,n])=>`<button type="button" class="msk-chip${MSK.st===k?' on':''}" onclick="mskSaring('st','${k}')">${esc(l)} (${n})</button>`).join('');
+  $('#msk_h').innerHTML=[['','Semua',tot]].concat(MSK_STATUS.map(s=>[s,s,h[s]||0])).map(([k,l,n])=>`<button type="button" class="msk-chip${MSK.st===k?' on':''}" onclick="mskSaring('st','${k}')"><b>${n}</b><span>${esc(l)}</span></button>`).join('');
   const sk={};(d.sekolah||[]).forEach(x=>sk[x.id]=x.nama);
   const rows=d.baris||[];
-  $('#msk_l').innerHTML=rows.length?`<div class="tw"><table><tr><th>Diterima</th><th>Surat</th><th>Status</th><th>Diteruskan</th><th>Berkas</th><th></th></tr>`+rows.map(x=>`<tr>
-    <td>${esc(mskTgl(x.diterima))}${x.status!=='Selesai'&&x.hari>=7?`<br><span class="msk-lama">${x.hari} hari belum selesai</span>`:''}</td>
-    <td><b>${esc(x.perihal)}</b><br><small>${esc(x.pengirim)}${x.nomor?' · '+esc(x.nomor):''}${x.tglSurat?' · tgl surat '+esc(mskTgl(x.tglSurat)):''}</small>${x.alamat||x.hp?`<br><small>${esc(x.alamat.split('\n').join(', '))}${x.alamat&&x.hp?' · ':''}${x.hp?'HP '+esc(x.hp):''}</small>`:''}${x.agenda?`<br><small>No. petunjuk: <b>${esc(x.agenda)}</b></small>`:''}<br><span class="msk-jenis">${esc(x.jenis)}</span> <span class="msk-jenis" style="background:${x.tipe==='Digital'?'#e0efff':x.tipe?'#f3ead9':'#eee'}">${esc(x.tipe||'Tipe belum diisi')}</span> <small>${x.sekolah?esc(sk[x.sekolah]||'(sekolah dihapus)'):'Umum'}</small>
-      ${x.jenis==='Undangan'?`<br><small>Acara: ${esc(mskTgl(x.tglAcara)||'belum diisi')} · Kehadiran: </small><select onchange="mskTandai('${esc(x.id)}',{kehadiran:this.value},this)" aria-label="Kehadiran">${mskOpt(MSK_HADIR,x.kehadiran||MSK_HADIR[0])}</select>`:''}
-      ${x.keterangan?`<div class="msk-ket">${esc(x.keterangan.length>160?x.keterangan.slice(0,160)+'...':x.keterangan)}</div>`:''}</td>
-    <td><select onchange="mskTandai('${esc(x.id)}',{status:this.value},this)" aria-label="Status">${mskOpt(MSK_STATUS,x.status)}</select></td>
-    <td><label style="margin:0"><input type="checkbox" style="width:auto" ${x.diteruskan?'checked':''} onchange="mskTandai('${esc(x.id)}',{diteruskan:this.checked},this)"> Sudah</label></td>
-    <td>${x.berkas?`<button class="btn sm ghost" onclick="mskBerkas('${esc(x.id)}')">Lihat</button>`:'<small>-</small>'}</td>
-    <td><div class="row" style="flex-wrap:nowrap"><button class="btn sm" onclick="mskForm('${esc(x.id)}')">Ubah</button><button class="btn bad sm" onclick="mskHapus('${esc(x.id)}')">Hapus</button></div></td></tr>`).join('')+'</table></div>'
+  $('#msk_l').innerHTML=rows.length?rows.map(x=>{const t=/^(\d{4})-(\d{2})-(\d{2})/.exec(x.diterima||'');return `<div class="msk-it ${esc(x.status)}" data-id="${esc(x.id)}">
+    <div class="msk-cal"><b>${t?+t[3]:'-'}</b><small>${t?MSK_BLN[+t[2]-1]:''}</small><small>${t?t[1]:''}</small></div>
+    <div><h4>${esc(x.perihal)}</h4><small>${esc(x.pengirim)}${x.nomor?' · '+esc(x.nomor):''}${x.tglSurat?' · tgl surat '+esc(mskTgl(x.tglSurat)):''}</small>${x.alamat||x.hp?`<br><small>${esc(x.alamat.split('\n').join(', '))}${x.alamat&&x.hp?' · ':''}${x.hp?'HP '+esc(x.hp):''}</small>`:''}${x.agenda?`<br><small>No. petunjuk: <b>${esc(x.agenda)}</b></small>`:''}
+      <div style="margin:6px 0"><span class="msk-jenis">${esc(x.jenis)}</span> <span class="msk-jenis" style="background:${x.tipe==='Digital'?'#e0efff':x.tipe?'#f3ead9':'#eee'}">${esc(x.tipe||'Tipe belum diisi')}</span> <small>${x.sekolah?esc(sk[x.sekolah]||'(sekolah dihapus)'):'Umum'}</small>${x.status!=='Selesai'&&x.hari>=7?` <span class="msk-lama">${x.hari} hari belum selesai</span>`:''}</div>
+      ${x.jenis==='Undangan'?`<small>Acara: ${esc(mskTgl(x.tglAcara)||'belum diisi')} · Kehadiran: </small><select style="width:auto" onchange="mskTandai('${esc(x.id)}',{kehadiran:this.value},this)" aria-label="Kehadiran">${mskOpt(MSK_HADIR,x.kehadiran||MSK_HADIR[0])}</select>`:''}
+      ${x.keterangan?`<div class="msk-ket">${esc(x.keterangan.length>160?x.keterangan.slice(0,160)+'...':x.keterangan)}</div>`:''}</div>
+    <div class="msk-aksi"><select onchange="mskTandai('${esc(x.id)}',{status:this.value},this)" aria-label="Status">${mskOpt(MSK_STATUS,x.status)}</select>
+      <label style="margin:0;font-weight:400"><input type="checkbox" style="width:auto" ${x.diteruskan?'checked':''} onchange="mskTandai('${esc(x.id)}',{diteruskan:this.checked},this)"> Sudah diteruskan</label>
+      <div class="row">${x.berkas?`<button class="btn sm ghost" onclick="mskBerkas('${esc(x.id)}')">Lihat berkas</button>`:''}<button class="btn sm" onclick="mskForm('${esc(x.id)}')">Ubah</button><button class="btn bad sm" onclick="mskHapus('${esc(x.id)}')">Hapus</button></div></div></div>`}).join('')
     +(d.total>d.perHal?`<div class="row" style="margin-top:10px;align-items:center"><button class="btn sm ghost" ${d.hal<=1?'disabled':''} onclick="mskHal(${d.hal-1})">Sebelumnya</button><small>Halaman ${d.hal} dari ${Math.ceil(d.total/d.perHal)} (${d.total} surat)</small><button class="btn sm ghost" ${d.hal*d.perHal>=d.total?'disabled':''} onclick="mskHal(${d.hal+1})">Berikutnya</button></div>`:'')
     :'<div class="empty">'+(MSK.q||MSK.st||MSK.jn||MSK.sek||MSK.tp||MSK.thn?'Tidak ada surat yang cocok dengan penyaringan.':'Belum ada surat masuk yang dicatat.')+'</div>'}
 
@@ -4345,9 +4434,9 @@ function mskForm(id){
   MSK.ed={id:id||'',file:null,hapus:false,ada:x?x.berkas:''};
   const v=x||{jenis:'Undangan',tipe:'Digital',status:'Baru',diterima:mskHariIni(),kehadiran:MSK_HADIR[0],diteruskan:false};
   M(`<h2>${x?'Ubah':'Catat'} surat masuk</h2><div style="max-width:680px">
-   <fieldset style="border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin:0 0 6px"><legend>Tipe surat</legend>
-    <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:2px 0"><input type="radio" name="msk_tipe" value="Digital" style="width:auto"${v.tipe==='Digital'?' checked':''}> Digital <small>(diterima lewat email, WhatsApp, atau aplikasi)</small></label>
-    <label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:2px 0"><input type="radio" name="msk_tipe" value="Non digital" style="width:auto"${v.tipe==='Non digital'?' checked':''}> Non digital <small>(kertas atau diantar langsung)</small></label></fieldset>
+   <fieldset style="border:0;padding:0;margin:0 0 6px"><legend style="font-weight:600;padding:0">Tipe surat</legend>
+    <label class="msk-tile"><input type="radio" name="msk_tipe" value="Digital" style="width:auto"${v.tipe==='Digital'?' checked':''}> Digital <small>(diterima lewat email, WhatsApp, atau aplikasi)</small></label>
+    <label class="msk-tile"><input type="radio" name="msk_tipe" value="Non digital" style="width:auto"${v.tipe==='Non digital'?' checked':''}> Non digital <small>(kertas atau diantar langsung)</small></label></fieldset>
    <label for="msk_jenis">Jenis surat</label><select id="msk_jenis" onchange="mskJenis()">${mskOpt(MSK_JENIS,v.jenis)}</select>
    <label for="msk_pengirim">Nama lembaga / pengirim</label><input id="msk_pengirim" maxlength="150" autocomplete="off" value="${esc(v.pengirim||'')}" placeholder="Contoh: Dinas Pendidikan Kota">
    <label for="msk_alamat">Alamat pengirim <small>(boleh kosong)</small></label><textarea id="msk_alamat" maxlength="250" style="min-height:56px">${esc(v.alamat||'')}</textarea>
