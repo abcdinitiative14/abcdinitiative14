@@ -5101,7 +5101,60 @@ async function bkiSimpan(){const b=$('#bki-sv');b.disabled=true;b.textContent='M
   try{const r=await api('bank.impor',{Mapel_ID:BK.mapel,Bab:$('#bki-b').value,Status:$('#bki-s').value,rows:BKI.rows,simpan:true});
     toast(r.valid+' soal diimpor'+(r.gagalJumlah?', '+r.gagalJumlah+' dilewati':''));BKI.rows=null;BK.sel={};BK.d=await api('bank.mapel');bkDraw()}
   catch(er){fail(er);b.disabled=false;b.textContent='Coba simpan lagi'}}
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
+/* ===== BANK SOAL - Tahap 2b: tombol "Ambil dari Bank" di halaman soal ujian (Fase5UI) =====
+   Tidak mengubah Fase5UI.html: uSoalDraw dibungkus, lalu tombol disisipkan di samping "Impor soal" (hanya muncul bila soal masih boleh diubah).
+   Soal DISALIN ke ujian lewat rute 'bank.ambil' (BankSoal.gs). Dua cara: pilih sendiri (hanya soal Aktif) atau acak per bab. */
+const BA={info:null,tab:'pilih',sel:{},bab:'',q:'',hal:1,list:null,n:0,tg:'',tmr:0};
+function bkSisip(){const im=document.querySelector('button[onclick="ujImport()"]');if(!im||document.getElementById('bka-btn'))return;
+  const b=document.createElement('button');b.id='bka-btn';b.className='btn ghost';b.textContent='Ambil dari Bank';b.onclick=bkAmbil;im.parentNode.insertBefore(b,im)}
+if(typeof uSoalDraw==='function'&&!uSoalDraw.bka){const o=uSoalDraw;uSoalDraw=function(){const r=o.apply(this,arguments);try{bkSisip()}catch(e){}return r};uSoalDraw.bka=1}
+async function bkAmbil(){const u=UJ.cur&&UJ.cur.ujian;if(!u)return;MT('<div class="skel"></div><br><div class="skel"></div>');
+  try{const i=await api('bank.ujian',{Ujian_ID:u.Ujian_ID});
+    if(i.terkunci){toast('Sudah ada murid yang mulai. Soal tidak bisa diubah.',1);uSoalDraw();return}
+    BA.info=i;BA.tab='pilih';BA.sel={};BA.bab='';BA.q='';BA.hal=1;BA.tg='';BA.n++;baDraw()}
+  catch(e){fail(e);uSoalDraw()}}
+function baDraw(){const i=BA.info,u=UJ.cur.ujian,nSel=Object.keys(BA.sel).length;
+  const kepala=`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Ambil soal dari Bank</h2><button class="btn ghost" id="ba-x">Kembali ke soal ujian</button></div>
+  <p><small>${esc(u.Judul)} &middot; ${esc(i.mapel)}. Di ujian sekarang ${i.ada} soal (sisa kapasitas ${i.sisa}). Soal Aktif di bank: ${i.total}. Soal disalin ke ujian; mengubah soal di bank sesudahnya tidak mengubah ujian ini.</small></p>`;
+  if(!i.total){MT(kepala+'<p style="padding:14px 0">Belum ada soal berstatus <b>Aktif</b> untuk mapel ini. Buka menu <b>Bank Soal</b>, tambahkan soal, lalu ubah statusnya menjadi Aktif.</p>');$('#ba-x').onclick=()=>uSoalDraw();return}
+  MT(kepala+`<div class="bk-bab" id="ba-tab"><button type="button" class="${BA.tab==='pilih'?'on':''}" data-t="pilih">Pilih sendiri</button><button type="button" class="${BA.tab==='acak'?'on':''}" data-t="acak">Acak per bab</button></div><div id="ba-isi"></div>`);
+  $('#ba-x').onclick=()=>uSoalDraw();
+  $('#ba-tab').onclick=e=>{const t=e.target.dataset&&e.target.dataset.t;if(t&&t!==BA.tab){BA.tab=t;baDraw()}};
+  if(BA.tab==='pilih')baPilih();else baAcak()}
+function baPilih(){const i=BA.info,el=$('#ba-isi');
+  el.innerHTML=`<div class="bk-f"><select id="ba-b" aria-label="Bab"><option value="">Semua bab</option>${i.bab.map(b=>`<option ${b.Bab.toLowerCase()===BA.bab.toLowerCase()?'selected':''}>${esc(b.Bab)}</option>`).join('')}</select><input id="ba-q" type="search" placeholder="Cari soal" aria-label="Cari" value="${esc(BA.q)}"></div><div id="ba-l"><div class="skel"></div></div><div id="ba-bar"></div>`;
+  $('#ba-b').onchange=e=>{BA.bab=e.target.value;BA.hal=1;baMuat()};
+  $('#ba-q').oninput=e=>{BA.q=e.target.value;clearTimeout(BA.tmr);BA.tmr=setTimeout(()=>{BA.hal=1;baMuat()},350)};
+  baMuat()}
+function baMuat(){const my=++BA.n;
+  api('bank.list',{Mapel_ID:BA.info.Mapel_ID,Status:'Aktif',Bab:BA.bab,q:BA.q,hal:BA.hal}).then(r=>{if(my!==BA.n||!$('#ba-l'))return;BA.list=r;BA.hal=r.hal;baList()}).catch(e=>{if(my===BA.n&&$('#ba-l')){fail(e);$('#ba-l').innerHTML='<p>Gagal memuat soal.</p>'}})}
+function baList(){const r=BA.list,el=$('#ba-l');if(!el)return;
+  if(!r.items.length){el.innerHTML='<p style="padding:14px 0;opacity:.8">Tidak ada soal Aktif yang cocok.</p>';baBar();return}
+  const semua=r.items.every(x=>BA.sel[x.Bank_ID]);
+  el.innerHTML=`<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin:6px 0"><input type="checkbox" id="ba-all" style="width:18px;height:18px;margin:0" ${semua?'checked':''}> Pilih semua di halaman ini</label>`+r.items.map(x=>`<div class="bk-k"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BA.sel[x.Bank_ID]?'checked':''} aria-label="Pilih soal"><div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">${BK_JN[x.Jenis_Soal]||esc(x.Jenis_Soal)}</span><span class="bk-c">${esc(x.Tingkat)}</span></div><div class="bk-t">${esc(x.Ringkas)||'<i>(tanpa teks)</i>'}</div></div></div>`).join('')+
+    `<div class="bk-p"><button class="btn ghost sm" id="ba-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} soal)</small></span><button class="btn ghost sm" id="ba-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
+  el.onclick=e=>{const t=e.target;
+    if(t.id==='ba-pv'){BA.hal--;baMuat()}else if(t.id==='ba-nx'){BA.hal++;baMuat()}
+    else if(t.id==='ba-all'){r.items.forEach(x=>{if(t.checked)BA.sel[x.Bank_ID]=1;else delete BA.sel[x.Bank_ID]});baList()}
+    else if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BA.sel[t.dataset.i]=1;else delete BA.sel[t.dataset.i];baBar();const a=$('#ba-all');if(a)a.checked=r.items.every(x=>BA.sel[x.Bank_ID])}};
+  baBar()}
+function baBar(){const n=Object.keys(BA.sel).length,el=$('#ba-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" id="ba-go">Salin ${n} soal ke ujian</button><button class="btn ghost sm" id="ba-clr">Kosongkan pilihan</button></div>`:'';
+  if(n){$('#ba-go').onclick=()=>baKirim({ids:Object.keys(BA.sel)},n);$('#ba-clr').onclick=()=>{BA.sel={};baList()}}}
+function baAcak(){const i=BA.info,el=$('#ba-isi'),tg=BA.tg,ada=b=>tg?b[tg]:b.total;
+  el.innerHTML=`<p><small>Isi berapa soal yang diambil dari tiap bab. Soal dipilih acak dari soal Aktif; soal yang sudah ada di ujian ini tidak ikut diacak.</small></p>
+  <div style="max-width:260px"><label for="ba-tg">Tingkat kesulitan</label><select id="ba-tg"><option value="">Semua tingkat</option>${['Mudah','Sedang','Sulit'].map(t=>`<option ${t===tg?'selected':''}>${t}</option>`).join('')}</select></div>
+  <div class="tw" style="margin-top:10px"><table><tr><th>Bab</th><th>Tersedia</th><th>Ambil</th></tr>${i.bab.map((b,k)=>`<tr><td>${esc(b.Bab)}</td><td>${ada(b)}</td><td><input type="number" min="0" max="${ada(b)}" value="0" data-k="${k}" style="width:90px;margin:0" ${ada(b)?'':'disabled'} aria-label="Jumlah soal ${esc(b.Bab)}"></td></tr>`).join('')}</table></div>
+  <p class="row" style="margin-top:12px"><button class="btn" id="ba-go" disabled>Ambil soal acak</button><small id="ba-t"></small></p>`;
+  $('#ba-tg').onchange=e=>{BA.tg=e.target.value;baAcak()};
+  const hit=()=>{let t=0;const a=[];el.querySelectorAll('input[data-k]').forEach(x=>{const n=Math.max(0,Math.floor(Number(x.value)||0));if(n){t+=n;a.push({Bab:i.bab[Number(x.dataset.k)].Bab,n})}});
+    $('#ba-t').textContent=t?t+' soal akan disalin (sisa kapasitas ujian '+i.sisa+')':'';$('#ba-go').disabled=!t;return [t,a]};
+  el.oninput=hit;$('#ba-go').onclick=()=>{const [t,a]=hit();if(t)baKirim({acak:a,Tingkat:BA.tg},t)}}
+async function baKirim(p,n){const b=$('#ba-go');if(b){b.disabled=true;b.textContent='Menyalin...'}
+  try{const r=await api('bank.ambil',Object.assign({Ujian_ID:UJ.cur.ujian.Ujian_ID},p));UJ.cur.soal=r.soal;uSyncCount();
+    toast(r.n+' soal disalin ke ujian'+(r.lewat?'; '+r.lewat+' dilewati karena sudah ada':''));uSoalDraw()}
+  catch(e){fail(e);if(b){b.disabled=false;b.textContent='Coba lagi'}}}
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
 Object.assign(VIEWS,{'g-bank':vGBank});
 </script>
 <style>
