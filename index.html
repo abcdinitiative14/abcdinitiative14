@@ -252,7 +252,7 @@ function ask(msg,o){o=o||{};return new Promise(res=>{
   document.addEventListener('keydown',key,true);m.classList.add('on');
   setTimeout(()=>(inp?v:(o.bad?nob:okb)).focus(),30)})}
 function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3500)}
-async function api(a,p){let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
+window.TIMING=window.TIMING||[];async function api(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
 function fail(e){if(e.message==='SESI_HABIS'){clearSess();toast('Sesi berakhir, silakan masuk lagi',1);go('#/login')}else toast(e.message,1)}
 function clearSess(){S={token:'',user:null};localStorage.removeItem('tk');localStorage.removeItem('us');for(const k in MEM)delete MEM[k];(window.LOGOUT_HOOKS||[]).forEach(f=>{try{f()}catch(e){}});if(typeof mrReset==='function')mrReset();navAuth()}
 
