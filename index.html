@@ -6352,19 +6352,22 @@ const dcGuru=()=>!!(S&&S.user&&(S.user.role==='Guru'||S.user.role==='Wali Kelas'
 function dcCover(name,key,edit){const h=dcHash(name),p=DC_PAL[h%DC_PAL.length],v=(h>>>3)%DC_ART.length,ed=edit&&dcGuru()&&key;
   return `<div class="cv" data-ck="${esc(key||'')}" style="--c1:${p[0]};--c2:${p[1]}"><svg viewBox="0 0 220 120" aria-hidden="true">${DC_ART[v]}</svg>`+
    (ed?`<span class="cv-act"><span class="cv-b" role="button" tabindex="0" title="Ganti gambar" aria-label="Ganti gambar mata pelajaran" data-ck="${esc(key)}" onclick="dcPick(event,this.dataset.ck)">${DC_CAM}</span><span class="cv-b cv-x" role="button" tabindex="0" title="Hapus gambar" aria-label="Hapus gambar mata pelajaran" data-ck="${esc(key)}" onclick="dcDel(event,this.dataset.ck)">${DC_X}</span></span>`:'')+`</div>`}
-const DCV={map:null,t:0,tk:'',blob:{}};
+const DCV={map:null,t:0,tk:'',blob:{},p:null,pt:'',f:{}};   // p = permintaan daftar yang sedang jalan, f = permintaan gambar yang sedang jalan (per kunci)
 async function dcCoverLoad(){
-  const els=[...document.querySelectorAll('#dmain .cv[data-ck]')];if(!els.length)return;
+  if(!document.querySelector('#dmain .cv[data-ck]'))return;
   const tk=S&&S.token;
-  try{if(!DCV.map||DCV.tk!==tk||Date.now()-DCV.t>60000){const m=await api('mapel.cover.list');if(!S||S.token!==tk)return;DCV.map=m||{};DCV.t=Date.now();DCV.tk=tk}}catch(e){return}
+  try{if(!DCV.map||DCV.tk!==tk||Date.now()-DCV.t>60000){
+      if(!DCV.p||DCV.pt!==tk){DCV.pt=tk;DCV.p=api('mapel.cover.list').finally(()=>{DCV.p=null})}   // daftar digambar beberapa kali berturut-turut: satu permintaan dipakai bersama
+      const m=await DCV.p;if(!S||S.token!==tk)return;DCV.map=m||{};DCV.t=Date.now();DCV.tk=tk}}catch(e){return}
   document.querySelectorAll('#dmain .cv[data-ck]').forEach(dcShow)}
 function dcShow(el){const k=el.dataset.ck,ts=DCV.map&&DCV.map[k];
   if(!ts){el.classList.remove('has-img');const im=el.querySelector('img.cvi');if(im)im.remove();return}
   const bk=k+'@'+ts,put=u=>{if(!document.body.contains(el))return;let im=el.querySelector('img.cvi');if(!im){im=new Image();im.className='cvi';im.alt='';el.insertBefore(im,el.firstChild)}im.src=u;el.classList.add('has-img')};
   if(DCV.blob[bk])return put(DCV.blob[bk]);
   const i=k.indexOf('|'),tk=S&&S.token;
-  api('mapel.cover.get',{Kelas_ID:k.slice(0,i),Mapel_ID:k.slice(i+1)}).then(r=>{if(!S||S.token!==tk)return;const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)u[j]=bin.charCodeAt(j);
-    DCV.blob[bk]=URL.createObjectURL(new Blob([u],{type:r.mime}));put(DCV.blob[bk])}).catch(()=>{})}
+  const ambil=DCV.f[bk]||(DCV.f[bk]=api('mapel.cover.get',{Kelas_ID:k.slice(0,i),Mapel_ID:k.slice(i+1)}).then(r=>{if(!S||S.token!==tk)throw new Error('SESI_BERUBAH');const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let j=0;j<bin.length;j++)u[j]=bin.charCodeAt(j);
+    return DCV.blob[bk]=URL.createObjectURL(new Blob([u],{type:r.mime}))}).finally(()=>{delete DCV.f[bk]}));   // kartu yang sama digambar ulang saat gambar masih dimuat: tidak diminta dua kali
+  ambil.then(put).catch(()=>{})}
 function dcResize(f,max){return new Promise((ok,no)=>{
   if(!/^image\/(jpeg|png)$/.test(f.type))return no(new Error('Gambar harus berformat JPG atau PNG.'));
   if(f.size>15*1024*1024)return no(new Error('Gambar terlalu besar (maks 15 MB sebelum diperkecil)'));
@@ -6387,7 +6390,7 @@ async function dcDel(ev,key){ev.preventDefault();ev.stopPropagation();
   try{const i=key.indexOf('|');await api('mapel.cover.save',{Kelas_ID:key.slice(0,i),Mapel_ID:key.slice(i+1),hapus:true});
     if(DCV.map)delete DCV.map[key];document.querySelectorAll('#dmain .cv[data-ck="'+key+'"]').forEach(dcShow);toast('Gambar dihapus')}
   catch(e){fail(e)}dcBusy(key,false)}
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{DCV.map=null;DCV.t=0;DCV.tk='';for(const k in DCV.blob){try{URL.revokeObjectURL(DCV.blob[k])}catch(e){}delete DCV.blob[k]}});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{DCV.map=null;DCV.t=0;DCV.tk='';DCV.p=null;DCV.f={};for(const k in DCV.blob){try{URL.revokeObjectURL(DCV.blob[k])}catch(e){}delete DCV.blob[k]}});
 (function(){
   const uri=s=>'url("data:image/svg+xml,'+encodeURIComponent(s)+'")';
   const L=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 156">${dcBk(20,112,152,30,'#ef6a3d')}${dcBk(12,84,158,30,'#7b5cd6')}${dcBk(30,56,122,30,'#3fb68b')}<g fill="none" stroke="#f4b740" stroke-width="5" stroke-linecap="round"><circle cx="66" cy="34" r="17"/><circle cx="108" cy="34" r="17"/><path d="M83 33q4-5 8 0M49 30L38 24M125 30L136 24"/></g></svg>`;
