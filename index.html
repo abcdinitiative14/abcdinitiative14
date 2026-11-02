@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ABCD initiative</title>
@@ -211,7 +213,7 @@ footer{background:var(--ink);color:#b9d0da;padding:22px 0;font-size:14px}
 </form></div>
 <div id="toast"></div>
 
-<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
+<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{"school_name":"ABCD initiative","profil_sekolah":"\u003cp>\u003cstrong>Al Biruni Career Development (ABCD)\u003c/strong> adalah komunitas strategis yang hadir untuk \u003cstrong>membangun sinergi berkesinambungan antara alumni dan almamater Al-Biruni Mandiri.\u003c/strong> Komunitas ini berfungsi sebagai jembatan penghubung yang merekatkan kembali ikatan silaturahmi, sekaligus menjadi mitra aktif sekolah dalam mengakselerasi pengembangan potensi siswa. Melalui kolaborasi dengan para alumni yang telah berkiprah di berbagai sektor, ABCD berdedikasi untuk memberikan bimbingan, inspirasi, dan pembekalan nyata agar siswa-siswi Al-Biruni Mandiri siap menavigasi perjalanan karir mereka di masa depan.\u003c/p>","visi":"\u003cp>Menjadi pusat kolaborasi dan sinergi terdepan antara alumni dan Al-Biruni Mandiri untuk mencetak generasi penerus yang berkarakter, berdaya saing tinggi, dan tangguh dalam menghadapi tantangan karir masa depan.\u003c/p>","misi":"\u003cul>\u003cli>Memperkuat Jejaring: Membangun ekosistem komunikasi yang erat dan berkelanjutan antara alumni lintas angkatan dengan pihak sekolah.\u003c/li>\u003cli>Mentoring dan Edukasi: Menyelenggarakan program bimbingan karir, sharing session, dan pengembangan soft skill maupun hard skill bagi siswa dengan melibatkan alumni sebagai mentor.\u003c/li>\u003cli>Akselerasi Peluang: Menjadi pusat informasi dan fasilitator terkait peluang pendidikan lanjutan, beasiswa, magang, dan wawasan dunia kerja profesional bagi siswa.\u003c/li>\u003cli>Sinergi Kurikulum Karir: Berkolaborasi dengan pihak sekolah dalam merancang program atau kegiatan yang relevan dengan tren industri terkini untuk memaksimalkan kesiapan karir siswa.\u003c/li>\u003c/ul>","alamat":"","kontak":"abcdinitiative14@gmail.com"},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
   window.addEventListener('load', function () {
     fetch(window.API_URL + '?aksi=boot').then(function (r) { return r.json(); }).then(function (b) {
       if (!b || !Array.isArray(b.articles)) return;
@@ -252,11 +254,25 @@ function ask(msg,o){o=o||{};return new Promise(res=>{
   document.addEventListener('keydown',key,true);m.classList.add('on');
   setTimeout(()=>(inp?v:(o.bad?nob:okb)).focus(),30)})}
 function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3500)}
-window.TIMING=window.TIMING||[];async function api(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
+window.TIMING=window.TIMING||[];var API_P={};
+var API_BACA=/\.(get|list|data|cek|cari|all|ringkasan|badge)$/;
+async function apiKirim(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}
+const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(window.TIMING.length>200)window.TIMING.shift();
+if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
+const apiSalin=d=>{try{return structuredClone(d)}catch(e){return d==null?d:JSON.parse(JSON.stringify(d))}};
+function api(a,p){
+if(!API_BACA.test(a)){API_P={};return apiKirim(a,p).finally(()=>{API_P={}})}
+const k=a+'|'+S.token+'|'+JSON.stringify(p||{});
+if(!API_P[k]){const q=apiKirim(a,p);API_P[k]=q;const b=()=>{if(API_P[k]===q)delete API_P[k]};q.then(b,b)}
+return API_P[k].then(apiSalin)}
 function fail(e){if(e.message==='SESI_HABIS'){clearSess();toast('Sesi berakhir, silakan masuk lagi',1);go('#/login')}else toast(e.message,1)}
 function clearSess(){S={token:'',user:null};localStorage.removeItem('tk');localStorage.removeItem('us');for(const k in MEM)delete MEM[k];(window.LOGOUT_HOOKS||[]).forEach(f=>{try{f()}catch(e){}});if(typeof mrReset==='function')mrReset();navAuth()}
 
 async function swr(key,a,p,render){const R=d=>{try{render(d)}catch(x){console.warn(x)}};if(MEM[key])R(MEM[key]);try{const d=await api(a,p);MEM[key]=d;R(d)}catch(e){fail(e)}}
+
+async function swrF(key,a,p,render,ms){const R=d=>{try{render(d)}catch(x){console.warn(x)}};
+  if(MEM[key]){R(MEM[key]);if(Date.now()-(MEM[key+'T']||0)<ms)return}
+  try{const d=await api(a,p);MEM[key]=d;MEM[key+'T']=Date.now();R(d)}catch(e){fail(e)}}
 
  
 const CATS=['Berita','Beasiswa','Jalur Kampus'];
@@ -309,7 +325,8 @@ async function doLogin(e){e.preventDefault();$('#bLogin').disabled=true;$('#bLog
 async function doReg(e){e.preventDefault();$('#bReg').disabled=true;$('#bReg').textContent='Memproses...';
   try{toast(await api('register',{cabang:cabVal('rc'),nama:$('#rn').value,email:$('#re').value,username:$('#ru').value,password:$('#rp').value}));swAuth('l')}
   catch(x){toast(x.message,1)}$('#bReg').disabled=false;$('#bReg').textContent='Daftar';return false}
-async function logout(){try{await api('logout')}catch(e){}clearSess();go('#/')}
+function logout(){const tk=S.token;clearSess();go('#/');   
+  try{fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logout',token:tk,payload:{}}),keepalive:true}).catch(()=>{})}catch(e){}}
 
  
 const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['masuk','Surat masuk'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
@@ -328,7 +345,7 @@ function vSoon(){M(`<h2>Segera hadir</h2><div class="empty">Modul untuk peran <b
 async function pw(){const l=await ask('Masukkan password Anda saat ini.',{title:'Ganti password',input:{type:'password',label:'Password lama',auto:'current-password'},ok:'Lanjut'});if(!l)return;const b=await ask('Gunakan minimal 8 karakter.',{title:'Password baru',input:{type:'password',label:'Password baru',auto:'new-password'},ok:'Ganti password'});if(!b)return;api('password.ganti',{lama:l,baru:b}).then(()=>toast('Password diganti')).catch(fail)}
 
 function vRingkasan(){M('<h2>Ringkasan</h2><div class="stats" id="st"></div>');if(!MEM.stats)$('#st').innerHTML='<div class="skel"></div>';
-  swr('stats','stats.get',{},d=>{if(!$('#st'))return;$('#st').innerHTML=Object.entries({Pengguna:d.pengguna,'Menunggu verifikasi':d.menunggu,Siswa:d.siswa,Guru:d.guru,Kelas:d.kelas,Artikel:d.artikel,Draft:d.draft,'Versi skema':d.versiSkema}).map(([k,v])=>`<div class="stat"><b>${v}</b>${k}</div>`).join('')})}
+  swrF('stats','stats.get',{},d=>{if(!$('#st'))return;$('#st').innerHTML=Object.entries({Pengguna:d.pengguna,'Menunggu verifikasi':d.menunggu,Siswa:d.siswa,Guru:d.guru,Kelas:d.kelas,Artikel:d.artikel,Draft:d.draft,'Versi skema':d.versiSkema}).map(([k,v])=>`<div class="stat"><b>${v}</b>${k}</div>`).join('')},20000)}
 
 function vPengguna(){M('<h2>Pengguna</h2><div class="tw" id="ut"></div>');if(!MEM.users)$('#ut').innerHTML='<div class="skel"></div>';
   swr('users','users.list',{},l=>{const ro=['','Admin','Guru','Wali Kelas','Murid'];if(!$('#ut'))return;
@@ -408,7 +425,7 @@ function opts(t,v,d,e){let a;
 function vMaster(e){const c=ENT[e],hasK=c.cols.some(x=>x[0]==='Kelas_ID');
  M(`<div class="row" style="justify-content:space-between"><h2>${c.t}</h2>${c.ro?'':`<button class="btn" onclick="formMaster('${e}')">Tambah</button>`}</div>${c.ro?`<div class="empty" style="margin:0 0 12px;text-align:left"><b>Hanya tampilan.</b> ${c.t} ditambah, diubah, dan dihapus dari menu <a href="#/dashboard/pengguna" style="color:var(--teal);font-weight:700">Pengguna</a>: pilih akun, lalu atur ${e==='siswa'?'NIS dan kelas':e==='guru'?'nama, email, wali kelas, dan mapel yang diampu':e==='wali'?'wali kelas':'mapel yang diampu'} di sana.</div>`:''}<div class="row" style="margin:10px 0"><input id="mq" placeholder="Cari..." style="max-width:240px" oninput="drawMaster('${e}')">${hasK?`<select id="mk" style="max-width:260px" onchange="drawMaster('${e}')"></select>`:''}</div><div class="tw" id="mt"></div>`);
  if(!MEM.master)$('#mt').innerHTML='<div class="skel"></div>';
- swr('master','master.all',{},d=>{if(!$('#mt'))return;const k=$('#mk');if(k){const cur=k.value;k.innerHTML='<option value="">Semua kelas</option>'+d.kelas.map(x=>`<option value="${esc(x.Kelas_ID)}">${esc(x.Nama_Kelas)} (${esc(x.Tahun_Ajaran)})</option>`).join('');k.value=cur}drawMaster(e)})}
+ swrF('master','master.all',{},d=>{if(!$('#mt'))return;const k=$('#mk');if(k){const cur=k.value;k.innerHTML='<option value="">Semua kelas</option>'+d.kelas.map(x=>`<option value="${esc(x.Kelas_ID)}">${esc(x.Nama_Kelas)} (${esc(x.Tahun_Ajaran)})</option>`).join('');k.value=cur}drawMaster(e)},20000)}
 // tempat dan tanggal lahir menjadi satu teks, mis. "Makassar, 12 Mei 2010" (tanggal yang belum berformat tahun-bulan-tanggal ditampilkan apa adanya)
 const ttlTeks=r=>{const t=String(r.Tempat_Lahir||'').trim(),s=String(r.Tanggal_Lahir||'').trim(),m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s),b=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],tg=m?(+m[3])+' '+b[+m[2]-1]+' '+m[1]:s;return [t,tg].filter(Boolean).join(', ')};
 function drawMaster(e){const d=MEM.master,c=ENT[e];if(!d||!$('#mt'))return;const L=LK(d);
@@ -491,7 +508,7 @@ navAuth();route();kampusLoad();
 
 const ROLES=['Admin','Guru','Wali Kelas','Murid'];
 const PG={tab:'',sel:new Set(),tampil:[]};   
-const PGU={id:'',role:'',ta:'',rows:[],wali:''};   
+const PGU={id:'',role:'',ta:'',rows:[],wali:'',kotor:0,bg:0};   
 const PGR={sibuk:false};                            
 const PGI_KOLOM={nama:'nama',namalengkap:'nama',username:'username',user:'username',password:'password',katasandi:'password',sandi:'password',email:'email',role:'role',peran:'role',aktif:'aktif',status:'aktif',ta:'ta',tahunajaran:'ta',nis:'nis',kelas:'kelas',mengajar:'mengajar',wali:'wali',walikelas:'wali',niy:'niy',tempat:'tempat',tempatlahir:'tempat',tanggal:'tanggal',tanggallahir:'tanggal',tgllahir:'tanggal'};
 const PGI_MAX=300, PGI_CHUNK=15;   
@@ -511,7 +528,7 @@ function vPengguna2(){
   <div class="row" style="margin:10px 0"><input id="uq" placeholder="Cari nama, username, atau email..." style="max-width:300px" oninput="drawUsers()"><span id="pgbar" class="row"></span></div>
   <div id="ut"></div>`);
   if(!MEM.users)$('#ut').innerHTML='<div class="skel"></div>';
-  swr('users','users.list',{},()=>drawUsers());pgDaftarMuat()}
+  swrF('users','users.list',{},()=>drawUsers(),20000);pgDaftarMuat()}
 
 const uRole=u=>u.Role||'-';
 function uTab(t){PG.tab=t;drawUsers()}
@@ -562,14 +579,15 @@ function pgDaftarDraw(buka){const el=$('#pgreg');if(!el)return;
 function pgMenunggu(){const el=$('#pgwait');if(!el||!MEM.users)return;const n=MEM.users.filter(u=>!u.Role).length;
   el.innerHTML=n?`<b>${n}</b> akun belum diberi role (menunggu verifikasi) &middot; <a href="javascript:void 0" onclick="uTab('-')" style="color:var(--teal);font-weight:600">Lihat</a>`:'Tidak ada akun yang menunggu verifikasi.'}
 async function pgDaftarMuat(){
-  try{const r=await api('registrasi.get');pgDaftarDraw(r.buka!==false)}
-  catch(e){if(e.message==='SESI_HABIS')return fail(e);const el=$('#pgreg');
+  if(MEM.reg){pgDaftarDraw(MEM.reg.buka!==false);if(Date.now()-(MEM.regT||0)<20000)return}   
+  try{const r=await api('registrasi.get');MEM.reg=r;MEM.regT=Date.now();pgDaftarDraw(r.buka!==false)}
+  catch(e){if(e.message==='SESI_HABIS')return fail(e);if(MEM.reg)return;const el=$('#pgreg');
     if(el)el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><span><b>Pendaftaran mandiri</b><br><small>Status belum bisa dimuat (${esc(e.message)}).</small></span><button class="btn ghost sm" onclick="pgDaftarMuat()">Coba lagi</button></div>`}}
 async function pgDaftarSet(buka){if(PGR.sibuk)return;PGR.sibuk=true;   // penjaga dipasang sebelum dialog, jadi klik ganda tidak membuka dua dialog atau mengirim dua permintaan
   try{
     if(!await ask(buka?'Buka pendaftaran mandiri? Siapa pun bisa mengirim pendaftaran dari halaman depan. Akun baru tetap menunggu verifikasi Anda.':'Tutup pendaftaran mandiri? Formulir pendaftaran di halaman depan dinonaktifkan. Akun yang sudah mendaftar tidak terpengaruh.',{title:buka?'Buka pendaftaran':'Tutup pendaftaran',ok:buka?'Buka':'Tutup'}))return;
     const b=$('#pgregb');if(b)b.disabled=true;
-    try{const r=await api('registrasi.set',{buka:buka===true});pgDaftarDraw(r.buka!==false);toast(r.buka?'Pendaftaran mandiri dibuka':'Pendaftaran mandiri ditutup')}
+    try{const r=await api('registrasi.set',{buka:buka===true});MEM.reg=r;MEM.regT=Date.now();pgDaftarDraw(r.buka!==false);toast(r.buka?'Pendaftaran mandiri dibuka':'Pendaftaran mandiri ditutup')}
     catch(e){fail(e);pgDaftarMuat()}   
   }finally{PGR.sibuk=false}}
 
@@ -598,13 +616,20 @@ const pgOptMapel=(d,sel)=>'<option value="">- pilih mata pelajaran -</option>'+d
   .sort((a,b)=>String(a.Nama_Mapel).localeCompare(String(b.Nama_Mapel))).map(m=>`<option value="${esc(m.Mapel_ID)}" ${m.Mapel_ID===sel?'selected':''}>${esc(m.Kode_Mapel)} - ${esc(m.Nama_Mapel)}</option>`).join('');
 const pgKartu=(judul,isi)=>`<div class="dcard" style="margin-bottom:16px;max-width:600px"><h3 style="margin-top:0">${judul}</h3>${isi}</div>`;
 
+/* tanda ringkas data yang dipakai halaman Ubah, untuk membandingkan simpanan dengan data segar */
+function pgSig(u,d){const g=d.guru.find(x=>x.User_ID===u.User_ID),gid=g?g.Guru_ID:'#';
+  return JSON.stringify([d.kelas.length,d.mapel.length,g||0,d.siswa.find(x=>x.User_ID===u.User_ID)||0,d.pengampu.filter(r=>r.Guru_ID===gid).map(r=>r.Kelas_ID+r.Mapel_ID+r.Tahun_Ajaran),d.wali.filter(r=>r.Guru_ID===gid).map(r=>r.Kelas_ID+r.Tahun_Ajaran),d.siswa.filter(x=>!x.User_ID).length])}
 async function pgUbah(id){
   const u=(MEM.users||[]).find(x=>x.User_ID===id);if(!u)return;
-  PGU.id=id;PGU.role=u.Role||'';
+  PGU.id=id;PGU.role=u.Role||'';PGU.kotor=0;
   M(`<div class="row" style="justify-content:space-between"><h2>Ubah pengguna</h2><button class="btn ghost" onclick="vPengguna2()">Kembali</button></div>
   <p><b>${esc(u.Nama_Lengkap)}</b> (${esc(u.Username)}) &middot; ${u.Role?esc(u.Role):'belum ada role'}</p><div id="pgu"><div class="skel"></div></div>`);
-  try{const d=await api('master.all');MEM.master=d;if(PGU.id!==id||!$('#pgu'))return;pgUbahDraw(u,d)}
-  catch(e){if(e.message==='SESI_HABIS')return fail(e);if($('#pgu'))$('#pgu').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
+  const pu=$('#pgu');pu.oninput=pu.onchange=()=>{PGU.kotor=1};   // pengguna mulai mengisi: data segar tidak boleh menimpa isian
+  const c=MEM.master;let sg='';
+  if(c){pgUbahDraw(u,c);sg=pgSig(u,c);if(Date.now()-(MEM.masterT||0)<20000)return}   // simpanan tampil seketika; masih segar = tanpa panggilan
+  try{const d=await api('master.all');MEM.master=d;MEM.masterT=Date.now();if(PGU.id!==id||!$('#pgu'))return;
+    if(!c)pgUbahDraw(u,d);else if(!PGU.kotor&&pgSig(u,d)!==sg)pgUbahDraw(u,d)}
+  catch(e){if(e.message==='SESI_HABIS')return fail(e);if(c)return;if($('#pgu'))$('#pgu').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
 
 function pgUbahDraw(u,d){
   const prof=pgKartu('Profil',`<label for="pgn">Nama lengkap</label><input id="pgn" value="${esc(u.Nama_Lengkap)}" autocomplete="off">
@@ -639,8 +664,15 @@ async function pgSimpanProfil(){const b=$('#pgpb'),nama=$('#pgn').value,email=$(
     if(g&&g.value!==pgIso(PGN.tanggal))p.tanggal=g.value}
   try{const r=await api('user.profil.save',p);const u=(MEM.users||[]).find(x=>x.User_ID===PGU.id);if(u){u.Nama_Lengkap=r.Nama_Lengkap;u.Email=r.Email}
     if(PGN.ada){PGN.niy=r.NIY||'';PGN.tempat=r.Tempat_Lahir||'';PGN.tanggal=r.Tanggal_Lahir||''}
-    delete MEM.master;delete MEM.stats;toast('Profil tersimpan')}
+    pgPatchProfil(r);delete MEM.stats;toast('Profil tersimpan')}
   catch(e){fail(e)}if($('#pgpb'))$('#pgpb').disabled=false}
+
+/* simpanan master.all diperbarui di tempat setelah simpan (tanpa mengambil ulang seluruh tabel) */
+function pgPatchProfil(r){const d=MEM.master;if(!d)return;
+  const ak=d.akun.find(x=>x.User_ID===PGU.id);if(ak)ak.Nama_Lengkap=r.Nama_Lengkap;
+  const g=d.guru.find(x=>x.User_ID===PGU.id),w=d.siswa.find(x=>x.User_ID===PGU.id);
+  if(g){g.Nama_Guru=r.Nama_Lengkap;g.Email=r.Email;g.NIY=r.NIY||'';g.Tempat_Lahir=r.Tempat_Lahir||'';g.Tanggal_Lahir=r.Tanggal_Lahir||''}
+  if(w){w.Nama_Siswa=r.Nama_Lengkap;w.Tempat_Lahir=r.Tempat_Lahir||'';w.Tanggal_Lahir=r.Tanggal_Lahir||''}}
 
 /* murid: NIS dan kelas */
 function pgMuridHtml(u,d){
@@ -657,11 +689,11 @@ function pgMuridHtml(u,d){
    (kosong&&yatim?pgKartu('Tautkan ke siswa yang sudah ada',`<p><small>Untuk siswa yang datanya sudah ada (mis. hasil impor) tetapi belum punya akun. Data kosong yang dibuat otomatis untuk akun ini akan dibersihkan.</small></p>
     <input id="pgsq" placeholder="Cari NIS atau nama siswa..." oninput="pgTautkanCari()" autocomplete="off"><select id="pgsw" style="margin-top:8px">${pgOptSiswa(d,'')}</select>
     <p><button class="btn ghost" id="pgtk" onclick="pgTautkan()">Tautkan</button></p>`):'')}
-function pgMuridTa(){const d=MEM.master,k=$('#pgkl');if(!d||!k)return;PGU.ta=$('#pgta').value;k.innerHTML=pgOptKelas(d,PGU.ta,'')}
+function pgMuridTa(){const d=MEM.master,k=$('#pgkl');if(!d||!k)return;PGU.kotor=1;PGU.ta=$('#pgta').value;k.innerHTML=pgOptKelas(d,PGU.ta,'')}
 async function pgSimpanMurid(){const b=$('#pgsv'),nis=$('#pgnis').value.trim(),ta=$('#pgta').value,kelas=$('#pgkl').value;
   if(!nis||!kelas){toast('NIS dan kelas wajib diisi',1);return}
   b.disabled=true;b.textContent='Menyimpan...';
-  try{await api('user.tugas.save',{id:PGU.id,ta,nis,kelas});delete MEM.master;delete MEM.stats;toast('Kelas dan NIS tersimpan')}catch(e){fail(e)}
+  try{await api('user.tugas.save',{id:PGU.id,ta,nis,kelas});const sw=MEM.master&&MEM.master.siswa.find(x=>x.User_ID===PGU.id);if(sw){sw.NIS=nis;sw.Kelas_ID=kelas;sw.Tahun_Ajaran=ta}else delete MEM.master;delete MEM.stats;toast('Kelas dan NIS tersimpan')}catch(e){fail(e)}
   if($('#pgsv')){b.disabled=false;b.textContent='Simpan kelas dan NIS'}}
 function pgOptSiswa(d,q){q=String(q||'').toLowerCase();const kn=Object.fromEntries(d.kelas.map(k=>[k.Kelas_ID,k.Nama_Kelas]));
   const l=d.siswa.filter(x=>!x.User_ID&&(!q||(String(x.NIS)+' '+String(x.Nama_Siswa)).toLowerCase().includes(q))).sort((a,b)=>String(a.Nama_Siswa).localeCompare(String(b.Nama_Siswa)));
@@ -690,21 +722,30 @@ function pgGuruMuat(d){const g=d.guru.find(x=>x.User_ID===PGU.id);
 function pgRowsDraw(){const d=MEM.master,el=$('#pgrows');if(!d||!el)return;
   el.innerHTML=PGU.rows.length?PGU.rows.map((r,i)=>`<div class="row" style="margin:6px 0"><select style="flex:1 1 150px;min-width:0" onchange="pgBarisSet(${i},0,this.value)" aria-label="Kelas">${pgOptKelas(d,PGU.ta,r[0])}</select><select style="flex:2 1 200px;min-width:0" onchange="pgBarisSet(${i},1,this.value)" aria-label="Mata pelajaran">${pgOptMapel(d,r[1])}</select><button class="btn bad sm" style="flex:none" type="button" onclick="pgBarisHapus(${i})" aria-label="Hapus baris">Hapus</button></div>`).join(''):'<p><small>Belum ada mata pelajaran. Klik "+ Tambah baris".</small></p>';
   const w=$('#pgw');if(w)w.innerHTML='<option value="">- tidak menjadi wali kelas -</option>'+pgOptKelas(d,PGU.ta,PGU.wali).replace('<option value="">- pilih kelas -</option>','')}
-function pgGuruTa(){PGU.ta=$('#pgta').value;pgGuruMuat(MEM.master);pgRowsDraw()}
-function pgBaris(){PGU.rows.push(['','']);pgRowsDraw()}
+function pgGuruTa(){PGU.kotor=1;PGU.ta=$('#pgta').value;pgGuruMuat(MEM.master);pgRowsDraw()}
+function pgBaris(){PGU.kotor=1;PGU.rows.push(['','']);pgRowsDraw()}
 function pgBarisSet(i,k,v){if(PGU.rows[i])PGU.rows[i][k]=v}
-function pgBarisHapus(i){PGU.rows.splice(i,1);pgRowsDraw()}
+function pgBarisHapus(i){PGU.kotor=1;PGU.rows.splice(i,1);pgRowsDraw()}
 async function pgSimpanGuru(){const b=$('#pgsv'),rows=PGU.rows.filter(r=>r[0]||r[1]);
   if(rows.some(r=>!r[0]||!r[1])){toast('Setiap baris harus berisi kelas DAN mata pelajaran',1);return}
   b.disabled=true;b.textContent='Menyimpan...';
   try{await api('user.tugas.save',{id:PGU.id,ta:PGU.ta,pairs:rows,wali:PGU.role==='Wali Kelas'?PGU.wali:''});
-    const d=await api('master.all');MEM.master=d;delete MEM.stats;toast('Penugasan tersimpan');
-    if($('#pgrows')){pgGuruMuat(d);pgRowsDraw()}}
+    delete MEM.stats;toast('Penugasan tersimpan');
+    if(pgPatchGuru(rows)){const n=++PGU.bg;   // simpanan diperbarui di tempat; data lengkap disegarkan di belakang (hanya jawaban terbaru yang dipakai)
+      api('master.all').then(d=>{if(n===PGU.bg&&S&&S.token){MEM.master=d;MEM.masterT=Date.now()}}).catch(()=>{})}
+    else{const d=await api('master.all');MEM.master=d;MEM.masterT=Date.now();if($('#pgrows')){pgGuruMuat(d);pgRowsDraw()}}}
   catch(e){fail(e)}
   if($('#pgsv')){b.disabled=false;b.textContent='Simpan penugasan'}}
 
-/* ---------- hapus & reset password ---------- */
-function delUser(id){hapusPenggunaDialog([id],()=>{PG.sel=new Set();vPengguna2()})}   // hapus permanen, sama seperti hapus massal
+function pgPatchGuru(rows){const d=MEM.master;if(!d)return false;const g=d.guru.find(x=>x.User_ID===PGU.id);if(!g)return false;
+  const ta=String(PGU.ta),wl=PGU.role==='Wali Kelas'?PGU.wali:'';
+  d.pengampu=d.pengampu.filter(r=>!(String(r.Tahun_Ajaran)===ta&&(r.Guru_ID===g.Guru_ID||rows.some(p=>p[0]===String(r.Kelas_ID)&&p[1]===String(r.Mapel_ID)))));   
+  rows.forEach(p=>d.pengampu.push({Pengampu_ID:'',Guru_ID:g.Guru_ID,Mapel_ID:p[1],Kelas_ID:p[0],Tahun_Ajaran:ta}));
+  d.wali=d.wali.filter(r=>!(String(r.Tahun_Ajaran)===ta&&(r.Guru_ID===g.Guru_ID||(wl&&String(r.Kelas_ID)===wl))));
+  if(wl)d.wali.push({Relasi_ID:'',Guru_ID:g.Guru_ID,Kelas_ID:wl,Tahun_Ajaran:ta});return true}
+
+ 
+function delUser(id){hapusPenggunaDialog([id],()=>{PG.sel=new Set();vPengguna2()})}   
 
  
 function formReset(id){const u=(MEM.users||[]).find(x=>x.User_ID===id);if(!u)return;
@@ -1015,16 +1056,16 @@ async function gMateriBuka(id){const d=MEM.gd,r=d&&d.materi.find(x=>x.Materi_ID=
   MT(`<p><button class="btn ghost sm" onclick="GS.tab='materi';gHome()">&larr; Semua materi</button></p>
   <div class="kd-head"><span class="kcm">${esc(pairLabel())} &middot; ${esc(r.Tanggal_Teks)}</span><h2>${esc(r.Judul)}</h2>
    <div class="kcf" style="margin-bottom:10px">${kcStat(r)}${r.Status==='Draft'?'<small style="color:#5b7083;align-self:center">Murid belum bisa melihat materi ini.</small>':''}</div>
-   <div class="row"><button class="btn${r.Status==='Draft'?'':' ghost'} sm" onclick="gStatus('materi','${esc(id)}',1)">${r.Status==='Draft'?'Aktifkan sekarang':'Jadikan draft'}</button><button class="btn ghost sm" data-id="${esc(id)}" onclick="gFormMateri(this.dataset.id)">Edit</button>${typeof mpArsip==='function'?`<button class="btn ghost sm" data-id="${esc(id)}" onclick="mpArsip(this.dataset.id)">Simpan ke Bank</button>`:''}<button class="btn bad sm" data-id="${esc(id)}" onclick="gDelMateri(this.dataset.id,1)">Hapus</button></div></div>
+   <div class="row"><button class="btn${r.Status==='Draft'?'':' ghost'} sm" onclick="gStatus('materi','${esc(id)}',1)">${r.Status==='Draft'?'Aktifkan sekarang':'Jadikan draft'}</button><button class="btn ghost sm" data-id="${esc(id)}" onclick="gFormMateri(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(id)}" onclick="gDelMateri(this.dataset.id,1)">Hapus</button></div></div>
   <div class="kd ${r.Lampiran||tl?'dua':''}"><div class="kp"><h3>PEMBAHASAN</h3>${paras(r.Isi)||'<small style="color:#5b7083">Tidak ada teks pembahasan. Isi materi ada di berkas atau tautan.</small>'}</div>
   ${r.Lampiran||tl?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${r.Lampiran?tgBerkas('materi',id,r.Lampiran):''}${tl?`<p style="margin:8px 0 0"><a class="btn ghost sm" href="${esc(tl)}" target="_blank" rel="noopener">Buka tautan</a></p>`:''}</div>`:''}</div>`);
   tgAuto()}
 
 async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi_ID===id)||{}:{};
-  if(id&&r.Isi===undefined){   // g.data tidak membawa isi materi: ambil dulu satu materi ini
+  if(id&&r.Isi===undefined){   
     MT('<div id="gfm-wait"><div class="skel"></div></div>');
     try{const x=await api('materi.get',{id});r=Object.assign({},r,{Isi:x.Isi})}catch(e){if($('#gfm-wait')){fail(e);gHome()}return}
-    if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
+    if(!$('#gfm-wait'))return}   
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" value="${esc(r.Judul)}">
   <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan; Enter = paragraf baru)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
@@ -1082,12 +1123,12 @@ const kcEks=n=>({pdf:'PDF',doc:'DOC',docx:'DOC',xls:'XLS',xlsx:'XLS',ppt:'PPT',p
 function kcTenggat(iso){if(!iso)return{t:'Tanpa tenggat',c:''};const d=new Date(iso).getTime();if(!isFinite(d))return{t:'Tanpa tenggat',c:''};
   const sel=d-Date.now();if(sel<0)return{t:'Lewat tenggat',c:'w'};if(sel<86400000)return{t:'Kurang dari 24 jam',c:'w'};
   const h=Math.ceil(sel/86400000);return{t:h===1?'Besok':h+' hari lagi',c:h<=2?'w':''}}
-const TG_BL={};   
+const TG_BL={};   // blob berkas (kunci memuat token sesi)
 async function tgBlob(tipe,id){const key=(S&&S.token||'')+'|'+tipe+'|'+id;
   if(!TG_BL[key]){const r=await api('tugas.file',{tipe,id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     TG_BL[key]={url:URL.createObjectURL(new Blob([u],{type:r.mime})),mime:r.mime}}
   return TG_BL[key]}
- 
+/* satu baris berkas: ikon jenis, nama, tombol Pratinjau (PDF/gambar; gambar tampil otomatis) dan Unduh */
 function tgBerkas(tipe,id,nama){const k='bf'+Math.random().toString(36).slice(2,9),eks=(String(nama).split('.').pop()||'').toLowerCase(),lihat=/^(pdf|jpg|jpeg|png)$/.test(eks);
   return `<div class="kb-file"><span class="kb-ext">${kcEks(nama)}</span><span class="kb-nm">${esc(nama)}</span>${lihat?`<button type="button" class="btn sm" data-tipe="${tipe}" data-id="${esc(id)}" data-v="${k}" ${eks==='pdf'?'':'data-auto="1" '}onclick="tgLihat(this)">Pratinjau</button>`:''}<button type="button" class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">Unduh</button></div><div class="kb-view" id="${k}"></div>`}
 async function tgLihat(b,auto){const v=document.getElementById(b.dataset.v);if(!v)return;
@@ -1518,30 +1559,47 @@ function mxcClose(){
 <script>
 
 
-const NS={busy:false,sem:'Ganjil',key:'',nd:null,wk:'',ws:'',wl:[],wd:null,wreq:0,wmode:'siswa',wm:'',wmk:'',wmd:null};
+const NS={cache:{},dirty:false,ver:0,busy:false,sem:'Ganjil',key:'',nd:null,wk:'',ws:'',wl:[],wd:null,wreq:0,wmode:'siswa',wm:'',wmk:'',wmd:null};
 const SEMS=['Ganjil','Genap'];
 const semOpt=()=>SEMS.map(x=>`<option ${x===NS.sem?'selected':''}>${x}</option>`).join('');
 const warn=t=>`<p style="color:var(--bad)">${t}</p>`;
 
 
 
+const nPairIngat=()=>{try{return localStorage.getItem('nilaiPair')||''}catch(e){return ''}};
+const nPairSimpan=v=>{try{localStorage.setItem('nilaiPair',v)}catch(e){}};
+const nLabel=()=>{const d=NS.nd;return esc(pairLabel())+(d?' &middot; Tahun ajaran '+esc(d.Tahun_Ajaran)+' &middot; Semester '+esc(NS.sem):'')};
+function nPilih(v){GS.pair=v;nPairSimpan(v);nLoad()}
+function nSiap(d){   
+  if(!$('#np'))return;
+  if(!d.ampu.length){$('#np').style.display='none';$('#ns').style.display='none';$('#nb').innerHTML=NOAMPU;return}
+  if(!d.ampu.some(a=>a.Kelas_ID+'|'+a.Mapel_ID===GS.pair))GS.pair=d.ampu[0].Kelas_ID+'|'+d.ampu[0].Mapel_ID;
+  $('#np').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
+  nPairSimpan(GS.pair);
+  const l=$('#npl');if(l)l.innerHTML=nLabel();   // label kelas/mapel bisa tiba setelah tabel (muat spekulatif)
+  if(NS.key!==GS.pair+'|'+NS.sem)nLoad()}
 function vGNilai(){
   NS.key='';
-  M(`<h2>Input Nilai</h2><div class="row" style="margin:8px 0"><select id="np" style="max-width:340px" onchange="GS.pair=this.value;nLoad()"></select><select id="ns" style="max-width:140px" onchange="NS.sem=this.value;nLoad()">${semOpt()}</select></div><div id="nb"></div>`);
-  if(!MEM.gd)$('#nb').innerHTML='<div class="skel"></div>';
-  swr3('gd','g.data','#nb',d=>{
-    if(!d.ampu.length){$('#np').style.display='none';$('#ns').style.display='none';$('#nb').innerHTML=NOAMPU;return}
-    if(!d.ampu.some(a=>a.Kelas_ID+'|'+a.Mapel_ID===GS.pair))GS.pair=d.ampu[0].Kelas_ID+'|'+d.ampu[0].Mapel_ID;
-    $('#np').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
-    if(NS.key!==GS.pair+'|'+NS.sem)nLoad()})}
-async function nLoad(){const [k,m]=GS.pair.split('|'),key=GS.pair+'|'+NS.sem;NS.key=key;$('#nb').innerHTML='<div class="skel"></div>';
+  M(`<h2>Input Nilai</h2><div class="row" style="margin:8px 0"><select id="np" style="max-width:340px" onchange="nPilih(this.value)"></select><select id="ns" style="max-width:140px" onchange="NS.sem=this.value;nLoad()">${semOpt()}</select></div><div id="nb"></div>`);
+  if(!GS.pair){const p=nPairIngat();if(p)GS.pair=p}
+  if(!MEM.gd&&GS.pair)nLoad(true);   // muat nilai langsung memakai pilihan terakhir, tanpa menunggu daftar kelas (hemat satu putaran)
+  else if(!MEM.gd)$('#nb').innerHTML='<div class="skel"></div>';
+  swr3('gd','g.data','#nb',nSiap)}
+async function nLoad(spec){const [k,m]=GS.pair.split('|'),key=GS.pair+'|'+NS.sem,c=NS.cache[key];NS.key=key;NS.dirty=false;
+  if(c){NS.nd=c.d;nDraw()}else $('#nb').innerHTML='<div class="skel"></div>';   
   try{const d=await api('n.data',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem});if(NS.key!==key||!$('#nb'))return;
-    d.kol=d.komponen.map(c=>({nama:c.nama,kelompok:c.kelompok||'',isi:c.isi||0}));   // server lama hanya mengirim {nama,bobot}
-    d.maks=d.maks||20;NS.nd=d;nDraw()}
-  catch(e){if($('#nb'))$('#nb').innerHTML='';fail(e)}}
+    d.kol=d.komponen.map(c=>({nama:c.nama,kelompok:c.kelompok||'',isi:c.isi||0}));   
+    d.maks=d.maks||20;NS.cache[key]={d:d};
+    const ae=document.activeElement;
+    if(c&&(NS.dirty||(ae&&/^nv_/.test(ae.id||''))))return;   
+    NS.nd=d;nDraw()}
+  catch(e){
+    if(spec){if(NS.key===key)NS.key='';if(MEM.gd)nSiap(MEM.gd);return}   
+    if(c&&NS.key===key)return fail(e);   
+    if($('#nb'))$('#nb').innerHTML='';fail(e)}}
 const nSkorKosong=v=>String(v).trim()==='';
 function nRataBaris(vals){const a=vals.map(v=>String(v).trim().replace(',','.')).filter(v=>v!==''&&isFinite(Number(v))).map(Number);return a.length?String(Math.round(a.reduce((t,v)=>t+v,0)/a.length*100)/100):'-'}
-function nRata(i){const d=NS.nd,v=d.kol.map((c,j)=>{const e=$('#nv_'+i+'_'+j);return e?e.value:''}),t=$('#nr_'+i);if(t)t.textContent=nRataBaris(v)}
+function nRata(i){NS.dirty=true;NS.ver++;const d=NS.nd,v=d.kol.map((c,j)=>{const e=$('#nv_'+i+'_'+j);return e?e.value:''}),t=$('#nr_'+i);if(t)t.textContent=nRataBaris(v)}
 function nAmbil(){const d=NS.nd;d.siswa.forEach((x,i)=>d.kol.forEach((c,j)=>{const e=$('#nv_'+i+'_'+j);if(e)d.nilai[x.Siswa_ID+'|'+c.nama]={Skor:e.value}}))}   
 function nTugasBerikut(){const d=NS.nd;let mx=0;d.kol.forEach(c=>{const m=/^tugas\s+(\d+)$/i.exec(c.nama);if(m)mx=Math.max(mx,Number(m[1]))});
   if(!mx&&d.kol.some(c=>c.nama.toLowerCase()==='tugas'))mx=1;return 'Tugas '+(mx+1)}
@@ -1551,38 +1609,47 @@ function nDraw(){const d=NS.nd,ada=c=>d.kol.some(x=>x.nama.toLowerCase()===c.toL
     return `<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td>`+d.kol.map((c,j)=>`<td><input id="nv_${i}_${j}" type="number" min="0" max="100" step="any" style="width:76px" oninput="nRata(${i})" aria-label="${esc(c.nama)} ${esc(x.Nama_Siswa)}" value="${esc(isi[j])}"></td>`).join('')+`<td><b id="nr_${i}">${esc(nRataBaris(isi))}</b></td></tr>`}).join('');
   const cepat=[nTugasBerikut(),'Capaian 1','Capaian 2'].filter(c=>!ada(c)).map(c=>`<button type="button" class="btn sm ghost" data-n="${esc(c)}" onclick="nTambah(this.dataset.n)">+ ${esc(c)}</button>`).join(' ');
   const tg=d.kol.filter(c=>c.kelompok==='Tugas'),tgList=tg.length?tg:d.kol;
-  $('#nb').innerHTML=`<p><small>${esc(pairLabel())} &middot; Tahun ajaran ${esc(d.Tahun_Ajaran)} &middot; Semester ${esc(NS.sem)}</small></p>`+
+  $('#nb').innerHTML=`<p><small id="npl">${nLabel()}</small></p>`+
    (d.siswa.length?`<div class="row" style="margin:8px 0;align-items:flex-end;gap:8px;flex-wrap:wrap"><div><label for="nnew">Tambah kolom nilai</label><input id="nnew" maxlength="40" placeholder="mis. Tugas 1" style="width:190px" onkeydown="if(event.key==='Enter'){event.preventDefault();nTambah()}"></div><button type="button" class="btn ghost" onclick="nTambah()">+ Tambah kolom</button></div>
    <p style="margin:4px 0 8px"><small>Tambah cepat:</small> ${cepat||'<small>(semua sudah ada)</small>'}</p>
    <div class="tw"><table><tr><th>NIS</th><th>Nama</th>${head}<th>Rata-rata</th></tr>${rows}</table></div>
    <p class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn" id="nsv" onclick="nSimpan()">Simpan semua</button>
    <span style="margin-left:12px"><label for="ntg" class="sr-only" style="position:absolute;left:-9999px">Kolom tujuan</label><select id="ntg" style="max-width:190px">${tgList.map(c=>`<option value="${esc(c.nama)}">${esc(c.nama)}</option>`).join('')}</select> <button class="btn ghost" onclick="nTarik()">Isi dari rata-rata nilai tugas</button></span></p>
    <p><small>Nilai 0-100. Kosongkan kotak jika belum ada nilai. Kolom baru langsung tersimpan; isi nilainya lalu tekan "Simpan semua". Untuk menghapus kolom (tanda &times;), kosongkan dulu semua nilainya dan simpan. Paling banyak ${d.maks} kolom per kelas dan mapel. Catatan: STS di rapor mid memakai kolom <b>UTS</b> (nilainya sama).</small></p>`:'<div class="empty">Belum ada siswa di kelas ini.</div>')}
+const nSama=(l,k)=>l.length===k.length&&l.every((c,i)=>c.nama===k[i].nama);
+function nTujuan(){const e=$('#ntg'),d=NS.nd;if(!e||!d)return;const v=e.value,tg=d.kol.filter(c=>c.kelompok==='Tugas'),l=tg.length?tg:d.kol;
+  e.innerHTML=l.map(c=>`<option value="${esc(c.nama)}">${esc(c.nama)}</option>`).join('');if(l.some(c=>c.nama===v))e.value=v}
 async function nTambah(nama){const d=NS.nd,e=$('#nnew');if(!d||NS.busy)return;
   const v=String(nama!==undefined?nama:(e?e.value:'')).replace(/\s+/g,' ').trim();
   if(!v)return toast('Tulis nama nilainya dulu, misalnya Tugas 1');
   if(v.length>40||/[|<>]/.test(v)||/^[=+\-@]/.test(v))return toast('Nama tidak valid: maksimal 40 karakter, tanpa | < > dan tidak diawali = + - @');
   if(d.kol.some(c=>c.nama.toLowerCase()===v.toLowerCase()))return toast('Kolom "'+v+'" sudah ada');
   if(d.kol.length>=d.maks)return toast('Paling banyak '+d.maks+' kolom. Hapus kolom yang kosong dulu');
-  const [k,m]=GS.pair.split('|'),key=NS.key;nAmbil();NS.busy=true;
+  const [k,m]=GS.pair.split('|'),key=NS.key,lama=d.kol.slice();nAmbil();NS.busy=true;
+  d.kol=lama.concat([{nama:v,kelompok:'',isi:0}]);nDraw();const f=$('#nv_0_'+(d.kol.length-1));if(f)f.focus();   // kolom langsung tampil; server menyusul
   try{const l=await api('n.kolomTambah',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Nama:v});
-    if(NS.key!==key||NS.nd!==d)return;d.kol=l;nDraw();const f=$('#nv_0_'+(d.kol.length-1));if(f)f.focus()}
-  catch(er){fail(er)}finally{NS.busy=false}}
+    if(NS.key!==key||NS.nd!==d)return;
+    if(nSama(l,d.kol)){d.kol=l;nTujuan()}else{nAmbil();d.kol=l;nDraw()}}   // urutan dari server berbeda: gambar ulang tanpa menghilangkan isian
+  catch(er){if(NS.key===key&&NS.nd===d){nAmbil();d.kol=lama;nDraw()}fail(er)}finally{NS.busy=false}}
 async function nHapusKolom(j){const d=NS.nd,c=d&&d.kol[Number(j)];if(!c||NS.busy)return;
   if(!await ask('Hapus kolom "'+c.nama+'"? Kolom hanya bisa dihapus bila semua nilainya sudah kosong dan tersimpan.',{title:'Hapus kolom nilai',ok:'Hapus'}))return;
-  const [k,m]=GS.pair.split('|'),key=NS.key;nAmbil();NS.busy=true;
+  const [k,m]=GS.pair.split('|'),key=NS.key,lama=d.kol.slice();nAmbil();NS.busy=true;
+  d.kol=lama.filter(x=>x!==c);nDraw();toast('Kolom dihapus');
   try{const l=await api('n.kolomHapus',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Nama:c.nama});
-    if(NS.key!==key||NS.nd!==d)return;d.kol=l;nDraw();toast('Kolom dihapus')}
-  catch(er){fail(er)}finally{NS.busy=false}}
-async function nSimpan(){const d=NS.nd,[k,m]=GS.pair.split('|'),b=$('#nsv'),items=[];
+    if(NS.key!==key||NS.nd!==d)return;
+    if(nSama(l,d.kol)){d.kol=l;nTujuan()}else{nAmbil();d.kol=l;nDraw()}}
+  catch(er){if(NS.key===key&&NS.nd===d){nAmbil();d.kol=lama;nDraw()}fail(er)}finally{NS.busy=false}}
+async function nSimpan(){const d=NS.nd,[k,m]=GS.pair.split('|'),b=$('#nsv'),items=[],key=NS.key;
   d.siswa.forEach((x,i)=>d.kol.forEach((c,j)=>items.push({Siswa_ID:x.Siswa_ID,Jenis:c.nama,Skor:$('#nv_'+i+'_'+j).value})));
-  b.disabled=true;b.textContent='Menyimpan...';
-  try{const r=await api('n.save',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,items});toast(r.diubah?r.diubah+' nilai tersimpan':'Tidak ada perubahan');nLoad()}
-  catch(e){fail(e);b.disabled=false;b.textContent='Simpan semua'}}
+  nAmbil();const v=NS.ver;b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('n.save',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,items});toast(r.diubah?r.diubah+' nilai tersimpan':'Tidak ada perubahan');
+    NS.cache[key]={d:d};if(NS.key===key&&NS.ver===v)NS.dirty=false;   // tabel sudah sama dengan server: tidak perlu muat ulang
+    const b2=$('#nsv');if(b2){b2.disabled=false;b2.textContent='Simpan semua'}}
+  catch(e){fail(e);const b2=$('#nsv');if(b2){b2.disabled=false;b2.textContent='Simpan semua'}}}
 async function nTarik(){const s=$('#ntg'),tujuan=s?s.value:'';if(!tujuan)return toast('Pilih kolom tujuan dulu');
   if(!await ask('Isi kolom "'+tujuan+'" dengan rata-rata nilai tugas semester '+NS.sem+' yang sudah dinilai di menu Tugas? Isian lama di kolom itu akan diganti. Semester ditentukan dari tenggat tugas (Juli-Desember = Ganjil, Januari-Juni = Genap).',{title:'Tarik nilai tugas',ok:'Tarik nilai'}))return;
   const [k,m]=GS.pair.split('|');
-  try{const r=await api('n.tarikTugas',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Jenis:tujuan});toast(r.diubah?r.diubah+' nilai tugas diisi':'Sudah sama, tidak ada perubahan');nLoad()}catch(e){fail(e)}}
+  try{const r=await api('n.tarikTugas',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Jenis:tujuan});toast(r.diubah?r.diubah+' nilai tugas diisi':'Sudah sama, tidak ada perubahan');delete NS.cache[NS.key];nLoad()}catch(e){fail(e)}}
 
 /* MT: seperti M, tetapi bila halaman Kelas Binaan (#bn-body) atau Mata Pelajaran (#mp-body, MapelUI) sedang tampil, isi masuk ke tab, bukan ke seluruh #dmain. */
 let MTK=0;   // nomor tampilan: naik setiap MT() menggambar; WaliUI memakainya untuk mengabaikan respons tampilan lama
@@ -1672,7 +1739,7 @@ async function wUnduh(b){const t=b.textContent;b.disabled=true;b.textContent='Me
   catch(e){fail(e)}b.disabled=false;b.textContent=t}
 
 /* dipanggil Index.html saat keluar/ganti akun */
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{NS.nd=NS.wd=NS.wmd=null;NS.wl=[];NS.wk=NS.ws=NS.wm='';NS.key='';NS.wlk=''});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{NS.cache={};NS.dirty=false;try{localStorage.removeItem('nilaiPair')}catch(e){}NS.nd=NS.wd=NS.wmd=null;NS.wl=[];NS.wk=NS.ws=NS.wm='';NS.key='';NS.wlk=''});
 Object.assign(VIEWS,{'g-nilai':vGNilai,'w-siswa':vWSiswa,'w-nilai':vWNilai});
 </script>
 <style>
@@ -2667,6 +2734,7 @@ Object.assign(VIEWS,{'m-kelas':vMKelas});
 
 
 const MR_MAX=6;
+const mrSig=d=>JSON.stringify(d,(k,v)=>k==='now'?0:v);   
 const mrIc=n=>typeof dsI==='function'?dsI(n):'';
 
 function mrIn(ms){if(!isFinite(ms))return '';if(ms<0)return 'sudah lewat';const m=Math.floor(ms/60000);if(m<60)return Math.max(1,m)+' menit lagi';const h=Math.floor(m/60);if(h<24)return h+' jam lagi';return Math.floor(h/24)+' hari lagi'}
@@ -2761,8 +2829,9 @@ function mrMulai(id,b){EXB.fn=vMRingkasan;EXB.label='Kembali ke ringkasan';exSta
 function vMRingkasan(force){
   exStop(true);
   M('<div class="row" style="justify-content:space-between"><h2 style="margin:0">Ringkasan</h2><button type="button" class="btn ghost sm" onclick="vMRingkasan(true)">Segarkan</button></div><div id="mr-body" style="margin-top:14px"></div>');
-  if(MEM.mr)mrDraw(MEM.mr);else $('#mr-body').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
-  mrFetch(true).then(d=>{mrDraw(d);mrBadgeDraw()}).catch(e=>{   // selalu ambil ulang: booking Lab/PID baru tidak membuang MEM.mr, jadi cache 30 dtk bisa basi
+  let j0='';if(MEM.mr){mrDraw(MEM.mr);j0=mrSig(MEM.mr)}else $('#mr-body').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
+  const baru=MEM.mr&&force!==true&&Date.now()-MR_T<8000;   // baru saja dimuat (pindah halaman lalu kembali): tidak perlu ke server lagi
+  (baru?Promise.resolve(MEM.mr):mrFetch(true)).then(d=>{if(!$('#mr-body'))return;if(mrSig(d)!==j0)mrDraw(d);mrBadgeDraw()}).catch(e=>{   // selalu ambil ulang: booking Lab/PID baru tidak membuang MEM.mr, jadi cache 30 dtk bisa basi
     
     if(e&&e.message==='SESI_HABIS')return fail(e);
     if(!MEM.mr&&$('#mr-body'))$('#mr-body').innerHTML=`<div class="empty">${esc(e&&e.message||'Ringkasan belum bisa dimuat.')} <button type="button" class="btn ghost sm" onclick="vMRingkasan(true)">Coba lagi</button></div>`;
@@ -2806,15 +2875,29 @@ function grDraw(d){
    ${mrCard('gr-mp','Mata pelajaran yang saya ampu',d.jumlahMapel,false,(d.mapel||[]).map(grMapel),'Belum ada mata pelajaran.',{href:'#/dashboard/g-kelas',label:'Kelas & Mapel Saya'})}
   </div>`}
 
+let GR_P=null,GR_OK=false;   // GR_P: permintaan yang sedang berjalan; GR_OK: isi halaman sudah digambar dari data nyata
+const grInfo=t=>{const e=$('#gr-info');if(e)e.textContent=t||''};
+const grJam=t=>{try{return new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+const GR_SKEL='<div class="skel"></div><br><div class="skel"></div>';
 function vGRingkasan(){
-  M('<div class="row" style="justify-content:space-between"><h2 style="margin:0">Ringkasan</h2><button type="button" class="btn ghost sm" onclick="vGRingkasan()">Segarkan</button></div><div id="gr-body" style="margin-top:14px"></div>');
-  const baru=MEM.grr&&Date.now()-(MEM.grrT||0)<20000;   // cache lebih lama dari 20 dtk tidak ditampilkan, agar angka lama tidak sempat berkedip
-  if(baru)grDraw(MEM.grr);else $('#gr-body').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
-  const tk=S&&S.token;
-  api('gr.ringkasan').then(d=>{if(!S||S.token!==tk)return;MEM.grr=d;MEM.grrT=Date.now();grDraw(d)}).catch(e=>{
-    if(e&&e.message==='SESI_HABIS')return fail(e);
-    if(!baru&&$('#gr-body'))$('#gr-body').innerHTML=`<div class="empty">${esc(e&&e.message||'Ringkasan belum bisa dimuat.')} <button type="button" class="btn ghost sm" onclick="vGRingkasan()">Coba lagi</button></div>`;
-    else toast(e&&e.message||'Gagal menyegarkan',1)})}
+  M('<div class="row" style="justify-content:space-between"><h2 style="margin:0">Ringkasan</h2><button type="button" id="gr-seg" class="btn ghost sm" onclick="grMuat(true)">Segarkan</button></div><p id="gr-info" style="margin:6px 0 0;color:#5b7083;font-size:13px"></p><div id="gr-body" style="margin-top:14px"></div>');
+  GR_OK=false;
+  if(MEM.grr){grDraw(MEM.grr);GR_OK=true;if(Date.now()-(MEM.grrT||0)>20000)grInfo('Menampilkan data terakhir ('+grJam(MEM.grrT)+'), sedang disegarkan...')}   // data lama tampil dulu, dengan keterangan
+  else $('#gr-body').innerHTML=GR_SKEL;
+  grMuat(false)}
+function grMuat(force){
+  if(!force&&MEM.grr&&Date.now()-(MEM.grrT||0)<8000){grInfo('');return}   // baru saja dimuat (pindah halaman lalu kembali): tidak perlu ke server lagi
+  if(GR_P)return;
+  const tk=S&&S.token,b=$('#gr-seg');if(b){b.disabled=true;b.textContent='Menyegarkan...'}
+  GR_P=api('gr.ringkasan').then(d=>{if(!S||S.token!==tk)return;
+      const j=mrSig(d),sama=GR_OK&&j===MEM.grrJ;MEM.grr=d;MEM.grrJ=j;MEM.grrT=Date.now();
+      if(!sama&&$('#gr-body')){grDraw(d);GR_OK=true}   // angka sama dengan yang tampil: tidak digambar ulang (tidak berkedip, gulir tetap)
+      grInfo('')})
+    .catch(e=>{
+      if(e&&e.message==='SESI_HABIS')return fail(e);
+      if(!GR_OK&&$('#gr-body'))$('#gr-body').innerHTML=`<div class="empty">${esc(e&&e.message||'Ringkasan belum bisa dimuat.')} <button type="button" class="btn ghost sm" onclick="grMuat(true)">Coba lagi</button></div>`;
+      else toast(e&&e.message||'Gagal menyegarkan',1)})
+    .finally(()=>{GR_P=null;const b2=$('#gr-seg');if(b2){b2.disabled=false;b2.textContent='Segarkan'}})}
 
 Object.assign(VIEWS,{'g-ringkasan':vGRingkasan});
 </script>
@@ -4399,7 +4482,7 @@ async function verifPublik(kode,id){
 <script id="msk-js">
 /* ===== SURAT MASUK (S8): menu Admin 'masuk'. Memakai: M, $, esc, api, ask, toast, fail, VIEWS (Index). Berdiri sendiri. =====
    Nama global berawalan MSK / sm. Rute server: masuk.list, masuk.simpan, masuk.tandai, masuk.hapus, masuk.file (SuratMasuk.gs). */
-const MSK={q:'',st:'',jn:'',sek:'',tp:'',thn:'',bln:'',hal:1,ed:null,t:0};
+const MSK={q:'',st:'',jn:'',sek:'',tp:'',thn:'',bln:'',hal:1,ed:null,t:0,c:{},req:0};   // c = simpanan hasil per penyaringan (tampil dulu, disegarkan diam-diam)
 const MSK_TIPE=['Digital','Non digital'],MSK_BLN_PENUH=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],MSK_ROM=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const MSK_JENIS=['Undangan','Pemberitahuan','Permohonan','Edaran','Lainnya'],MSK_STATUS=['Baru','Direview','Selesai'],MSK_HADIR=['Belum ditentukan','Dihadiri','Tidak dihadiri','Diwakilkan'];
 const MSK_BLN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -4407,14 +4490,24 @@ const mskTgl=t=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(t||'');return m?(+m[3])
 const mskHariIni=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const mskOpt=(l,v,k)=>l.map(x=>{const a=k?x[0]:x,b=k?x[1]:x;return`<option value="${esc(a)}"${a===v?' selected':''}>${esc(b)}</option>`}).join('');
 
+const mskKey=()=>JSON.stringify([MSK.q,MSK.st,MSK.jn,MSK.sek,MSK.tp,MSK.thn,MSK.bln,MSK.hal]);
+const mskSimpanan=k=>MSK.c[k]||(MEM.masuk&&MEM.masuk._k===k?MEM.masuk:null);
 function vMasuk(){
   M(`<h2>Surat masuk</h2><div id="mskb"></div>`);
-  if(!MEM.masuk)$('#mskb').innerHTML='<div class="skel"></div>';
+  if(!mskSimpanan(mskKey()))$('#mskb').innerHTML='<div class="skel"></div>';
   mskMuat()}
 async function mskMuat(){
-  try{MEM.masuk=await api('masuk.list',{q:MSK.q,status:MSK.st,jenis:MSK.jn,sekolah:MSK.sek,tipe:MSK.tp,thn:MSK.thn,bln:MSK.bln,hal:MSK.hal});mskGambar()}catch(e){fail(e)}}
+  const k=mskKey(),id=++MSK.req,c=mskSimpanan(k);
+  if(c){MEM.masuk=c;mskGambar()}else{const l=$('#msk_l');if(l)l.style.opacity='.45'}   // simpanan tampil dulu; bila belum ada, daftar lama diredupkan
+  try{const d=await api('masuk.list',{q:MSK.q,status:MSK.st,jenis:MSK.jn,sekolah:MSK.sek,tipe:MSK.tp,thn:MSK.thn,bln:MSK.bln,hal:MSK.hal});
+    if(id!==MSK.req)return;   // ada permintaan yang lebih baru: abaikan jawaban lama
+    d._k=k;const sama=c&&JSON.stringify(Object.assign({},c,{_k:k}))===JSON.stringify(d);
+    if(Object.keys(MSK.c).length>30)MSK.c={};MSK.c[k]=d;MEM.masuk=d;if(!sama||!$('#msk_l')||!c)mskGambar()}
+  catch(e){if(id===MSK.req){const l=$('#msk_l');if(l)l.style.opacity='';fail(e)}}}
 function mskCari(v){MSK.q=v;MSK.hal=1;clearTimeout(MSK.t);MSK.t=setTimeout(mskMuat,300)}
-function mskSaring(k,v){MSK[k]=v;if(k==='thn'&&!v)MSK.bln='';if(k==='bln'&&v&&!MSK.thn){MSK.thn=String(new Date().getFullYear())}MSK.hal=1;if(k==='thn'||k==='bln')$('#mskb').innerHTML='';mskMuat()}
+function mskSaring(k,v){MSK[k]=v;if(k==='thn'&&!v)MSK.bln='';if(k==='bln'&&v&&!MSK.thn){MSK.thn=String(new Date().getFullYear())}MSK.hal=1;
+  const t=$('#msk_thn'),b=$('#msk_bln');if(t)t.value=MSK.thn;if(b)b.value=MSK.bln;   // sinkronkan pilihan tahun dan bulan tanpa menggambar ulang seluruh bilah
+  mskMuat()}
 function mskHal(n){MSK.hal=n;mskMuat()}
 
 function mskGambar(){
@@ -4439,6 +4532,7 @@ function mskGambar(){
   $('#msk_h').innerHTML=[['','Semua',tot]].concat(MSK_STATUS.map(s=>[s,s,h[s]||0])).map(([k,l,n])=>`<button type="button" class="msk-chip${MSK.st===k?' on':''}" onclick="mskSaring('st','${k}')"><b>${n}</b><span>${esc(l)}</span></button>`).join('');
   const sk={};(d.sekolah||[]).forEach(x=>sk[x.id]=x.nama);
   const rows=d.baris||[];
+  $('#msk_l').style.opacity='';
   $('#msk_l').innerHTML=rows.length?rows.map(x=>{const t=/^(\d{4})-(\d{2})-(\d{2})/.exec(x.diterima||'');return `<div class="msk-it ${esc(x.status)}" data-id="${esc(x.id)}">
     <div class="msk-cal"><b>${t?+t[3]:'-'}</b><small>${t?MSK_BLN[+t[2]-1]:''}</small><small>${t?t[1]:''}</small></div>
     <div><h4>${esc(x.perihal)}</h4><small>${esc(x.pengirim)}${x.nomor?' · '+esc(x.nomor):''}${x.tglSurat?' · tgl surat '+esc(mskTgl(x.tglSurat)):''}</small>${x.alamat||x.hp?`<br><small>${esc(x.alamat.split('\n').join(', '))}${x.alamat&&x.hp?' · ':''}${x.hp?'HP '+esc(x.hp):''}</small>`:''}${x.agenda?`<br><small>No. petunjuk: <b>${esc(x.agenda)}</b></small>`:''}
@@ -4451,15 +4545,24 @@ function mskGambar(){
     +(d.total>d.perHal?`<div class="row" style="margin-top:10px;align-items:center"><button class="btn sm ghost" ${d.hal<=1?'disabled':''} onclick="mskHal(${d.hal-1})">Sebelumnya</button><small>Halaman ${d.hal} dari ${Math.ceil(d.total/d.perHal)} (${d.total} surat)</small><button class="btn sm ghost" ${d.hal*d.perHal>=d.total?'disabled':''} onclick="mskHal(${d.hal+1})">Berikutnya</button></div>`:'')
     :'<div class="empty">'+(MSK.q||MSK.st||MSK.jn||MSK.sek||MSK.tp||MSK.thn?'Tidak ada surat yang cocok dengan penyaringan.':'Belum ada surat masuk yang dicatat.')+'</div>'}
 
-/* tandai cepat dari daftar */
+/* tandai cepat dari daftar: tampilan langsung berubah, server menyusul; bila gagal, dikembalikan */
+const mskUbahHitung=(d,dari,ke)=>{const h=d.hitung||(d.hitung={});if(dari&&dari!==ke)h[dari]=Math.max(0,(h[dari]||0)-1);if(ke&&dari!==ke)h[ke]=(h[ke]||0)+1};
 async function mskTandai(id,patch,el){
-  if(el)el.disabled=true;
-  try{const r=await api('masuk.tandai',Object.assign({id:id},patch)),l=MEM.masuk.baris,i=l.findIndex(x=>x.id===id);if(i>=0)l[i]=r.baris;MEM.masuk.hitung=r.hitung;toast('Tersimpan');mskGambar()}
-  catch(e){fail(e);mskGambar()}}
+  const d=MEM.masuk,l=d.baris,i=l.findIndex(x=>x.id===id);if(i<0)return;
+  const lama=l[i];l[i]=Object.assign({},lama,patch);mskUbahHitung(d,lama.status,l[i].status);mskGambar();
+  try{const r=await api('masuk.tandai',Object.assign({id:id},patch));
+    const l2=MEM.masuk&&MEM.masuk.baris,j=l2?l2.findIndex(x=>x.id===id):-1;if(j>=0){l2[j]=r.baris;MEM.masuk.hitung=r.hitung}
+    const k=mskKey();MSK.c={};if(MEM.masuk&&MEM.masuk._k===k)MSK.c[k]=MEM.masuk;   // simpanan penyaringan lain sudah usang (jumlah berubah)
+    toast('Tersimpan');mskGambar()}
+  catch(e){const l2=MEM.masuk&&MEM.masuk.baris,j=l2?l2.findIndex(x=>x.id===id):-1;
+    if(j>=0){mskUbahHitung(MEM.masuk,l2[j].status,lama.status);l2[j]=lama}fail(e);mskGambar()}}
 async function mskHapus(id){
-  const x=MEM.masuk.baris.find(y=>y.id===id);
+  const d=MEM.masuk,i=d.baris.findIndex(y=>y.id===id),x=d.baris[i];
   if(!await ask('Hapus surat masuk "'+(x?x.perihal:id)+'"? Berkas salinannya juga dihapus.'))return;
-  try{await api('masuk.hapus',{id:id});toast('Surat masuk dihapus');mskMuat()}catch(e){fail(e)}}
+  const d2=MEM.masuk,j=d2.baris.findIndex(y=>y.id===id);
+  if(j>=0){const [g]=d2.baris.splice(j,1);mskUbahHitung(d2,g.status,'');d2.total=Math.max(0,(d2.total||1)-1);mskGambar()}   // hilang dari daftar lebih dulu
+  try{await api('masuk.hapus',{id:id});toast('Surat masuk dihapus');MSK.c={};if(MEM.masuk)MEM.masuk._k='';mskMuat()}
+  catch(e){fail(e);MSK.c={};if(MEM.masuk)MEM.masuk._k='';mskMuat()}}   // gagal: ambil ulang dari server agar daftar benar
 
 /* melihat berkas: jendela dibuka dulu (sebelum menunggu server) agar tidak diblokir peramban */
 async function mskBerkas(id){
@@ -4543,7 +4646,7 @@ async function mskSimpan(lanjut){
       if(r.duplikat&&r.duplikat.length)m.push('Surat dengan nomor dan pengirim yang sama sudah tercatat (diterima '+mskTgl(r.duplikat[0].diterima)+').');
       if(r.agendaGanda&&r.agendaGanda.length){const g=r.agendaGanda[0];m.push('No. berkas '+p.noBerkas+' sudah dipakai tahun ini'+(g.agenda?' ('+g.agenda+')':'')+' pada surat "'+g.perihal+'" dari '+g.pengirim+'.')}
       if(await ask(m.join(' ')+' Tetap simpan?',{title:'Nomor sudah ada',ok:'Ya, tetap simpan',bad:true}))return mskSimpan(true);return}
-    toast('Surat masuk tersimpan');MEM.masuk=null;vMasuk()}
+    toast('Surat masuk tersimpan');MSK.c={};vMasuk()}   // daftar lama tampil dulu, disegarkan dalam beberapa detik
   catch(x){fail(x);b.disabled=false;b.textContent='Simpan'}}
 
 Object.assign(VIEWS,{masuk:vMasuk});
@@ -5388,8 +5491,8 @@ function vGBMateri(){BMT.sel={};MT('<div class="skel"></div><br><div class="skel
     if(!bmtCur())BMT.mapel=d.mapel[0].Mapel_ID;bmtDraw()}).catch(e=>{fail(e);MT('<h2>Bank Materi</h2><p>Gagal memuat. Coba muat ulang halaman.</p>')})}
 function bmtDraw(){const d=BMT.d,m=bmtCur();if(!m)return;
   const babs=m.Bab.map(b=>`<button type="button" class="${BMT.bab.toLowerCase()===b.Bab.toLowerCase()?'on':''}" data-b="${esc(b.Bab)}">${esc(b.Bab)} <small>${b.n}</small></button>`).join('');
-  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Materi</h2><span class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost" id="bmt-bs">Bank Bersama</button><button class="btn" id="bmt-baru">+ Materi baru</button></span></div>
-  <p><small>Gudang materi milik Anda (maksimal ${d.maks} materi per mapel). Centang materi lalu pilih <b>Tarik ke kelas</b>: materi disalin ke kelas, jadi mengubah materi di bank tidak mengubah materi yang sudah dipakai kelas. Murid tidak bisa melihat bank ini.</small></p>
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Materi</h2><span class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost" id="bmt-im">Impor dari kelas</button><button class="btn ghost" id="bmt-bs">Bank Bersama</button><button class="btn" id="bmt-baru">+ Materi baru</button></span></div>
+  <p><small>Gudang materi milik Anda (maksimal ${d.maks} materi per mapel). Materi masuk dengan dua cara: <b>+ Materi baru</b> (dibuat di sini) atau <b>Impor dari kelas</b> (menyalin materi yang sudah ada di kelas). Centang materi lalu pilih <b>Tarik ke kelas</b>: materi disalin ke kelas, jadi mengubah materi di bank tidak mengubah materi yang sudah dipakai kelas. Murid tidak bisa melihat bank ini.</small></p>
   <div class="bk-f"><select id="bmt-m" aria-label="Mata pelajaran">${d.mapel.map(x=>`<option value="${esc(x.Mapel_ID)}" ${x.Mapel_ID===BMT.mapel?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select>
   <select id="bmt-st" aria-label="Status"><option value="berjalan">Aktif dan Draft</option><option value="Aktif">Hanya Aktif</option><option value="Draft">Hanya Draft</option><option value="Arsip">Arsip</option><option value="semua">Semua</option></select>
   <input id="bmt-q" type="search" placeholder="Cari judul / tag" aria-label="Cari" value="${esc(BMT.q)}"></div>
@@ -5397,7 +5500,7 @@ function bmtDraw(){const d=BMT.d,m=bmtCur();if(!m)return;
   <div class="bk-bab" id="bmt-bab">${babs?`<button type="button" class="${BMT.bab?'':'on'}" data-b="">Semua bab</button>`+babs:'<small>Belum ada materi. Mulai dengan "+ Materi baru".</small>'}</div>
   <div id="bmt-l"><div class="skel"></div></div><div id="bmt-bar"></div>`);
   $('#bmt-st').value=BMT.st;
-  $('#bmt-baru').onclick=()=>bmtForm('');$('#bmt-bs').onclick=()=>bmbBuka();
+  $('#bmt-baru').onclick=()=>bmtForm('');$('#bmt-bs').onclick=()=>bmbBuka();$('#bmt-im').onclick=()=>bmiBuka();
   $('#bmt-m').onchange=e=>{BMT.mapel=e.target.value;BMT.bab='';BMT.hal=1;BMT.sel={};bmtDraw()};
   $('#bmt-st').onchange=e=>{BMT.st=e.target.value;BMT.hal=1;BMT.sel={};bmtLoad()};
   $('#bmt-q').oninput=e=>{BMT.q=e.target.value;clearTimeout(BMT.tmr);BMT.tmr=setTimeout(()=>{BMT.hal=1;BMT.sel={};bmtLoad()},350)};
@@ -5430,7 +5533,7 @@ async function bmtUnduh(id,b){const t0=b&&b.innerHTML;if(b){b.disabled=true;b.te
   try{const r=await api('bm.file',{id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     const url=URL.createObjectURL(new Blob([u],{type:r.mime})),a=document.createElement('a');a.href=url;a.download=r.nama||'berkas';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
   catch(e){fail(e)}if(b){b.disabled=false;b.innerHTML=t0}}
- 
+/* ---------- form materi ---------- */
 async function bmtForm(id){let r={Bab:BMT.bab,Judul:'',Isi:'',File_URL:'',Berkas:'',Tag:'',Status:'Draft',Bagikan:'Pribadi'};
   if(id){MT('<div class="skel"></div>');try{r=await api('bm.get',{id})}catch(e){fail(e);bmtDraw();return}}
   BMT.f={id:id||''};const m=bmtCur(),babs=m?m.Bab.map(b=>`<option value="${esc(b.Bab)}">`).join(''):'';
@@ -5438,7 +5541,7 @@ async function bmtForm(id){let r={Bab:BMT.bab,Judul:'',Isi:'',File_URL:'',Berkas
   <label for="bmf-b">Bab / topik</label><input id="bmf-b" list="bmf-bl" maxlength="60" value="${esc(r.Bab)}" placeholder="Contoh: Bab 3"><datalist id="bmf-bl">${babs}</datalist>
   <label for="bmf-j">Judul</label><input id="bmf-j" maxlength="200" value="${esc(r.Judul)}">
   <label for="bmf-i">Isi materi (boleh kosong bila memakai berkas atau tautan; Enter = paragraf baru)</label><textarea id="bmf-i" style="min-height:200px">${esc(r.Isi)}</textarea>
-  <label for="bmf-l">Tautan dokumen / video (opsional)</label><input id="bmf-l" placeholder="https://..." value="${esc(r.File_URL)}">
+  <label for="bmf-l">Tautan dokumen / video (opsional)</label><input id="bmf-l" placeholder="https:
   <label>Berkas materi (opsional)</label>${r.Berkas?`<p style="margin:0 0 6px">Berkas sekarang: <b>${esc(r.Berkas)}</b> &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="bmf-hf" style="width:auto;margin-right:5px">hapus berkas</label></p>`:''}
   <input id="bmf-f" type="file" accept="${typeof TG_ACC==='string'?TG_ACC:''}"><small style="display:block;opacity:.75">PDF, gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${r.Berkas?'Memilih berkas baru akan menggantikan berkas lama.':''}</small>
   <label for="bmf-g">Tag (opsional)</label><input id="bmf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: Semester 1">
@@ -5452,7 +5555,7 @@ async function bmtSimpan(){const b=$('#bmf-sv');b.disabled=true;b.textContent='M
     await api('bm.save',{id:BMT.f.id,Mapel_ID:BMT.mapel,Bab:$('#bmf-b').value,Judul:$('#bmf-j').value,Isi:$('#bmf-i').value,File_URL:$('#bmf-l').value,Tag:$('#bmf-g').value,Status:$('#bmf-s').value,Bagikan:$('#bmf-bg').value,file:fl,hapusLampiran:!!($('#bmf-hf')&&$('#bmf-hf').checked)});
     toast('Materi tersimpan');BMT.sel={};BMT.d=await api('bm.mapel');BMT.bab='';bmtDraw()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
-/* ---------- tarik ke kelas ---------- */
+ 
 async function bmtTarik(ids){MT('<div class="skel"></div>');let k;
   try{k=(await api('bm.kelas',{Mapel_ID:BMT.mapel})).kelas}catch(e){fail(e);bmtDraw();return}
   if(!k.length){toast('Anda belum mengampu kelas untuk mapel ini.',1);bmtDraw();return}
@@ -5469,7 +5572,45 @@ async function bmtTarik(ids){MT('<div class="skel"></div>');let k;
       let t=r.n+' materi ditarik ke kelas ('+r.Status+')';if(r.lewat)t+=', '+r.lewat+' dilewati karena sudah ada';if(r.tanpaBerkas)t+=', '+r.tanpaBerkas+' tanpa berkas (kolom berkas belum ada atau berkas hilang)';
       toast(t);BMT.sel={};bmtDraw()}
     catch(e){fail(e);b.disabled=false;b.textContent='Tarik'}}}
-/* ---------- bank bersama (materi) ---------- */
+/* ---------- impor materi yang sudah ada di kelas ke bank (salinan; materi kelas tidak berubah) ---------- */
+const BMI={k:[],kelas:'',items:[],sel:{},n:0};
+async function bmiBuka(){const m=bmtCur();MT('<div class="skel"></div>');
+  try{BMI.k=(await api('bm.kelas',{Mapel_ID:BMT.mapel})).kelas}catch(e){fail(e);bmtDraw();return}
+  if(!BMI.k.length){toast('Anda belum mengampu kelas untuk mapel ini.',1);bmtDraw();return}
+  if(!BMI.k.some(x=>x.Kelas_ID===BMI.kelas))BMI.kelas=BMI.k[0].Kelas_ID;BMI.sel={};bmiDraw()}
+function bmiDraw(){const m=bmtCur(),babs=m?m.Bab.map(b=>`<option value="${esc(b.Bab)}">`).join(''):'';
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Impor dari kelas</h2><button class="btn ghost" id="bmi-kb">Kembali ke bank saya</button></div>
+  <p><small>${esc(m?m.Nama:'')}. Pilih materi yang sudah ada di kelas lalu simpan ke bank. Materi di kelas tidak berubah; yang masuk bank adalah salinan (berkas ikut disalin). Hanya materi buatan Anda yang tampil.</small></p>
+  <div class="bk-f"><select id="bmi-k" aria-label="Kelas">${BMI.k.map(x=>`<option value="${esc(x.Kelas_ID)}" ${x.Kelas_ID===BMI.kelas?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select></div>
+  <div id="bmi-l"><div class="skel"></div></div><div id="bmi-bar"></div>`);
+  $('#bmi-kb').onclick=()=>bmtDraw();
+  $('#bmi-k').onchange=e=>{BMI.kelas=e.target.value;BMI.sel={};bmiLoad()};
+  BMI.babs=babs;bmiLoad()}
+function bmiLoad(){const my=++BMI.n;
+  api('bm.kelasList',{Mapel_ID:BMT.mapel,Kelas_ID:BMI.kelas}).then(r=>{if(my!==BMI.n||!$('#bmi-l'))return;BMI.items=r.items;bmiList()}).catch(e=>{if(my===BMI.n&&$('#bmi-l')){fail(e);$('#bmi-l').innerHTML='<p>Gagal memuat materi kelas.</p>'}})}
+function bmiList(){const el=$('#bmi-l');if(!el)return;
+  if(!BMI.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Belum ada materi buatan Anda di kelas ini untuk mapel tersebut.</p>';bmiBar();return}
+  el.innerHTML=`<p><button class="btn ghost sm" id="bmi-all">Pilih semua yang belum di bank</button></p>`+BMI.items.map(x=>`<div class="bk-k ${x.Status==='Draft'?'dr':''}"><input type="checkbox" data-i="${esc(x.Materi_ID)}" ${BMI.sel[x.Materi_ID]?'checked':''} aria-label="Pilih materi">
+    <div class="bk-q"><div><span class="bk-c ${x.Status==='Aktif'?'ok':'dr'}">Di kelas: ${esc(x.Status)}</span>${x.SudahDiBank?'<span class="bk-c ok">Judul sama sudah ada di bank</span>':''}${x.Berkas?`<span class="bk-c">Berkas: ${esc(x.Berkas)}</span>`:''}${x.Link?'<span class="bk-c">Tautan</span>':''}</div><div class="bk-t"><b>${esc(x.Judul)}</b></div></div></div>`).join('');
+  el.onclick=e=>{const t=e.target;
+    if(t.id==='bmi-all'){BMI.items.filter(x=>!x.SudahDiBank).slice(0,20).forEach(x=>{BMI.sel[x.Materi_ID]=1});bmiList();return}
+    if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BMI.sel[t.dataset.i]=1;else delete BMI.sel[t.dataset.i];bmiBar()}};
+  bmiBar()}
+function bmiBar(){const n=Object.keys(BMI.sel).length,el=$('#bmi-bar');if(!el)return;
+  if(!n){el.innerHTML='';return}
+  el.innerHTML=`<div class="bk-bar" style="flex-wrap:wrap;gap:8px"><b>${n} dipilih</b>
+    <span><label for="bmi-b" style="display:inline;font-weight:400">Bab di bank</label> <input id="bmi-b" list="bmi-bl" maxlength="60" placeholder="Contoh: Bab 3" style="max-width:170px"><datalist id="bmi-bl">${BMI.babs||''}</datalist></span>
+    <select id="bmi-s" aria-label="Status di bank" style="max-width:190px"><option value="Draft">Simpan sebagai Draft</option><option value="Aktif">Simpan sebagai Aktif</option></select>
+    <button class="btn sm" id="bmi-go">Simpan ke bank</button></div>`;
+  $('#bmi-go').onclick=bmiSimpan}
+async function bmiSimpan(){const ids=Object.keys(BMI.sel),b=$('#bmi-go'),bab=$('#bmi-b').value;
+  if(!String(bab).trim()){toast('Isi bab / topik tujuan di bank dulu.',1);$('#bmi-b').focus();return}
+  b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('bm.impor',{Mapel_ID:BMT.mapel,Kelas_ID:BMI.kelas,ids,Bab:bab,Status:$('#bmi-s').value});
+    let t=r.n+' materi masuk ke bank ('+r.Status+')';if(r.lewat)t+=', '+r.lewat+' dilewati ('+(r.penuh?'bank penuh atau ':'')+'judul sama di bab itu sudah ada)';
+    toast(t);BMI.sel={};BMT.d=await api('bm.mapel');bmiLoad();bmiBar()}
+  catch(e){fail(e);b.disabled=false;b.textContent='Simpan ke bank'}}
+ 
 const BMB={mapel:'',bab:'',q:'',hal:1,sel:{},list:null,n:0,tmr:0};
 function bmbBuka(){BMB.mapel=BMT.mapel;BMB.bab='';BMB.q='';BMB.hal=1;BMB.sel={};bmbDraw()}
 function bmbDraw(){const d=BMT.d,m=d.mapel.find(x=>x.Mapel_ID===BMB.mapel)||d.mapel[0];if(!m)return;BMB.mapel=m.Mapel_ID;
@@ -5571,7 +5712,7 @@ async function bsSalin(){const ids=Object.keys(BS.sel),b=$('#bs-sl');if(b){b.dis
     BS.sel={};BK.d=await api('bank.mapel');bsLoad();bsBar()}
   catch(e){fail(e);if(b){b.disabled=false;b.textContent='Salin ke bank saya'}}}
 
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BMT.d=null;BMT.list=null;BMT.sel={};BMT.mapel='';BMT.bab='';BMT.q='';BMT.st='berjalan';BMT.hal=1;BMT.n++;BMB.list=null;BMB.sel={};BMB.n++;BMB.mapel='';BMB.q='';BMB.bab='';BT.d=null;BT.sel={};BS.list=null;BS.sel={};BS.n++;BS.mapel='';BS.q='';BS.bab='';BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BMT.d=null;BMT.list=null;BMT.sel={};BMT.mapel='';BMT.bab='';BMT.q='';BMT.st='berjalan';BMT.hal=1;BMT.n++;BMB.list=null;BMB.sel={};BMB.n++;BMI.items=[];BMI.sel={};BMI.n++;BMI.kelas='';BMB.mapel='';BMB.q='';BMB.bab='';BT.d=null;BT.sel={};BS.list=null;BS.sel={};BS.n++;BS.mapel='';BS.q='';BS.bab='';BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
 Object.assign(VIEWS,{'g-bank':vGBank,'g-bmateri':vGBMateri});
 </script>
 <style>
