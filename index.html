@@ -252,7 +252,7 @@ function ask(msg,o){o=o||{};return new Promise(res=>{
   document.addEventListener('keydown',key,true);m.classList.add('on');
   setTimeout(()=>(inp?v:(o.bad?nob:okb)).focus(),30)})}
 function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3500)}
-async function api(a,p){let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
+window.TIMING=window.TIMING||[];async function api(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
 function fail(e){if(e.message==='SESI_HABIS'){clearSess();toast('Sesi berakhir, silakan masuk lagi',1);go('#/login')}else toast(e.message,1)}
 function clearSess(){S={token:'',user:null};localStorage.removeItem('tk');localStorage.removeItem('us');for(const k in MEM)delete MEM[k];(window.LOGOUT_HOOKS||[]).forEach(f=>{try{f()}catch(e){}});if(typeof mrReset==='function')mrReset();navAuth()}
 
@@ -1015,16 +1015,16 @@ async function gMateriBuka(id){const d=MEM.gd,r=d&&d.materi.find(x=>x.Materi_ID=
   MT(`<p><button class="btn ghost sm" onclick="GS.tab='materi';gHome()">&larr; Semua materi</button></p>
   <div class="kd-head"><span class="kcm">${esc(pairLabel())} &middot; ${esc(r.Tanggal_Teks)}</span><h2>${esc(r.Judul)}</h2>
    <div class="kcf" style="margin-bottom:10px">${kcStat(r)}${r.Status==='Draft'?'<small style="color:#5b7083;align-self:center">Murid belum bisa melihat materi ini.</small>':''}</div>
-   <div class="row"><button class="btn${r.Status==='Draft'?'':' ghost'} sm" onclick="gStatus('materi','${esc(id)}',1)">${r.Status==='Draft'?'Aktifkan sekarang':'Jadikan draft'}</button><button class="btn ghost sm" data-id="${esc(id)}" onclick="gFormMateri(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(id)}" onclick="gDelMateri(this.dataset.id,1)">Hapus</button></div></div>
+   <div class="row"><button class="btn${r.Status==='Draft'?'':' ghost'} sm" onclick="gStatus('materi','${esc(id)}',1)">${r.Status==='Draft'?'Aktifkan sekarang':'Jadikan draft'}</button><button class="btn ghost sm" data-id="${esc(id)}" onclick="gFormMateri(this.dataset.id)">Edit</button>${typeof mpArsip==='function'?`<button class="btn ghost sm" data-id="${esc(id)}" onclick="mpArsip(this.dataset.id)">Simpan ke Bank</button>`:''}<button class="btn bad sm" data-id="${esc(id)}" onclick="gDelMateri(this.dataset.id,1)">Hapus</button></div></div>
   <div class="kd ${r.Lampiran||tl?'dua':''}"><div class="kp"><h3>PEMBAHASAN</h3>${paras(r.Isi)||'<small style="color:#5b7083">Tidak ada teks pembahasan. Isi materi ada di berkas atau tautan.</small>'}</div>
   ${r.Lampiran||tl?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${r.Lampiran?tgBerkas('materi',id,r.Lampiran):''}${tl?`<p style="margin:8px 0 0"><a class="btn ghost sm" href="${esc(tl)}" target="_blank" rel="noopener">Buka tautan</a></p>`:''}</div>`:''}</div>`);
   tgAuto()}
 
 async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi_ID===id)||{}:{};
-  if(id&&r.Isi===undefined){   
+  if(id&&r.Isi===undefined){   // g.data tidak membawa isi materi: ambil dulu satu materi ini
     MT('<div id="gfm-wait"><div class="skel"></div></div>');
     try{const x=await api('materi.get',{id});r=Object.assign({},r,{Isi:x.Isi})}catch(e){if($('#gfm-wait')){fail(e);gHome()}return}
-    if(!$('#gfm-wait'))return}   
+    if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" value="${esc(r.Judul)}">
   <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan; Enter = paragraf baru)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
@@ -1082,12 +1082,12 @@ const kcEks=n=>({pdf:'PDF',doc:'DOC',docx:'DOC',xls:'XLS',xlsx:'XLS',ppt:'PPT',p
 function kcTenggat(iso){if(!iso)return{t:'Tanpa tenggat',c:''};const d=new Date(iso).getTime();if(!isFinite(d))return{t:'Tanpa tenggat',c:''};
   const sel=d-Date.now();if(sel<0)return{t:'Lewat tenggat',c:'w'};if(sel<86400000)return{t:'Kurang dari 24 jam',c:'w'};
   const h=Math.ceil(sel/86400000);return{t:h===1?'Besok':h+' hari lagi',c:h<=2?'w':''}}
-const TG_BL={};   // blob berkas (kunci memuat token sesi)
+const TG_BL={};   
 async function tgBlob(tipe,id){const key=(S&&S.token||'')+'|'+tipe+'|'+id;
   if(!TG_BL[key]){const r=await api('tugas.file',{tipe,id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     TG_BL[key]={url:URL.createObjectURL(new Blob([u],{type:r.mime})),mime:r.mime}}
   return TG_BL[key]}
-/* satu baris berkas: ikon jenis, nama, tombol Pratinjau (PDF/gambar; gambar tampil otomatis) dan Unduh */
+ 
 function tgBerkas(tipe,id,nama){const k='bf'+Math.random().toString(36).slice(2,9),eks=(String(nama).split('.').pop()||'').toLowerCase(),lihat=/^(pdf|jpg|jpeg|png)$/.test(eks);
   return `<div class="kb-file"><span class="kb-ext">${kcEks(nama)}</span><span class="kb-nm">${esc(nama)}</span>${lihat?`<button type="button" class="btn sm" data-tipe="${tipe}" data-id="${esc(id)}" data-v="${k}" ${eks==='pdf'?'':'data-auto="1" '}onclick="tgLihat(this)">Pratinjau</button>`:''}<button type="button" class="btn ghost sm" data-id="${esc(id)}" onclick="tgUnduh('${tipe}',this.dataset.id,this)">Unduh</button></div><div class="kb-view" id="${k}"></div>`}
 async function tgLihat(b,auto){const v=document.getElementById(b.dataset.v);if(!v)return;
@@ -1518,47 +1518,30 @@ function mxcClose(){
 <script>
 
 
-const NS={cache:{},dirty:false,ver:0,busy:false,sem:'Ganjil',key:'',nd:null,wk:'',ws:'',wl:[],wd:null,wreq:0,wmode:'siswa',wm:'',wmk:'',wmd:null};
+const NS={busy:false,sem:'Ganjil',key:'',nd:null,wk:'',ws:'',wl:[],wd:null,wreq:0,wmode:'siswa',wm:'',wmk:'',wmd:null};
 const SEMS=['Ganjil','Genap'];
 const semOpt=()=>SEMS.map(x=>`<option ${x===NS.sem?'selected':''}>${x}</option>`).join('');
 const warn=t=>`<p style="color:var(--bad)">${t}</p>`;
 
 
 
-const nPairIngat=()=>{try{return localStorage.getItem('nilaiPair')||''}catch(e){return ''}};
-const nPairSimpan=v=>{try{localStorage.setItem('nilaiPair',v)}catch(e){}};
-const nLabel=()=>{const d=NS.nd;return esc(pairLabel())+(d?' &middot; Tahun ajaran '+esc(d.Tahun_Ajaran)+' &middot; Semester '+esc(NS.sem):'')};
-function nPilih(v){GS.pair=v;nPairSimpan(v);nLoad()}
-function nSiap(d){   
-  if(!$('#np'))return;
-  if(!d.ampu.length){$('#np').style.display='none';$('#ns').style.display='none';$('#nb').innerHTML=NOAMPU;return}
-  if(!d.ampu.some(a=>a.Kelas_ID+'|'+a.Mapel_ID===GS.pair))GS.pair=d.ampu[0].Kelas_ID+'|'+d.ampu[0].Mapel_ID;
-  $('#np').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
-  nPairSimpan(GS.pair);
-  const l=$('#npl');if(l)l.innerHTML=nLabel();   // label kelas/mapel bisa tiba setelah tabel (muat spekulatif)
-  if(NS.key!==GS.pair+'|'+NS.sem)nLoad()}
 function vGNilai(){
   NS.key='';
-  M(`<h2>Input Nilai</h2><div class="row" style="margin:8px 0"><select id="np" style="max-width:340px" onchange="nPilih(this.value)"></select><select id="ns" style="max-width:140px" onchange="NS.sem=this.value;nLoad()">${semOpt()}</select></div><div id="nb"></div>`);
-  if(!GS.pair){const p=nPairIngat();if(p)GS.pair=p}
-  if(!MEM.gd&&GS.pair)nLoad(true);   // muat nilai langsung memakai pilihan terakhir, tanpa menunggu daftar kelas (hemat satu putaran)
-  else if(!MEM.gd)$('#nb').innerHTML='<div class="skel"></div>';
-  swr3('gd','g.data','#nb',nSiap)}
-async function nLoad(spec){const [k,m]=GS.pair.split('|'),key=GS.pair+'|'+NS.sem,c=NS.cache[key];NS.key=key;NS.dirty=false;
-  if(c){NS.nd=c.d;nDraw()}else $('#nb').innerHTML='<div class="skel"></div>';   
+  M(`<h2>Input Nilai</h2><div class="row" style="margin:8px 0"><select id="np" style="max-width:340px" onchange="GS.pair=this.value;nLoad()"></select><select id="ns" style="max-width:140px" onchange="NS.sem=this.value;nLoad()">${semOpt()}</select></div><div id="nb"></div>`);
+  if(!MEM.gd)$('#nb').innerHTML='<div class="skel"></div>';
+  swr3('gd','g.data','#nb',d=>{
+    if(!d.ampu.length){$('#np').style.display='none';$('#ns').style.display='none';$('#nb').innerHTML=NOAMPU;return}
+    if(!d.ampu.some(a=>a.Kelas_ID+'|'+a.Mapel_ID===GS.pair))GS.pair=d.ampu[0].Kelas_ID+'|'+d.ampu[0].Mapel_ID;
+    $('#np').innerHTML=d.ampu.map(a=>{const v=a.Kelas_ID+'|'+a.Mapel_ID;return `<option value="${esc(v)}" ${v===GS.pair?'selected':''}>${esc(a.Kelas)} - ${esc(a.Mapel)}</option>`}).join('');
+    if(NS.key!==GS.pair+'|'+NS.sem)nLoad()})}
+async function nLoad(){const [k,m]=GS.pair.split('|'),key=GS.pair+'|'+NS.sem;NS.key=key;$('#nb').innerHTML='<div class="skel"></div>';
   try{const d=await api('n.data',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem});if(NS.key!==key||!$('#nb'))return;
-    d.kol=d.komponen.map(c=>({nama:c.nama,kelompok:c.kelompok||'',isi:c.isi||0}));   
-    d.maks=d.maks||20;NS.cache[key]={d:d};
-    const ae=document.activeElement;
-    if(c&&(NS.dirty||(ae&&/^nv_/.test(ae.id||''))))return;   
-    NS.nd=d;nDraw()}
-  catch(e){
-    if(spec){if(NS.key===key)NS.key='';if(MEM.gd)nSiap(MEM.gd);return}   
-    if(c&&NS.key===key)return fail(e);   
-    if($('#nb'))$('#nb').innerHTML='';fail(e)}}
+    d.kol=d.komponen.map(c=>({nama:c.nama,kelompok:c.kelompok||'',isi:c.isi||0}));   // server lama hanya mengirim {nama,bobot}
+    d.maks=d.maks||20;NS.nd=d;nDraw()}
+  catch(e){if($('#nb'))$('#nb').innerHTML='';fail(e)}}
 const nSkorKosong=v=>String(v).trim()==='';
 function nRataBaris(vals){const a=vals.map(v=>String(v).trim().replace(',','.')).filter(v=>v!==''&&isFinite(Number(v))).map(Number);return a.length?String(Math.round(a.reduce((t,v)=>t+v,0)/a.length*100)/100):'-'}
-function nRata(i){NS.dirty=true;NS.ver++;const d=NS.nd,v=d.kol.map((c,j)=>{const e=$('#nv_'+i+'_'+j);return e?e.value:''}),t=$('#nr_'+i);if(t)t.textContent=nRataBaris(v)}
+function nRata(i){const d=NS.nd,v=d.kol.map((c,j)=>{const e=$('#nv_'+i+'_'+j);return e?e.value:''}),t=$('#nr_'+i);if(t)t.textContent=nRataBaris(v)}
 function nAmbil(){const d=NS.nd;d.siswa.forEach((x,i)=>d.kol.forEach((c,j)=>{const e=$('#nv_'+i+'_'+j);if(e)d.nilai[x.Siswa_ID+'|'+c.nama]={Skor:e.value}}))}   
 function nTugasBerikut(){const d=NS.nd;let mx=0;d.kol.forEach(c=>{const m=/^tugas\s+(\d+)$/i.exec(c.nama);if(m)mx=Math.max(mx,Number(m[1]))});
   if(!mx&&d.kol.some(c=>c.nama.toLowerCase()==='tugas'))mx=1;return 'Tugas '+(mx+1)}
@@ -1568,47 +1551,38 @@ function nDraw(){const d=NS.nd,ada=c=>d.kol.some(x=>x.nama.toLowerCase()===c.toL
     return `<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td>`+d.kol.map((c,j)=>`<td><input id="nv_${i}_${j}" type="number" min="0" max="100" step="any" style="width:76px" oninput="nRata(${i})" aria-label="${esc(c.nama)} ${esc(x.Nama_Siswa)}" value="${esc(isi[j])}"></td>`).join('')+`<td><b id="nr_${i}">${esc(nRataBaris(isi))}</b></td></tr>`}).join('');
   const cepat=[nTugasBerikut(),'Capaian 1','Capaian 2'].filter(c=>!ada(c)).map(c=>`<button type="button" class="btn sm ghost" data-n="${esc(c)}" onclick="nTambah(this.dataset.n)">+ ${esc(c)}</button>`).join(' ');
   const tg=d.kol.filter(c=>c.kelompok==='Tugas'),tgList=tg.length?tg:d.kol;
-  $('#nb').innerHTML=`<p><small id="npl">${nLabel()}</small></p>`+
+  $('#nb').innerHTML=`<p><small>${esc(pairLabel())} &middot; Tahun ajaran ${esc(d.Tahun_Ajaran)} &middot; Semester ${esc(NS.sem)}</small></p>`+
    (d.siswa.length?`<div class="row" style="margin:8px 0;align-items:flex-end;gap:8px;flex-wrap:wrap"><div><label for="nnew">Tambah kolom nilai</label><input id="nnew" maxlength="40" placeholder="mis. Tugas 1" style="width:190px" onkeydown="if(event.key==='Enter'){event.preventDefault();nTambah()}"></div><button type="button" class="btn ghost" onclick="nTambah()">+ Tambah kolom</button></div>
    <p style="margin:4px 0 8px"><small>Tambah cepat:</small> ${cepat||'<small>(semua sudah ada)</small>'}</p>
    <div class="tw"><table><tr><th>NIS</th><th>Nama</th>${head}<th>Rata-rata</th></tr>${rows}</table></div>
    <p class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn" id="nsv" onclick="nSimpan()">Simpan semua</button>
    <span style="margin-left:12px"><label for="ntg" class="sr-only" style="position:absolute;left:-9999px">Kolom tujuan</label><select id="ntg" style="max-width:190px">${tgList.map(c=>`<option value="${esc(c.nama)}">${esc(c.nama)}</option>`).join('')}</select> <button class="btn ghost" onclick="nTarik()">Isi dari rata-rata nilai tugas</button></span></p>
    <p><small>Nilai 0-100. Kosongkan kotak jika belum ada nilai. Kolom baru langsung tersimpan; isi nilainya lalu tekan "Simpan semua". Untuk menghapus kolom (tanda &times;), kosongkan dulu semua nilainya dan simpan. Paling banyak ${d.maks} kolom per kelas dan mapel. Catatan: STS di rapor mid memakai kolom <b>UTS</b> (nilainya sama).</small></p>`:'<div class="empty">Belum ada siswa di kelas ini.</div>')}
-const nSama=(l,k)=>l.length===k.length&&l.every((c,i)=>c.nama===k[i].nama);
-function nTujuan(){const e=$('#ntg'),d=NS.nd;if(!e||!d)return;const v=e.value,tg=d.kol.filter(c=>c.kelompok==='Tugas'),l=tg.length?tg:d.kol;
-  e.innerHTML=l.map(c=>`<option value="${esc(c.nama)}">${esc(c.nama)}</option>`).join('');if(l.some(c=>c.nama===v))e.value=v}
 async function nTambah(nama){const d=NS.nd,e=$('#nnew');if(!d||NS.busy)return;
   const v=String(nama!==undefined?nama:(e?e.value:'')).replace(/\s+/g,' ').trim();
   if(!v)return toast('Tulis nama nilainya dulu, misalnya Tugas 1');
   if(v.length>40||/[|<>]/.test(v)||/^[=+\-@]/.test(v))return toast('Nama tidak valid: maksimal 40 karakter, tanpa | < > dan tidak diawali = + - @');
   if(d.kol.some(c=>c.nama.toLowerCase()===v.toLowerCase()))return toast('Kolom "'+v+'" sudah ada');
   if(d.kol.length>=d.maks)return toast('Paling banyak '+d.maks+' kolom. Hapus kolom yang kosong dulu');
-  const [k,m]=GS.pair.split('|'),key=NS.key,lama=d.kol.slice();nAmbil();NS.busy=true;
-  d.kol=lama.concat([{nama:v,kelompok:'',isi:0}]);nDraw();const f=$('#nv_0_'+(d.kol.length-1));if(f)f.focus();   // kolom langsung tampil; server menyusul
+  const [k,m]=GS.pair.split('|'),key=NS.key;nAmbil();NS.busy=true;
   try{const l=await api('n.kolomTambah',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Nama:v});
-    if(NS.key!==key||NS.nd!==d)return;
-    if(nSama(l,d.kol)){d.kol=l;nTujuan()}else{nAmbil();d.kol=l;nDraw()}}   // urutan dari server berbeda: gambar ulang tanpa menghilangkan isian
-  catch(er){if(NS.key===key&&NS.nd===d){nAmbil();d.kol=lama;nDraw()}fail(er)}finally{NS.busy=false}}
+    if(NS.key!==key||NS.nd!==d)return;d.kol=l;nDraw();const f=$('#nv_0_'+(d.kol.length-1));if(f)f.focus()}
+  catch(er){fail(er)}finally{NS.busy=false}}
 async function nHapusKolom(j){const d=NS.nd,c=d&&d.kol[Number(j)];if(!c||NS.busy)return;
   if(!await ask('Hapus kolom "'+c.nama+'"? Kolom hanya bisa dihapus bila semua nilainya sudah kosong dan tersimpan.',{title:'Hapus kolom nilai',ok:'Hapus'}))return;
-  const [k,m]=GS.pair.split('|'),key=NS.key,lama=d.kol.slice();nAmbil();NS.busy=true;
-  d.kol=lama.filter(x=>x!==c);nDraw();toast('Kolom dihapus');
+  const [k,m]=GS.pair.split('|'),key=NS.key;nAmbil();NS.busy=true;
   try{const l=await api('n.kolomHapus',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Nama:c.nama});
-    if(NS.key!==key||NS.nd!==d)return;
-    if(nSama(l,d.kol)){d.kol=l;nTujuan()}else{nAmbil();d.kol=l;nDraw()}}
-  catch(er){if(NS.key===key&&NS.nd===d){nAmbil();d.kol=lama;nDraw()}fail(er)}finally{NS.busy=false}}
-async function nSimpan(){const d=NS.nd,[k,m]=GS.pair.split('|'),b=$('#nsv'),items=[],key=NS.key;
+    if(NS.key!==key||NS.nd!==d)return;d.kol=l;nDraw();toast('Kolom dihapus')}
+  catch(er){fail(er)}finally{NS.busy=false}}
+async function nSimpan(){const d=NS.nd,[k,m]=GS.pair.split('|'),b=$('#nsv'),items=[];
   d.siswa.forEach((x,i)=>d.kol.forEach((c,j)=>items.push({Siswa_ID:x.Siswa_ID,Jenis:c.nama,Skor:$('#nv_'+i+'_'+j).value})));
-  nAmbil();const v=NS.ver;b.disabled=true;b.textContent='Menyimpan...';
-  try{const r=await api('n.save',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,items});toast(r.diubah?r.diubah+' nilai tersimpan':'Tidak ada perubahan');
-    NS.cache[key]={d:d};if(NS.key===key&&NS.ver===v)NS.dirty=false;   // tabel sudah sama dengan server: tidak perlu muat ulang
-    const b2=$('#nsv');if(b2){b2.disabled=false;b2.textContent='Simpan semua'}}
-  catch(e){fail(e);const b2=$('#nsv');if(b2){b2.disabled=false;b2.textContent='Simpan semua'}}}
+  b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('n.save',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,items});toast(r.diubah?r.diubah+' nilai tersimpan':'Tidak ada perubahan');nLoad()}
+  catch(e){fail(e);b.disabled=false;b.textContent='Simpan semua'}}
 async function nTarik(){const s=$('#ntg'),tujuan=s?s.value:'';if(!tujuan)return toast('Pilih kolom tujuan dulu');
   if(!await ask('Isi kolom "'+tujuan+'" dengan rata-rata nilai tugas semester '+NS.sem+' yang sudah dinilai di menu Tugas? Isian lama di kolom itu akan diganti. Semester ditentukan dari tenggat tugas (Juli-Desember = Ganjil, Januari-Juni = Genap).',{title:'Tarik nilai tugas',ok:'Tarik nilai'}))return;
   const [k,m]=GS.pair.split('|');
-  try{const r=await api('n.tarikTugas',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Jenis:tujuan});toast(r.diubah?r.diubah+' nilai tugas diisi':'Sudah sama, tidak ada perubahan');delete NS.cache[NS.key];nLoad()}catch(e){fail(e)}}
+  try{const r=await api('n.tarikTugas',{Kelas_ID:k,Mapel_ID:m,Semester:NS.sem,Jenis:tujuan});toast(r.diubah?r.diubah+' nilai tugas diisi':'Sudah sama, tidak ada perubahan');nLoad()}catch(e){fail(e)}}
 
 /* MT: seperti M, tetapi bila halaman Kelas Binaan (#bn-body) atau Mata Pelajaran (#mp-body, MapelUI) sedang tampil, isi masuk ke tab, bukan ke seluruh #dmain. */
 let MTK=0;   // nomor tampilan: naik setiap MT() menggambar; WaliUI memakainya untuk mengabaikan respons tampilan lama
@@ -1698,7 +1672,7 @@ async function wUnduh(b){const t=b.textContent;b.disabled=true;b.textContent='Me
   catch(e){fail(e)}b.disabled=false;b.textContent=t}
 
 /* dipanggil Index.html saat keluar/ganti akun */
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{NS.cache={};NS.dirty=false;try{localStorage.removeItem('nilaiPair')}catch(e){}NS.nd=NS.wd=NS.wmd=null;NS.wl=[];NS.wk=NS.ws=NS.wm='';NS.key='';NS.wlk=''});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{NS.nd=NS.wd=NS.wmd=null;NS.wl=[];NS.wk=NS.ws=NS.wm='';NS.key='';NS.wlk=''});
 Object.assign(VIEWS,{'g-nilai':vGNilai,'w-siswa':vWSiswa,'w-nilai':vWNilai});
 </script>
 <style>
@@ -2693,7 +2667,6 @@ Object.assign(VIEWS,{'m-kelas':vMKelas});
 
 
 const MR_MAX=6;
-const mrSig=d=>JSON.stringify(d,(k,v)=>k==='now'?0:v);   
 const mrIc=n=>typeof dsI==='function'?dsI(n):'';
 
 function mrIn(ms){if(!isFinite(ms))return '';if(ms<0)return 'sudah lewat';const m=Math.floor(ms/60000);if(m<60)return Math.max(1,m)+' menit lagi';const h=Math.floor(m/60);if(h<24)return h+' jam lagi';return Math.floor(h/24)+' hari lagi'}
@@ -2788,9 +2761,8 @@ function mrMulai(id,b){EXB.fn=vMRingkasan;EXB.label='Kembali ke ringkasan';exSta
 function vMRingkasan(force){
   exStop(true);
   M('<div class="row" style="justify-content:space-between"><h2 style="margin:0">Ringkasan</h2><button type="button" class="btn ghost sm" onclick="vMRingkasan(true)">Segarkan</button></div><div id="mr-body" style="margin-top:14px"></div>');
-  let j0='';if(MEM.mr){mrDraw(MEM.mr);j0=mrSig(MEM.mr)}else $('#mr-body').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
-  const baru=MEM.mr&&force!==true&&Date.now()-MR_T<8000;   // baru saja dimuat (pindah halaman lalu kembali): tidak perlu ke server lagi
-  (baru?Promise.resolve(MEM.mr):mrFetch(true)).then(d=>{if(!$('#mr-body'))return;if(mrSig(d)!==j0)mrDraw(d);mrBadgeDraw()}).catch(e=>{   // selalu ambil ulang: booking Lab/PID baru tidak membuang MEM.mr, jadi cache 30 dtk bisa basi
+  if(MEM.mr)mrDraw(MEM.mr);else $('#mr-body').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
+  mrFetch(true).then(d=>{mrDraw(d);mrBadgeDraw()}).catch(e=>{   // selalu ambil ulang: booking Lab/PID baru tidak membuang MEM.mr, jadi cache 30 dtk bisa basi
     
     if(e&&e.message==='SESI_HABIS')return fail(e);
     if(!MEM.mr&&$('#mr-body'))$('#mr-body').innerHTML=`<div class="empty">${esc(e&&e.message||'Ringkasan belum bisa dimuat.')} <button type="button" class="btn ghost sm" onclick="vMRingkasan(true)">Coba lagi</button></div>`;
@@ -2834,29 +2806,15 @@ function grDraw(d){
    ${mrCard('gr-mp','Mata pelajaran yang saya ampu',d.jumlahMapel,false,(d.mapel||[]).map(grMapel),'Belum ada mata pelajaran.',{href:'#/dashboard/g-kelas',label:'Kelas & Mapel Saya'})}
   </div>`}
 
-let GR_P=null,GR_OK=false;   // GR_P: permintaan yang sedang berjalan; GR_OK: isi halaman sudah digambar dari data nyata
-const grInfo=t=>{const e=$('#gr-info');if(e)e.textContent=t||''};
-const grJam=t=>{try{return new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
-const GR_SKEL='<div class="skel"></div><br><div class="skel"></div>';
 function vGRingkasan(){
-  M('<div class="row" style="justify-content:space-between"><h2 style="margin:0">Ringkasan</h2><button type="button" id="gr-seg" class="btn ghost sm" onclick="grMuat(true)">Segarkan</button></div><p id="gr-info" style="margin:6px 0 0;color:#5b7083;font-size:13px"></p><div id="gr-body" style="margin-top:14px"></div>');
-  GR_OK=false;
-  if(MEM.grr){grDraw(MEM.grr);GR_OK=true;if(Date.now()-(MEM.grrT||0)>20000)grInfo('Menampilkan data terakhir ('+grJam(MEM.grrT)+'), sedang disegarkan...')}   // data lama tampil dulu, dengan keterangan
-  else $('#gr-body').innerHTML=GR_SKEL;
-  grMuat(false)}
-function grMuat(force){
-  if(!force&&MEM.grr&&Date.now()-(MEM.grrT||0)<8000){grInfo('');return}   // baru saja dimuat (pindah halaman lalu kembali): tidak perlu ke server lagi
-  if(GR_P)return;
-  const tk=S&&S.token,b=$('#gr-seg');if(b){b.disabled=true;b.textContent='Menyegarkan...'}
-  GR_P=api('gr.ringkasan').then(d=>{if(!S||S.token!==tk)return;
-      const j=mrSig(d),sama=GR_OK&&j===MEM.grrJ;MEM.grr=d;MEM.grrJ=j;MEM.grrT=Date.now();
-      if(!sama&&$('#gr-body')){grDraw(d);GR_OK=true}   // angka sama dengan yang tampil: tidak digambar ulang (tidak berkedip, gulir tetap)
-      grInfo('')})
-    .catch(e=>{
-      if(e&&e.message==='SESI_HABIS')return fail(e);
-      if(!GR_OK&&$('#gr-body'))$('#gr-body').innerHTML=`<div class="empty">${esc(e&&e.message||'Ringkasan belum bisa dimuat.')} <button type="button" class="btn ghost sm" onclick="grMuat(true)">Coba lagi</button></div>`;
-      else toast(e&&e.message||'Gagal menyegarkan',1)})
-    .finally(()=>{GR_P=null;const b2=$('#gr-seg');if(b2){b2.disabled=false;b2.textContent='Segarkan'}})}
+  M('<div class="row" style="justify-content:space-between"><h2 style="margin:0">Ringkasan</h2><button type="button" class="btn ghost sm" onclick="vGRingkasan()">Segarkan</button></div><div id="gr-body" style="margin-top:14px"></div>');
+  const baru=MEM.grr&&Date.now()-(MEM.grrT||0)<20000;   // cache lebih lama dari 20 dtk tidak ditampilkan, agar angka lama tidak sempat berkedip
+  if(baru)grDraw(MEM.grr);else $('#gr-body').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
+  const tk=S&&S.token;
+  api('gr.ringkasan').then(d=>{if(!S||S.token!==tk)return;MEM.grr=d;MEM.grrT=Date.now();grDraw(d)}).catch(e=>{
+    if(e&&e.message==='SESI_HABIS')return fail(e);
+    if(!baru&&$('#gr-body'))$('#gr-body').innerHTML=`<div class="empty">${esc(e&&e.message||'Ringkasan belum bisa dimuat.')} <button type="button" class="btn ghost sm" onclick="vGRingkasan()">Coba lagi</button></div>`;
+    else toast(e&&e.message||'Gagal menyegarkan',1)})}
 
 Object.assign(VIEWS,{'g-ringkasan':vGRingkasan});
 </script>
@@ -4441,7 +4399,7 @@ async function verifPublik(kode,id){
 <script id="msk-js">
 /* ===== SURAT MASUK (S8): menu Admin 'masuk'. Memakai: M, $, esc, api, ask, toast, fail, VIEWS (Index). Berdiri sendiri. =====
    Nama global berawalan MSK / sm. Rute server: masuk.list, masuk.simpan, masuk.tandai, masuk.hapus, masuk.file (SuratMasuk.gs). */
-const MSK={q:'',st:'',jn:'',sek:'',tp:'',thn:'',bln:'',hal:1,ed:null,t:0,c:{},req:0};   // c = simpanan hasil per penyaringan (tampil dulu, disegarkan diam-diam)
+const MSK={q:'',st:'',jn:'',sek:'',tp:'',thn:'',bln:'',hal:1,ed:null,t:0};
 const MSK_TIPE=['Digital','Non digital'],MSK_BLN_PENUH=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],MSK_ROM=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 const MSK_JENIS=['Undangan','Pemberitahuan','Permohonan','Edaran','Lainnya'],MSK_STATUS=['Baru','Direview','Selesai'],MSK_HADIR=['Belum ditentukan','Dihadiri','Tidak dihadiri','Diwakilkan'];
 const MSK_BLN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -4449,24 +4407,14 @@ const mskTgl=t=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(t||'');return m?(+m[3])
 const mskHariIni=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
 const mskOpt=(l,v,k)=>l.map(x=>{const a=k?x[0]:x,b=k?x[1]:x;return`<option value="${esc(a)}"${a===v?' selected':''}>${esc(b)}</option>`}).join('');
 
-const mskKey=()=>JSON.stringify([MSK.q,MSK.st,MSK.jn,MSK.sek,MSK.tp,MSK.thn,MSK.bln,MSK.hal]);
-const mskSimpanan=k=>MSK.c[k]||(MEM.masuk&&MEM.masuk._k===k?MEM.masuk:null);
 function vMasuk(){
   M(`<h2>Surat masuk</h2><div id="mskb"></div>`);
-  if(!mskSimpanan(mskKey()))$('#mskb').innerHTML='<div class="skel"></div>';
+  if(!MEM.masuk)$('#mskb').innerHTML='<div class="skel"></div>';
   mskMuat()}
 async function mskMuat(){
-  const k=mskKey(),id=++MSK.req,c=mskSimpanan(k);
-  if(c){MEM.masuk=c;mskGambar()}else{const l=$('#msk_l');if(l)l.style.opacity='.45'}   // simpanan tampil dulu; bila belum ada, daftar lama diredupkan
-  try{const d=await api('masuk.list',{q:MSK.q,status:MSK.st,jenis:MSK.jn,sekolah:MSK.sek,tipe:MSK.tp,thn:MSK.thn,bln:MSK.bln,hal:MSK.hal});
-    if(id!==MSK.req)return;   // ada permintaan yang lebih baru: abaikan jawaban lama
-    d._k=k;const sama=c&&JSON.stringify(Object.assign({},c,{_k:k}))===JSON.stringify(d);
-    if(Object.keys(MSK.c).length>30)MSK.c={};MSK.c[k]=d;MEM.masuk=d;if(!sama||!$('#msk_l')||!c)mskGambar()}
-  catch(e){if(id===MSK.req){const l=$('#msk_l');if(l)l.style.opacity='';fail(e)}}}
+  try{MEM.masuk=await api('masuk.list',{q:MSK.q,status:MSK.st,jenis:MSK.jn,sekolah:MSK.sek,tipe:MSK.tp,thn:MSK.thn,bln:MSK.bln,hal:MSK.hal});mskGambar()}catch(e){fail(e)}}
 function mskCari(v){MSK.q=v;MSK.hal=1;clearTimeout(MSK.t);MSK.t=setTimeout(mskMuat,300)}
-function mskSaring(k,v){MSK[k]=v;if(k==='thn'&&!v)MSK.bln='';if(k==='bln'&&v&&!MSK.thn){MSK.thn=String(new Date().getFullYear())}MSK.hal=1;
-  const t=$('#msk_thn'),b=$('#msk_bln');if(t)t.value=MSK.thn;if(b)b.value=MSK.bln;   // sinkronkan pilihan tahun dan bulan tanpa menggambar ulang seluruh bilah
-  mskMuat()}
+function mskSaring(k,v){MSK[k]=v;if(k==='thn'&&!v)MSK.bln='';if(k==='bln'&&v&&!MSK.thn){MSK.thn=String(new Date().getFullYear())}MSK.hal=1;if(k==='thn'||k==='bln')$('#mskb').innerHTML='';mskMuat()}
 function mskHal(n){MSK.hal=n;mskMuat()}
 
 function mskGambar(){
@@ -4491,7 +4439,6 @@ function mskGambar(){
   $('#msk_h').innerHTML=[['','Semua',tot]].concat(MSK_STATUS.map(s=>[s,s,h[s]||0])).map(([k,l,n])=>`<button type="button" class="msk-chip${MSK.st===k?' on':''}" onclick="mskSaring('st','${k}')"><b>${n}</b><span>${esc(l)}</span></button>`).join('');
   const sk={};(d.sekolah||[]).forEach(x=>sk[x.id]=x.nama);
   const rows=d.baris||[];
-  $('#msk_l').style.opacity='';
   $('#msk_l').innerHTML=rows.length?rows.map(x=>{const t=/^(\d{4})-(\d{2})-(\d{2})/.exec(x.diterima||'');return `<div class="msk-it ${esc(x.status)}" data-id="${esc(x.id)}">
     <div class="msk-cal"><b>${t?+t[3]:'-'}</b><small>${t?MSK_BLN[+t[2]-1]:''}</small><small>${t?t[1]:''}</small></div>
     <div><h4>${esc(x.perihal)}</h4><small>${esc(x.pengirim)}${x.nomor?' · '+esc(x.nomor):''}${x.tglSurat?' · tgl surat '+esc(mskTgl(x.tglSurat)):''}</small>${x.alamat||x.hp?`<br><small>${esc(x.alamat.split('\n').join(', '))}${x.alamat&&x.hp?' · ':''}${x.hp?'HP '+esc(x.hp):''}</small>`:''}${x.agenda?`<br><small>No. petunjuk: <b>${esc(x.agenda)}</b></small>`:''}
@@ -4504,24 +4451,15 @@ function mskGambar(){
     +(d.total>d.perHal?`<div class="row" style="margin-top:10px;align-items:center"><button class="btn sm ghost" ${d.hal<=1?'disabled':''} onclick="mskHal(${d.hal-1})">Sebelumnya</button><small>Halaman ${d.hal} dari ${Math.ceil(d.total/d.perHal)} (${d.total} surat)</small><button class="btn sm ghost" ${d.hal*d.perHal>=d.total?'disabled':''} onclick="mskHal(${d.hal+1})">Berikutnya</button></div>`:'')
     :'<div class="empty">'+(MSK.q||MSK.st||MSK.jn||MSK.sek||MSK.tp||MSK.thn?'Tidak ada surat yang cocok dengan penyaringan.':'Belum ada surat masuk yang dicatat.')+'</div>'}
 
-/* tandai cepat dari daftar: tampilan langsung berubah, server menyusul; bila gagal, dikembalikan */
-const mskUbahHitung=(d,dari,ke)=>{const h=d.hitung||(d.hitung={});if(dari&&dari!==ke)h[dari]=Math.max(0,(h[dari]||0)-1);if(ke&&dari!==ke)h[ke]=(h[ke]||0)+1};
+/* tandai cepat dari daftar */
 async function mskTandai(id,patch,el){
-  const d=MEM.masuk,l=d.baris,i=l.findIndex(x=>x.id===id);if(i<0)return;
-  const lama=l[i];l[i]=Object.assign({},lama,patch);mskUbahHitung(d,lama.status,l[i].status);mskGambar();
-  try{const r=await api('masuk.tandai',Object.assign({id:id},patch));
-    const l2=MEM.masuk&&MEM.masuk.baris,j=l2?l2.findIndex(x=>x.id===id):-1;if(j>=0){l2[j]=r.baris;MEM.masuk.hitung=r.hitung}
-    const k=mskKey();MSK.c={};if(MEM.masuk&&MEM.masuk._k===k)MSK.c[k]=MEM.masuk;   // simpanan penyaringan lain sudah usang (jumlah berubah)
-    toast('Tersimpan');mskGambar()}
-  catch(e){const l2=MEM.masuk&&MEM.masuk.baris,j=l2?l2.findIndex(x=>x.id===id):-1;
-    if(j>=0){mskUbahHitung(MEM.masuk,l2[j].status,lama.status);l2[j]=lama}fail(e);mskGambar()}}
+  if(el)el.disabled=true;
+  try{const r=await api('masuk.tandai',Object.assign({id:id},patch)),l=MEM.masuk.baris,i=l.findIndex(x=>x.id===id);if(i>=0)l[i]=r.baris;MEM.masuk.hitung=r.hitung;toast('Tersimpan');mskGambar()}
+  catch(e){fail(e);mskGambar()}}
 async function mskHapus(id){
-  const d=MEM.masuk,i=d.baris.findIndex(y=>y.id===id),x=d.baris[i];
+  const x=MEM.masuk.baris.find(y=>y.id===id);
   if(!await ask('Hapus surat masuk "'+(x?x.perihal:id)+'"? Berkas salinannya juga dihapus.'))return;
-  const d2=MEM.masuk,j=d2.baris.findIndex(y=>y.id===id);
-  if(j>=0){const [g]=d2.baris.splice(j,1);mskUbahHitung(d2,g.status,'');d2.total=Math.max(0,(d2.total||1)-1);mskGambar()}   // hilang dari daftar lebih dulu
-  try{await api('masuk.hapus',{id:id});toast('Surat masuk dihapus');MSK.c={};if(MEM.masuk)MEM.masuk._k='';mskMuat()}
-  catch(e){fail(e);MSK.c={};if(MEM.masuk)MEM.masuk._k='';mskMuat()}}   // gagal: ambil ulang dari server agar daftar benar
+  try{await api('masuk.hapus',{id:id});toast('Surat masuk dihapus');mskMuat()}catch(e){fail(e)}}
 
 /* melihat berkas: jendela dibuka dulu (sebelum menunggu server) agar tidak diblokir peramban */
 async function mskBerkas(id){
@@ -4605,7 +4543,7 @@ async function mskSimpan(lanjut){
       if(r.duplikat&&r.duplikat.length)m.push('Surat dengan nomor dan pengirim yang sama sudah tercatat (diterima '+mskTgl(r.duplikat[0].diterima)+').');
       if(r.agendaGanda&&r.agendaGanda.length){const g=r.agendaGanda[0];m.push('No. berkas '+p.noBerkas+' sudah dipakai tahun ini'+(g.agenda?' ('+g.agenda+')':'')+' pada surat "'+g.perihal+'" dari '+g.pengirim+'.')}
       if(await ask(m.join(' ')+' Tetap simpan?',{title:'Nomor sudah ada',ok:'Ya, tetap simpan',bad:true}))return mskSimpan(true);return}
-    toast('Surat masuk tersimpan');MSK.c={};vMasuk()}   // daftar lama tampil dulu, disegarkan dalam beberapa detik
+    toast('Surat masuk tersimpan');MEM.masuk=null;vMasuk()}
   catch(x){fail(x);b.disabled=false;b.textContent='Simpan'}}
 
 Object.assign(VIEWS,{masuk:vMasuk});
@@ -5030,7 +4968,12 @@ if(Array.isArray(BOOT.jumbo))jbxApply(BOOT.jumbo);else api('public.jumbo').then(
 <script>
 
 
-const MP={tab:'siswa',pair:'',kelas:'',sig:''};
+const MP={tab:'siswa',pair:'',kelas:'',sig:'',sw:{},rq:0};
+const MP_FRESH=20000;   
+ 
+function mpGet(key,a,sel,render,force){
+  if(!force&&MEM[key]&&Date.now()-(MEM[key+'T']||0)<MP_FRESH){if($(sel))try{render(MEM[key])}catch(x){console.warn(x)}return Promise.resolve()}
+  return swr3(key,a,sel,render)}
 const MP_TABS=[['siswa','Siswa'],['materi','Materi'],['tugas','Tugas'],['ujian','Ujian CBT'],['nilai','Input Nilai']];
 const mpP=a=>a.Kelas_ID+'|'+a.Mapel_ID;
 const mpChip=(t,c)=>`<span class="mkchip ${c||''}">${t}</span>`;
@@ -5041,11 +4984,12 @@ const mpDec=t=>{try{return decodeURIComponent(t)}catch(e){return t}};
 function vGMapel(){if(SUBR)mpDetail(mpDec(SUBR));else mpList()}
 
 /* ---------- Halaman 1: dropdown kelas + kartu ---------- */
-function mpList(){MP.pair='';
-  M('<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Mata Pelajaran</h2><button class="btn ghost sm" onclick="delete MEM.gd;delete MEM.ug;mpList()">Segarkan</button></div><div class="row" style="margin:12px 0"><select id="mp-k" aria-label="Filter kelas" style="max-width:320px" onchange="MP.kelas=this.value;mpListDraw()"></select></div><div id="mp-l"></div>');
+function mpList(force){MP.pair='';
+  M('<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Mata Pelajaran</h2><button class="btn ghost sm" onclick="MP.sw={};mpList(true)">Segarkan</button></div><div class="row" style="margin:12px 0"><select id="mp-k" aria-label="Filter kelas" style="max-width:320px" onchange="MP.kelas=this.value;mpListDraw()"></select></div><div id="mp-l"></div>');
   if(!MEM.gd)$('#mp-l').innerHTML='<div class="skel"></div><br><div class="skel"></div>';
-  swr3('gd','g.data','#mp-l',()=>{mpListDraw();gmBadgeDraw()});
-  api('u.data').then(l=>{MEM.ug=l;mpListDraw()}).catch(()=>{})}   // chip ujian opsional: galat di sini tidak mengganggu daftar
+  mpGet('gd','g.data','#mp-l',()=>{mpListDraw();gmBadgeDraw()},force);
+  if(!force&&MEM.ug&&Date.now()-(MEM.ugT||0)<MP_FRESH)return;   // chip ujian masih segar
+  api('u.data').then(l=>{MEM.ug=l;MEM.ugT=Date.now();mpListDraw()}).catch(()=>{})}   
 function mpListDraw(){const d=MEM.gd,el=$('#mp-l');if(!d||!el)return;
   if(!d.ampu.length){const s=$('#mp-k');if(s)s.style.display='none';el.innerHTML=NOAMPU;return}
   const ks=[],seen={};d.ampu.forEach(a=>{if(!seen[a.Kelas_ID]){seen[a.Kelas_ID]=1;ks.push([a.Kelas_ID,a.Kelas])}});
@@ -5065,7 +5009,7 @@ function mpDetail(pair){MP.pair=pair;GS.pair=pair;
   M('<p><a class="btn ghost sm" href="#/dashboard/g-mapel">&larr; Semua mata pelajaran</a></p><div id="mp-h"></div><div class="tabs" id="mp-t"></div><div id="mp-body"></div>');
   mpTabs();MP.sig='';
   if(!MEM.gd)$('#mp-body').innerHTML='<div class="skel"></div>';
-  swr3('gd','g.data','#mp-body',d=>{
+  mpGet('gd','g.data','#mp-body',d=>{
     const a=d.ampu.find(x=>mpP(x)===pair);
     if(!a){if($('#mp-t'))$('#mp-t').innerHTML='';if($('#mp-h'))$('#mp-h').innerHTML='';$('#mp-body').innerHTML='<div class="empty">Mata pelajaran itu tidak ada di daftar pengampuan Anda.</div>';return}
     $('#mp-h').innerHTML=`<h2 style="margin:6px 0 2px">${esc(a.Mapel)}</h2><p style="margin:0 0 10px"><small>${esc(a.Kelas)} &middot; ${a.Siswa} siswa</small></p>`;
@@ -5082,10 +5026,10 @@ function mpBody(){const b=$('#mp-body');if(!b||!MP.pair||!MEM.gd)return;
   if(MP.tab==='siswa'){mpSiswa();return}
   if(MP.tab==='ujian'){mpUjian();return}
   if(MP.tab==='nilai'){mpNilai();return}
-  GS.pair=MP.pair;GS.tab=MP.tab;
+  GS.pair=MP.pair;GS.tab=MP.tab;MEM.gdT=0;   // materi/tugas bisa diubah di tab ini: daftar mengambil ulang saat dibuka lagi
   b.innerHTML='<div class="tabs" id="gtabs" style="display:none"></div><div id="gbody"></div>';gDraw()}
 /* tab Ujian CBT: daftar ujian pasangan ini; Soal/Hasil/Edit/Buat memakai layar Fase5UI yang menggambar ke #mp-body lewat MT() */
-function mpUjian(){const b=$('#mp-body');GS.pair=MP.pair;UJ.pair=MP.pair;UJ.req=0;
+function mpUjian(){const b=$('#mp-body');GS.pair=MP.pair;UJ.pair=MP.pair;UJ.req=0;MEM.ugT=0;   // ujian bisa dibuat/diubah di tab ini
   b.innerHTML='<p><button class="btn" onclick="uForm()">Buat ujian</button></p><p><small>Bentuk soal: pilihan ganda, pilihan ganda kompleks, dan benar/salah; mendukung rumus matematika; nilai otomatis. Alur: buat ujian (Draft), tambah soal atau impor dari CSV, lalu aktifkan.</small></p><div class="tw" id="ub"></div>';
   if(MEM.ug)uDraw();else $('#ub').innerHTML='<div class="skel"></div>';
   uLoad()}
@@ -5093,10 +5037,16 @@ function mpUjian(){const b=$('#mp-body');GS.pair=MP.pair;UJ.pair=MP.pair;UJ.req=
 function mpNilai(){const b=$('#mp-body');GS.pair=MP.pair;NS.key='';
   b.innerHTML=`<div class="row" style="margin:8px 0"><label for="ns" style="margin:0">Semester</label><select id="ns" style="max-width:140px" onchange="NS.sem=this.value;nLoad()">${semOpt()}</select></div><div id="nb"></div>`;
   nLoad()}
-async function mpSiswa(){const b=$('#mp-body'),p=MP.pair,[k,m]=p.split('|');b.innerHTML='<div class="skel"></div>';
-  try{const l=await api('g.siswa',{Kelas_ID:k,Mapel_ID:m});if(MP.pair!==p||MP.tab!=='siswa'||!$('#mp-body'))return;
-    $('#mp-body').innerHTML=l.length?`<div class="tw"><table><tr><th>NIS</th><th>Nama</th></tr>`+l.map(x=>`<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada siswa di kelas ini.</div>'}
-  catch(e){if($('#mp-body'))$('#mp-body').innerHTML='';fail(e)}}
+/* tab Siswa: daftar disimpan per pasangan (MP.sw). Buka lagi = tampil seketika; disegarkan diam-diam bila lebih dari 30 detik, digambar ulang hanya bila isinya berubah */
+async function mpSiswa(){const b=$('#mp-body'),p=MP.pair,[k,m]=p.split('|'),c=MP.sw[p],my=++MP.rq;
+  const draw=l=>{if(MP.pair!==p||MP.tab!=='siswa'||!$('#mp-body'))return;
+    $('#mp-body').innerHTML=l.length?`<div class="tw"><table><tr><th>NIS</th><th>Nama</th></tr>`+l.map(x=>`<tr><td>${esc(x.NIS)}</td><td>${esc(x.Nama_Siswa)}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada siswa di kelas ini.</div>'};
+  if(c){draw(c.l);if(Date.now()-c.t<30000)return}else b.innerHTML='<div class="skel"></div>';
+  try{const l=await api('g.siswa',{Kelas_ID:k,Mapel_ID:m}),sg=JSON.stringify(l);
+    if(c&&MP.sw[p]===c&&c.sg===sg){c.t=Date.now();return}   // sama: tidak digambar ulang
+    MP.sw[p]={l,t:Date.now(),sg};if(my===MP.rq)draw(l);else if(MP.pair===p&&MP.tab==='siswa')draw(l)}
+  catch(e){if(c&&e.message!=='SESI_HABIS')return;   // sudah ada daftar lama di layar: galat jaringan tidak perlu mengganggu
+    if(MP.pair===p&&MP.tab==='siswa'&&$('#mp-body'))$('#mp-body').innerHTML='';fail(e)}}
 /* dipanggil Fase3UI setelah simpan/batal/kembali: di halaman ini cukup gambar ulang isi tab (kartu dan lencana ikut segar) */
 function gHome(){if($('#mp-body')){mpTabs();mpBody()}else vGTugas()}
 function uHome(){if($('#mp-body')){mpTabs();mpBody()}else vGUjian()}
@@ -5123,7 +5073,7 @@ function gmKe(tab){return()=>{const p=GS.pair,d=MEM.gd;
   if(tab&&p&&(!d||d.ampu.some(a=>mpP(a)===p))){MP.tab=tab==='*'?(GS.tab==='tugas'?'tugas':'materi'):tab;go('#/dashboard/g-mapel/'+p)}
   else go('#/dashboard/g-mapel')}}
 /* dipanggil Index.html saat keluar/ganti akun */
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{MP.pair='';MP.kelas='';MP.sig='';GMB.busy=0;document.querySelectorAll('.gmbadge').forEach(e=>e.remove())});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{MP.sw={};MP.pair='';MP.kelas='';MP.sig='';GMB.busy=0;document.querySelectorAll('.gmbadge').forEach(e=>e.remove())});
 Object.assign(VIEWS,{'g-mapel':vGMapel,'g-kelas':gmKe(''),'g-tugas':gmKe('*'),'g-ujian':gmKe('ujian'),'g-nilai':gmKe('nilai')});
 
 /* ===== BANK SOAL - Tahap 1 (rute server: BankSoal.gs) =====
@@ -5135,12 +5085,24 @@ const BK_JN={PG:'Pilihan ganda',PGK:'PG kompleks',BS:'Benar/Salah'},BK_WK=['','5
 const bkCur=()=>BK.d&&BK.d.mapel.find(m=>m.Mapel_ID===BK.mapel);
 function bkMenu(){try{if(typeof MENU!=='object')return;['Guru','Wali Kelas','Admin'].forEach(r=>{const a=MENU[r];if(a&&!a.some(x=>x[0]==='g-bank')){const i=a.findIndex(x=>x[0]==='g-mapel'||x[0]==='mapel');a.splice(i>=0?i+1:a.length,0,['g-bank','Bank Soal'])}})}catch(e){}}
 bkMenu();
+/* IKON dan LETAK menu: Bank Soal masuk ke grup "Mata Pelajaran" (tepat setelah "Mata Pelajaran"), Admin di grup "Sekolah".
+   TemaDashboard.html dimuat SETELAH file ini, jadi penambahan dilakukan setelah halaman selesai dimuat (isi DS_MAPEL / DS_K / DS_P hanya ditambah, tidak diganti). */
+const BK_IKON='<rect x="3" y="3" width="18" height="5" rx="1.5"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M9.7 12.3a2.4 2.4 0 1 1 3.4 2.2c-.7.4-1.1.8-1.1 1.5"/><path d="M12 18.2h.01"/>';
+function bkDS(){try{
+  if(typeof DS_P==='object')DS_P.bank=BK_IKON;
+  if(typeof DS_P==='object')DS_P.bmateri=BMT_IKON;
+  if(typeof DS_K==='object'){DS_K['g-bank']='bank';DS_K['g-bmateri']='bmateri'}
+  if(typeof DS_MAPEL==='object'&&DS_MAPEL.k.indexOf('g-bank')<0){const i=DS_MAPEL.k.indexOf('g-mapel');DS_MAPEL.k.splice(i>=0?i+1:DS_MAPEL.k.length,0,'g-bank')}
+  if(typeof DS_MAPEL==='object'&&DS_MAPEL.k.indexOf('g-bmateri')<0){const i=DS_MAPEL.k.indexOf('g-bank');DS_MAPEL.k.splice(i>=0?i+1:DS_MAPEL.k.length,0,'g-bmateri')}
+  if(typeof DS_GROUPS==='object'){const g=DS_GROUPS.find(x=>x.k.indexOf('mapel')>=0);if(g&&g.k.indexOf('g-bank')<0){const i=g.k.indexOf('mapel');g.k.splice(i+1,0,'g-bank')}}
+}catch(e){}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bkDS);else setTimeout(bkDS,0);
 function vGBank(){BK.sel={};MT('<div class="skel"></div><br><div class="skel"></div>');
   api('bank.mapel').then(d=>{BK.d=d;if(!d.mapel.length){MT('<h2>Bank Soal</h2><p>Belum ada mata pelajaran yang Anda ampu. Hubungi admin sekolah.</p>');return}
     if(!bkCur())BK.mapel=d.mapel[0].Mapel_ID;bkDraw()}).catch(e=>{fail(e);MT('<h2>Bank Soal</h2><p>Gagal memuat. Coba muat ulang halaman.</p>')})}
 function bkDraw(){const d=BK.d,m=bkCur(),adm=d.admin;if(!m)return;
   const babs=m.Bab.map(b=>`<button type="button" class="${BK.bab.toLowerCase()===b.Bab.toLowerCase()?'on ':''}${b.n>=d.maks?'pen':''}" data-b="${esc(b.Bab)}">${esc(b.Bab)} <small>${b.n}/${d.maks}</small></button>`).join('');
-  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Soal</h2><span class="row" style="gap:8px;flex-wrap:wrap">${adm?'':'<button class="btn ghost" id="bk-imp">Impor</button>'}<button class="btn ghost" id="bk-unduh">Unduh / Cetak</button>${adm?'':'<button class="btn" id="bk-baru">+ Soal baru</button>'}</span></div>
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Soal</h2><span class="row" style="gap:8px;flex-wrap:wrap">${adm?'':'<button class="btn ghost" id="bk-imp">Impor</button><button class="btn ghost" id="bk-bs">Bank Bersama</button>'}<button class="btn ghost" id="bk-unduh">Unduh / Cetak</button>${adm?'':'<button class="btn" id="bk-baru">+ Soal baru</button>'}</span></div>
   <p><small>Gudang soal milik ${adm?'semua guru':'Anda'}. Maksimal ${d.maks} soal aktif/draft per bab; soal lama bisa diarsipkan. Murid tidak bisa melihat bank ini.</small></p>
   <div class="bk-f"><select id="bk-m" aria-label="Mata pelajaran">${d.mapel.map(x=>`<option value="${esc(x.Mapel_ID)}" ${x.Mapel_ID===BK.mapel?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select>
   <select id="bk-st" aria-label="Status"><option value="berjalan">Aktif dan Draft</option><option value="Aktif">Hanya Aktif</option><option value="Draft">Hanya Draft</option><option value="Arsip">Arsip</option><option value="semua">Semua</option></select>
@@ -5152,7 +5114,7 @@ function bkDraw(){const d=BK.d,m=bkCur(),adm=d.admin;if(!m)return;
   <div id="bk-l"><div class="skel"></div></div><div id="bk-bar"></div>`);
   $('#bk-st').value=BK.st;$('#bk-tg').value=BK.tg;$('#bk-jn').value=BK.jn;
   const nw=$('#bk-baru');if(nw)nw.onclick=()=>bkForm('');
-  const im=$('#bk-imp');if(im)im.onclick=bkImpor;$('#bk-unduh').onclick=bkUnduh;
+  const im=$('#bk-imp');if(im)im.onclick=bkImpor;const bs=$('#bk-bs');if(bs)bs.onclick=()=>bsBuka();$('#bk-unduh').onclick=bkUnduh;
   $('#bk-m').onchange=e=>{BK.mapel=e.target.value;BK.bab='';BK.hal=1;BK.sel={};bkDraw()};
   [['bk-st','st'],['bk-tg','tg'],['bk-jn','jn']].forEach(([i,k])=>$('#'+i).onchange=e=>{BK[k]=e.target.value;BK.hal=1;BK.sel={};bkLoad()});
   $('#bk-q').oninput=e=>{BK.q=e.target.value;clearTimeout(BK.tmr);BK.tmr=setTimeout(()=>{BK.hal=1;BK.sel={};bkLoad()},350)};
@@ -5163,7 +5125,7 @@ function bkLoad(){const my=++BK.n;
 function bkList(){const r=BK.list,el=$('#bk-l');if(!el)return;
   if(!r.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Tidak ada soal yang cocok.</p>';bkBar();return}
   el.innerHTML=r.items.map(x=>`<div class="bk-k ${x.Status==='Draft'?'dr':x.Status==='Arsip'?'ar':''}"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BK.sel[x.Bank_ID]?'checked':''} aria-label="Pilih soal">
-    <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">${BK_JN[x.Jenis_Soal]||esc(x.Jenis_Soal)}</span><span class="bk-c">${esc(x.Tingkat)}</span><span class="bk-c ${x.Status==='Aktif'?'ok':x.Status==='Draft'?'dr':''}">${esc(x.Status)}</span>${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div><div class="bk-t">${esc(x.Ringkas)||'<i>(tanpa teks)</i>'}</div>
+    <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">${BK_JN[x.Jenis_Soal]||esc(x.Jenis_Soal)}</span><span class="bk-c">${esc(x.Tingkat)}</span><span class="bk-c ${x.Status==='Aktif'?'ok':x.Status==='Draft'?'dr':''}">${esc(x.Status)}</span>${x.Bagikan==='Bersama'?'<span class="bk-c ok">Dibagikan</span>':''}${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div><div class="bk-t">${esc(x.Ringkas)||'<i>(tanpa teks)</i>'}</div>
     <div class="bk-a">${BK.d.admin?'':`<button class="btn ghost sm" data-e="${esc(x.Bank_ID)}">Ubah</button>`}${x.Status==='Arsip'?`<button class="btn ghost sm" data-s="Aktif" data-i1="${esc(x.Bank_ID)}">Pulihkan</button>`:`<button class="btn ghost sm" data-s="Arsip" data-i1="${esc(x.Bank_ID)}">Arsipkan</button>`}<button class="btn ghost sm" data-h="${esc(x.Bank_ID)}">Hapus</button></div></div></div>`).join('')+
     `<div class="bk-p"><button class="btn ghost sm" id="bk-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} soal)</small></span><button class="btn ghost sm" id="bk-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
   el.onclick=e=>{const t=e.target;
@@ -5174,14 +5136,15 @@ function bkList(){const r=BK.list,el=$('#bk-l');if(!el)return;
     else if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BK.sel[t.dataset.i]=1;else delete BK.sel[t.dataset.i];bkBar()}};
   bkBar()}
 function bkBar(){const n=Object.keys(BK.sel).length,el=$('#bk-bar');if(!el)return;
-  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" data-a="Aktif">Aktifkan</button><button class="btn ghost sm" data-a="Draft">Jadikan draft</button><button class="btn ghost sm" data-a="Arsip">Arsipkan</button><button class="btn ghost sm" data-a="hapus">Hapus</button></div>`:'';
-  el.onclick=e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;const ids=Object.keys(BK.sel);if(a==='hapus')bkHapus(ids);else bkStatus(ids,a)}}
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" data-a="Aktif">Aktifkan</button><button class="btn ghost sm" data-a="Draft">Jadikan draft</button><button class="btn ghost sm" data-a="Arsip">Arsipkan</button>${BK.d.admin?'':'<button class="btn ghost sm" data-a="Bersama">Bagikan</button><button class="btn ghost sm" data-a="Pribadi">Jadikan pribadi</button>'}<button class="btn ghost sm" data-a="hapus">Hapus</button></div>`:'';
+  el.onclick=e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;const ids=Object.keys(BK.sel);if(a==='hapus')bkHapus(ids);else if(a==='Bersama'||a==='Pribadi')bkBagi(ids,a);else bkStatus(ids,a)}}
 async function bkSegar(){try{BK.d=await api('bank.mapel')}catch(e){}BK.sel={};if($('#bk-l'))bkDraw()}
 async function bkStatus(ids,st){try{const r=await api('bank.status',{ids,Status:st});toast(r.jumlah+' soal menjadi '+st);bkSegar()}catch(e){fail(e)}}
+async function bkBagi(ids,v){try{const r=await api('bank.bagi',{ids,Bagikan:v});toast(v==='Bersama'?r.jumlah+' soal dibagikan (yang tampil ke guru lain hanya soal Aktif)':r.jumlah+' soal kembali pribadi');bkSegar()}catch(e){fail(e)}}
 async function bkHapus(ids){if(!await ask('Hapus '+ids.length+' soal terpilih? Soal yang sudah disalin ke ujian tetap aman di ujian itu. Pilihan lain: arsipkan.',{title:'Hapus soal',ok:'Hapus',bad:true}))return;
   try{const r=await api('bank.delete',{ids});toast(r.jumlah+' soal dihapus');bkSegar()}catch(e){fail(e)}}
 /* ---------- form soal ---------- */
-async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft',Opsi:['','','',''],Kunci:'',Bab:BK.bab,Pertanyaan:'',Waktu:'',Tag:''};
+async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft',Opsi:['','','',''],Kunci:'',Bab:BK.bab,Pertanyaan:'',Waktu:'',Tag:'',Bagikan:'Pribadi'};
   if(id){MT('<div class="skel"></div>');try{r=await api('bank.get',{id})}catch(e){fail(e);vGBank();return}}
   BK.f={id:id||'',jn:r.Jenis_Soal,op:r.Jenis_Soal==='BS'?['','','','']:(r.Opsi.length?r.Opsi.slice():['','','','']),kn:String(r.Kunci||'').split(',').filter(Boolean)};
   const m=bkCur(),babs=m?m.Bab.map(b=>`<option value="${esc(b.Bab)}">`).join(''):'';
@@ -5195,6 +5158,8 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <label for="bkf-g">Tag (opsional)</label><input id="bkf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: UTS, 2026">
   <label for="bkf-s">Status</label><select id="bkf-s">${['Draft','Aktif','Arsip'].map(k=>`<option ${k===r.Status?'selected':''}>${k}</option>`).join('')}</select>
   <small>Draft = masih disusun. Aktif = siap dipakai ke ujian. Arsip = disimpan sebagai referensi.</small>
+  <label for="bkf-bg">Bagikan ke guru lain</label><select id="bkf-bg"><option value="Pribadi" ${r.Bagikan!=='Bersama'?'selected':''}>Pribadi (hanya saya)</option><option value="Bersama" ${r.Bagikan==='Bersama'?'selected':''}>Bersama (guru pengampu mapel ini bisa menyalin)</option></select>
+  <small>Guru lain hanya bisa menyalin, tidak bisa mengubah atau menghapus soal Anda. Soal baru tampil di Bank Bersama setelah berstatus Aktif.</small>
   <p class="row"><button class="btn" id="bkf-sv">Simpan</button><button class="btn ghost" id="bkf-bt">Batal</button></p></div>`);
   $('#bkf-j').onchange=e=>{bkOpsiBaca();BK.f.jn=e.target.value;BK.f.kn=[];if(BK.f.jn!=='BS'&&BK.f.op.length<2)BK.f.op=['','','',''];bkOpsi()};
   $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi()}
@@ -5210,7 +5175,7 @@ function bkOpsi(){const f=BK.f,el=$('#bkf-o');if(!el)return;
   const pl=$('#bkf-pl');if(pl)pl.onclick=()=>{bkOpsiBaca();f.op.push('');bkOpsi()}}
 async function bkSimpan(){const f=BK.f,b=$('#bkf-sv');bkOpsiBaca();b.disabled=true;b.textContent='Menyimpan...';
   let op=f.op,kn=f.kn;if(f.jn!=='BS'){const pet=[];op=[];f.op.forEach((t,i)=>{if(String(t).trim()){pet[i]=op.length;op.push(t)}});kn=f.kn.map(k=>pet['ABCDE'.indexOf(k)]).filter(k=>k!==undefined).map(k=>'ABCDE'[k])}   // pilihan kosong dibuang, kunci disesuaikan
-  try{await api('bank.save',{id:f.id,Mapel_ID:BK.mapel,Bab:$('#bkf-b').value,Jenis_Soal:f.jn,Tingkat:$('#bkf-t').value,Waktu:$('#bkf-w').value,Pertanyaan:$('#bkf-q').value,Opsi:f.jn==='BS'?[]:op,Kunci:kn.join(','),Tag:$('#bkf-g').value,Status:$('#bkf-s').value});
+  try{await api('bank.save',{id:f.id,Mapel_ID:BK.mapel,Bab:$('#bkf-b').value,Jenis_Soal:f.jn,Tingkat:$('#bkf-t').value,Waktu:$('#bkf-w').value,Pertanyaan:$('#bkf-q').value,Opsi:f.jn==='BS'?[]:op,Kunci:kn.join(','),Tag:$('#bkf-g').value,Status:$('#bkf-s').value,Bagikan:$('#bkf-bg').value});
     toast('Soal tersimpan');BK.sel={};BK.d=await api('bank.mapel');BK.bab='';bkDraw()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
 /* ===== BANK SOAL - Tahap 2: IMPOR dan UNDUH (template model Kahoot; tanpa pustaka luar) =====
@@ -5362,7 +5327,8 @@ async function bkiSimpan(){const b=$('#bki-sv');b.disabled=true;b.textContent='M
    Tidak mengubah Fase5UI.html: uSoalDraw dibungkus, lalu tombol disisipkan di samping "Impor soal" (hanya muncul bila soal masih boleh diubah).
    Soal DISALIN ke ujian lewat rute 'bank.ambil' (BankSoal.gs). Dua cara: pilih sendiri (hanya soal Aktif) atau acak per bab. */
 const BA={info:null,tab:'pilih',sel:{},bab:'',q:'',hal:1,list:null,n:0,tg:'',tmr:0};
-function bkSisip(){const im=document.querySelector('button[onclick="ujImport()"]');if(!im||document.getElementById('bka-btn'))return;
+function bkSisip(){const hs=document.querySelector('button[onclick^="uHasil("]');if(hs&&!document.getElementById('bkt-btn')){const t=document.createElement('button');t.id='bkt-btn';t.className='btn ghost sm';t.textContent='Statistik soal';t.onclick=bkStat;hs.parentNode.insertBefore(t,hs.nextSibling)}
+  const im=document.querySelector('button[onclick="ujImport()"]');if(!im||document.getElementById('bka-btn'))return;
   const b=document.createElement('button');b.id='bka-btn';b.className='btn ghost';b.textContent='Ambil dari Bank';b.onclick=bkAmbil;im.parentNode.insertBefore(b,im)}
 if(typeof uSoalDraw==='function'&&!uSoalDraw.bka){const o=uSoalDraw;uSoalDraw=function(){const r=o.apply(this,arguments);try{bkSisip()}catch(e){}return r};uSoalDraw.bka=1}
 async function bkAmbil(){const u=UJ.cur&&UJ.cur.ujian;if(!u)return;MT('<div class="skel"></div><br><div class="skel"></div>');
@@ -5411,8 +5377,202 @@ async function baKirim(p,n){const b=$('#ba-go');if(b){b.disabled=true;b.textCont
   try{const r=await api('bank.ambil',Object.assign({Ujian_ID:UJ.cur.ujian.Ujian_ID},p));UJ.cur.soal=r.soal;uSyncCount();
     toast(r.n+' soal disalin ke ujian'+(r.lewat?'; '+r.lewat+' dilewati karena sudah ada':''));uSoalDraw()}
   catch(e){fail(e);if(b){b.disabled=false;b.textContent='Coba lagi'}}}
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
-Object.assign(VIEWS,{'g-bank':vGBank});
+ 
+const BMT={d:null,mapel:'',st:'berjalan',bab:'',q:'',hal:1,sel:{},list:null,n:0,tmr:0,f:null};
+const BMT_IKON='<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 13h8M8 16h5"/>';
+function bmtMenu(){try{if(typeof MENU!=='object')return;['Guru','Wali Kelas'].forEach(r=>{const a=MENU[r];if(a&&!a.some(x=>x[0]==='g-bmateri')){const i=a.findIndex(x=>x[0]==='g-bank'||x[0]==='g-mapel'||x[0]==='mapel');a.splice(i>=0?i+1:a.length,0,['g-bmateri','Bank Materi'])}})}catch(e){}}
+bmtMenu();
+function bmtCur(){return BMT.d&&BMT.d.mapel.find(x=>x.Mapel_ID===BMT.mapel)}
+function vGBMateri(){BMT.sel={};MT('<div class="skel"></div><br><div class="skel"></div>');
+  api('bm.mapel').then(d=>{BMT.d=d;if(!d.mapel.length){MT('<h2>Bank Materi</h2><p>Belum ada mata pelajaran yang Anda ampu. Hubungi admin sekolah.</p>');return}
+    if(!bmtCur())BMT.mapel=d.mapel[0].Mapel_ID;bmtDraw()}).catch(e=>{fail(e);MT('<h2>Bank Materi</h2><p>Gagal memuat. Coba muat ulang halaman.</p>')})}
+function bmtDraw(){const d=BMT.d,m=bmtCur();if(!m)return;
+  const babs=m.Bab.map(b=>`<button type="button" class="${BMT.bab.toLowerCase()===b.Bab.toLowerCase()?'on':''}" data-b="${esc(b.Bab)}">${esc(b.Bab)} <small>${b.n}</small></button>`).join('');
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Materi</h2><span class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost" id="bmt-bs">Bank Bersama</button><button class="btn" id="bmt-baru">+ Materi baru</button></span></div>
+  <p><small>Gudang materi milik Anda (maksimal ${d.maks} materi per mapel). Centang materi lalu pilih <b>Tarik ke kelas</b>: materi disalin ke kelas, jadi mengubah materi di bank tidak mengubah materi yang sudah dipakai kelas. Murid tidak bisa melihat bank ini.</small></p>
+  <div class="bk-f"><select id="bmt-m" aria-label="Mata pelajaran">${d.mapel.map(x=>`<option value="${esc(x.Mapel_ID)}" ${x.Mapel_ID===BMT.mapel?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select>
+  <select id="bmt-st" aria-label="Status"><option value="berjalan">Aktif dan Draft</option><option value="Aktif">Hanya Aktif</option><option value="Draft">Hanya Draft</option><option value="Arsip">Arsip</option><option value="semua">Semua</option></select>
+  <input id="bmt-q" type="search" placeholder="Cari judul / tag" aria-label="Cari" value="${esc(BMT.q)}"></div>
+  <p><small>Ringkasan ${esc(m.Nama)}: ${m.Aktif} aktif, ${m.Draft} draft, ${m.Arsip} arsip.</small></p>
+  <div class="bk-bab" id="bmt-bab">${babs?`<button type="button" class="${BMT.bab?'':'on'}" data-b="">Semua bab</button>`+babs:'<small>Belum ada materi. Mulai dengan "+ Materi baru".</small>'}</div>
+  <div id="bmt-l"><div class="skel"></div></div><div id="bmt-bar"></div>`);
+  $('#bmt-st').value=BMT.st;
+  $('#bmt-baru').onclick=()=>bmtForm('');$('#bmt-bs').onclick=()=>bmbBuka();
+  $('#bmt-m').onchange=e=>{BMT.mapel=e.target.value;BMT.bab='';BMT.hal=1;BMT.sel={};bmtDraw()};
+  $('#bmt-st').onchange=e=>{BMT.st=e.target.value;BMT.hal=1;BMT.sel={};bmtLoad()};
+  $('#bmt-q').oninput=e=>{BMT.q=e.target.value;clearTimeout(BMT.tmr);BMT.tmr=setTimeout(()=>{BMT.hal=1;BMT.sel={};bmtLoad()},350)};
+  $('#bmt-bab').onclick=e=>{const b=e.target.closest('button[data-b]');if(!b)return;BMT.bab=b.dataset.b;BMT.hal=1;BMT.sel={};bmtDraw()};
+  bmtLoad()}
+function bmtLoad(){const my=++BMT.n;
+  api('bm.list',{Mapel_ID:BMT.mapel,Status:BMT.st,Bab:BMT.bab,q:BMT.q,hal:BMT.hal}).then(r=>{if(my!==BMT.n||!$('#bmt-l'))return;BMT.list=r;BMT.hal=r.hal;bmtList()}).catch(e=>{if(my===BMT.n&&$('#bmt-l')){fail(e);$('#bmt-l').innerHTML='<p>Gagal memuat daftar materi.</p>'}})}
+function bmtChip(x){return `<span class="bk-c">${esc(x.Bab)}</span><span class="bk-c ${x.Status==='Aktif'?'ok':x.Status==='Draft'?'dr':''}">${esc(x.Status)}</span>${x.Bagikan==='Bersama'?'<span class="bk-c ok">Dibagikan</span>':''}${x.Berkas?`<span class="bk-c">Berkas: ${esc(x.Berkas)}</span>`:''}${x.Link?'<span class="bk-c">Tautan</span>':''}${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}`}
+function bmtList(){const r=BMT.list,el=$('#bmt-l');if(!el)return;
+  if(!r.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Tidak ada materi yang cocok.</p>';bmtBar();return}
+  el.innerHTML=r.items.map(x=>`<div class="bk-k ${x.Status==='Draft'?'dr':x.Status==='Arsip'?'ar':''}"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BMT.sel[x.Bank_ID]?'checked':''} aria-label="Pilih materi">
+    <div class="bk-q"><div>${bmtChip(x)}</div><div class="bk-t"><b>${esc(x.Judul)}</b></div>
+    <div class="bk-a"><button class="btn ghost sm" data-e="${esc(x.Bank_ID)}">Ubah</button>${x.Berkas?`<button class="btn ghost sm" data-u="${esc(x.Bank_ID)}">Unduh berkas</button>`:''}${x.Status==='Arsip'?`<button class="btn ghost sm" data-s="Aktif" data-i1="${esc(x.Bank_ID)}">Pulihkan</button>`:`<button class="btn ghost sm" data-s="Arsip" data-i1="${esc(x.Bank_ID)}">Arsipkan</button>`}<button class="btn ghost sm" data-h="${esc(x.Bank_ID)}">Hapus</button></div></div></div>`).join('')+
+    `<div class="bk-p"><button class="btn ghost sm" id="bmt-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} materi)</small></span><button class="btn ghost sm" id="bmt-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
+  el.onclick=e=>{const t=e.target,d=t.dataset||{};
+    if(d.e)bmtForm(d.e);else if(d.u)bmtUnduh(d.u,t);else if(d.s)bmtStatus([d.i1],d.s);else if(d.h)bmtHapus([d.h]);
+    else if(t.id==='bmt-pv'){BMT.hal--;BMT.sel={};bmtLoad()}else if(t.id==='bmt-nx'){BMT.hal++;BMT.sel={};bmtLoad()}
+    else if(t.type==='checkbox'&&d.i){if(t.checked)BMT.sel[d.i]=1;else delete BMT.sel[d.i];bmtBar()}};
+  bmtBar()}
+function bmtBar(){const n=Object.keys(BMT.sel).length,el=$('#bmt-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" data-a="tarik">Tarik ke kelas</button><button class="btn ghost sm" data-a="Aktif">Aktifkan</button><button class="btn ghost sm" data-a="Draft">Jadikan draft</button><button class="btn ghost sm" data-a="Arsip">Arsipkan</button><button class="btn ghost sm" data-a="Bersama">Bagikan</button><button class="btn ghost sm" data-a="Pribadi">Jadikan pribadi</button><button class="btn ghost sm" data-a="hapus">Hapus</button></div>`:'';
+  el.onclick=e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;const ids=Object.keys(BMT.sel);
+    if(a==='hapus')bmtHapus(ids);else if(a==='tarik')bmtTarik(ids);else if(a==='Bersama'||a==='Pribadi')bmtBagi(ids,a);else bmtStatus(ids,a)}}
+async function bmtSegar(){try{BMT.d=await api('bm.mapel')}catch(e){}BMT.sel={};if($('#bmt-l'))bmtDraw()}
+async function bmtStatus(ids,st){try{const r=await api('bm.status',{ids,Status:st});toast(r.jumlah+' materi menjadi '+st);bmtSegar()}catch(e){fail(e)}}
+async function bmtBagi(ids,v){try{const r=await api('bm.bagi',{ids,Bagikan:v});toast(v==='Bersama'?r.jumlah+' materi dibagikan (yang tampil ke guru lain hanya materi Aktif)':r.jumlah+' materi kembali pribadi');bmtSegar()}catch(e){fail(e)}}
+async function bmtHapus(ids){if(!await ask('Hapus '+ids.length+' materi terpilih dari bank? Materi yang sudah ditarik ke kelas tetap aman di kelas itu. Pilihan lain: arsipkan.',{title:'Hapus materi',ok:'Hapus',bad:true}))return;
+  try{const r=await api('bm.delete',{ids});toast(r.jumlah+' materi dihapus');bmtSegar()}catch(e){fail(e)}}
+async function bmtUnduh(id,b){const t0=b&&b.innerHTML;if(b){b.disabled=true;b.textContent='Mengunduh...'}
+  try{const r=await api('bm.file',{id}),bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([u],{type:r.mime})),a=document.createElement('a');a.href=url;a.download=r.nama||'berkas';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
+  catch(e){fail(e)}if(b){b.disabled=false;b.innerHTML=t0}}
+ 
+async function bmtForm(id){let r={Bab:BMT.bab,Judul:'',Isi:'',File_URL:'',Berkas:'',Tag:'',Status:'Draft',Bagikan:'Pribadi'};
+  if(id){MT('<div class="skel"></div>');try{r=await api('bm.get',{id})}catch(e){fail(e);bmtDraw();return}}
+  BMT.f={id:id||''};const m=bmtCur(),babs=m?m.Bab.map(b=>`<option value="${esc(b.Bab)}">`).join(''):'';
+  MT(`<h2>${id?'Ubah':'Materi baru'}</h2><div style="max-width:680px"><p><small>${esc(m?m.Nama:'')}</small></p>
+  <label for="bmf-b">Bab / topik</label><input id="bmf-b" list="bmf-bl" maxlength="60" value="${esc(r.Bab)}" placeholder="Contoh: Bab 3"><datalist id="bmf-bl">${babs}</datalist>
+  <label for="bmf-j">Judul</label><input id="bmf-j" maxlength="200" value="${esc(r.Judul)}">
+  <label for="bmf-i">Isi materi (boleh kosong bila memakai berkas atau tautan; Enter = paragraf baru)</label><textarea id="bmf-i" style="min-height:200px">${esc(r.Isi)}</textarea>
+  <label for="bmf-l">Tautan dokumen / video (opsional)</label><input id="bmf-l" placeholder="https://..." value="${esc(r.File_URL)}">
+  <label>Berkas materi (opsional)</label>${r.Berkas?`<p style="margin:0 0 6px">Berkas sekarang: <b>${esc(r.Berkas)}</b> &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="bmf-hf" style="width:auto;margin-right:5px">hapus berkas</label></p>`:''}
+  <input id="bmf-f" type="file" accept="${typeof TG_ACC==='string'?TG_ACC:''}"><small style="display:block;opacity:.75">PDF, gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${r.Berkas?'Memilih berkas baru akan menggantikan berkas lama.':''}</small>
+  <label for="bmf-g">Tag (opsional)</label><input id="bmf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: Semester 1">
+  <label for="bmf-s">Status</label><select id="bmf-s">${['Draft','Aktif','Arsip'].map(k=>`<option ${k===r.Status?'selected':''}>${k}</option>`).join('')}</select>
+  <small>Draft = masih disusun. Aktif = siap ditarik ke kelas. Arsip = disimpan sebagai referensi.</small>
+  <label for="bmf-bg">Bagikan ke guru lain</label><select id="bmf-bg"><option value="Pribadi" ${r.Bagikan!=='Bersama'?'selected':''}>Pribadi (hanya saya)</option><option value="Bersama" ${r.Bagikan==='Bersama'?'selected':''}>Bersama (pengampu mapel ini bisa menyalin)</option></select>
+  <p class="row"><button class="btn" id="bmf-sv">Simpan</button><button class="btn ghost" id="bmf-bt">Batal</button></p></div>`);
+  $('#bmf-sv').onclick=bmtSimpan;$('#bmf-bt').onclick=()=>bmtDraw()}
+async function bmtSimpan(){const b=$('#bmf-sv');b.disabled=true;b.textContent='Menyimpan...';
+  try{let fl=null;if($('#bmf-f').files&&$('#bmf-f').files[0]){if(typeof tgBaca!=='function')throw new Error('Unggah berkas belum siap. Muat ulang halaman.');fl=await tgBaca($('#bmf-f'));b.textContent='Mengunggah...'}
+    await api('bm.save',{id:BMT.f.id,Mapel_ID:BMT.mapel,Bab:$('#bmf-b').value,Judul:$('#bmf-j').value,Isi:$('#bmf-i').value,File_URL:$('#bmf-l').value,Tag:$('#bmf-g').value,Status:$('#bmf-s').value,Bagikan:$('#bmf-bg').value,file:fl,hapusLampiran:!!($('#bmf-hf')&&$('#bmf-hf').checked)});
+    toast('Materi tersimpan');BMT.sel={};BMT.d=await api('bm.mapel');BMT.bab='';bmtDraw()}
+  catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
+/* ---------- tarik ke kelas ---------- */
+async function bmtTarik(ids){MT('<div class="skel"></div>');let k;
+  try{k=(await api('bm.kelas',{Mapel_ID:BMT.mapel})).kelas}catch(e){fail(e);bmtDraw();return}
+  if(!k.length){toast('Anda belum mengampu kelas untuk mapel ini.',1);bmtDraw();return}
+  const jud=(BMT.list?BMT.list.items:[]).filter(x=>BMT.sel[x.Bank_ID]);
+  MT(`<h2>Tarik ke kelas</h2><div style="max-width:620px"><p><small>${esc(bmtCur().Nama)} &middot; ${ids.length} materi dipilih. Materi disalin ke kelas; bank tetap utuh.</small></p>
+  <ul style="margin:0 0 10px 18px">${jud.map(x=>`<li>${esc(x.Judul)}</li>`).join('')}</ul>
+  <label for="bmx-k">Kelas tujuan</label><select id="bmx-k">${k.map(x=>`<option value="${esc(x.Kelas_ID)}">${esc(x.Nama)}</option>`).join('')}</select>
+  <label for="bmx-s">Status materi di kelas</label><select id="bmx-s"><option value="Draft">Draft: murid belum melihat (Anda periksa dulu)</option><option value="Aktif">Aktif: langsung tampil ke murid</option></select>
+  <small>Materi yang judul dan isinya sudah sama persis di kelas itu dilewati. Hanya materi berstatus Aktif di bank yang bisa ditarik.</small>
+  <p class="row"><button class="btn" id="bmx-go">Tarik</button><button class="btn ghost" id="bmx-bt">Batal</button></p></div>`);
+  $('#bmx-bt').onclick=()=>bmtDraw();
+  $('#bmx-go').onclick=async()=>{const b=$('#bmx-go');b.disabled=true;b.textContent='Menarik...';
+    try{const r=await api('bm.tarik',{Mapel_ID:BMT.mapel,Kelas_ID:$('#bmx-k').value,ids,Status:$('#bmx-s').value});
+      let t=r.n+' materi ditarik ke kelas ('+r.Status+')';if(r.lewat)t+=', '+r.lewat+' dilewati karena sudah ada';if(r.tanpaBerkas)t+=', '+r.tanpaBerkas+' tanpa berkas (kolom berkas belum ada atau berkas hilang)';
+      toast(t);BMT.sel={};bmtDraw()}
+    catch(e){fail(e);b.disabled=false;b.textContent='Tarik'}}}
+/* ---------- bank bersama (materi) ---------- */
+const BMB={mapel:'',bab:'',q:'',hal:1,sel:{},list:null,n:0,tmr:0};
+function bmbBuka(){BMB.mapel=BMT.mapel;BMB.bab='';BMB.q='';BMB.hal=1;BMB.sel={};bmbDraw()}
+function bmbDraw(){const d=BMT.d,m=d.mapel.find(x=>x.Mapel_ID===BMB.mapel)||d.mapel[0];if(!m)return;BMB.mapel=m.Mapel_ID;
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Materi Bersama</h2><button class="btn ghost" id="bmb-kb">Kembali ke bank saya</button></div>
+  <p><small>Materi Aktif yang dibagikan guru lain di mapel yang sama. Anda hanya bisa menyalin: hasilnya masuk ke bank Anda sebagai Draft dan pribadi, lalu bebas Anda ubah.</small></p>
+  <div class="bk-f"><select id="bmb-m" aria-label="Mata pelajaran">${d.mapel.map(x=>`<option value="${esc(x.Mapel_ID)}" ${x.Mapel_ID===BMB.mapel?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select>
+  <input id="bmb-q" type="search" placeholder="Cari judul / tag" aria-label="Cari" value="${esc(BMB.q)}"></div>
+  <div class="bk-bab" id="bmb-bab"></div><div id="bmb-l"><div class="skel"></div></div><div id="bmb-bar"></div>`);
+  $('#bmb-kb').onclick=()=>bmtDraw();
+  $('#bmb-m').onchange=e=>{BMB.mapel=e.target.value;BMB.bab='';BMB.hal=1;BMB.sel={};bmbDraw()};
+  $('#bmb-q').oninput=e=>{BMB.q=e.target.value;clearTimeout(BMB.tmr);BMB.tmr=setTimeout(()=>{BMB.hal=1;BMB.sel={};bmbLoad()},350)};
+  $('#bmb-bab').onclick=e=>{const b=e.target.closest('button[data-b]');if(!b)return;BMB.bab=b.dataset.b;BMB.hal=1;BMB.sel={};bmbLoad()};
+  bmbLoad()}
+function bmbLoad(){const my=++BMB.n;
+  api('bm.bersama',{Mapel_ID:BMB.mapel,Bab:BMB.bab,q:BMB.q,hal:BMB.hal}).then(r=>{if(my!==BMB.n||!$('#bmb-l'))return;BMB.list=r;BMB.hal=r.hal;bmbList()}).catch(e=>{if(my===BMB.n&&$('#bmb-l')){fail(e);$('#bmb-l').innerHTML='<p>Gagal memuat Bank Materi Bersama.</p>'}})}
+function bmbList(){const r=BMB.list,el=$('#bmb-l');if(!el)return;
+  const bb=$('#bmb-bab');if(bb)bb.innerHTML=r.babList.length?`<button type="button" class="${BMB.bab?'':'on'}" data-b="">Semua bab</button>`+r.babList.map(b=>`<button type="button" class="${BMB.bab.toLowerCase()===b.Bab.toLowerCase()?'on':''}" data-b="${esc(b.Bab)}">${esc(b.Bab)} <small>${b.n}</small></button>`).join(''):'';
+  if(!r.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Belum ada materi bersama untuk mapel ini. Materi muncul di sini setelah guru lain membagikannya dan berstatus Aktif.</p>';bmbBar();return}
+  el.innerHTML=r.items.map(x=>`<div class="bk-k"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BMB.sel[x.Bank_ID]?'checked':''} aria-label="Pilih materi">
+    <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">Oleh ${esc(x.Pemilik)}</span>${x.Berkas?`<span class="bk-c">Berkas: ${esc(x.Berkas)}</span>`:''}${x.Link?'<span class="bk-c">Tautan</span>':''}${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div><div class="bk-t"><b>${esc(x.Judul)}</b></div>
+    ${x.Berkas?`<div class="bk-a"><button class="btn ghost sm" data-u="${esc(x.Bank_ID)}">Unduh berkas</button></div>`:''}</div></div>`).join('')+
+    `<div class="bk-p"><button class="btn ghost sm" id="bmb-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} materi)</small></span><button class="btn ghost sm" id="bmb-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
+  el.onclick=e=>{const t=e.target,d=t.dataset||{};
+    if(d.u)bmtUnduh(d.u,t);else if(t.id==='bmb-pv'){BMB.hal--;bmbLoad()}else if(t.id==='bmb-nx'){BMB.hal++;bmbLoad()}
+    else if(t.type==='checkbox'&&d.i){if(t.checked)BMB.sel[d.i]=1;else delete BMB.sel[d.i];bmbBar()}};
+  bmbBar()}
+function bmbBar(){const n=Object.keys(BMB.sel).length,el=$('#bmb-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" id="bmb-sl">Salin ke bank saya</button></div>`:'';
+  const b=$('#bmb-sl');if(b)b.onclick=bmbSalin}
+async function bmbSalin(){const ids=Object.keys(BMB.sel),b=$('#bmb-sl');if(b){b.disabled=true;b.textContent='Menyalin...'}
+  try{const r=await api('bm.salin',{Mapel_ID:BMB.mapel,ids});let t=r.n+' materi disalin sebagai Draft';if(r.lewat)t+=', '+r.lewat+' dilewati (sudah ada'+(r.penuh?' atau bank penuh':'')+')';toast(t);
+    BMB.sel={};BMT.d=await api('bm.mapel');bmbLoad();bmbBar()}
+  catch(e){fail(e);if(b){b.disabled=false;b.textContent='Salin ke bank saya'}}}
+
+/* ===== BANK SOAL - Tahap 4: STATISTIK SOAL setelah ujian (rute bank.stat dan bank.terapkan) ===== */
+const BT={d:null,sel:{}};
+async function bkStat(){const u=UJ.cur&&UJ.cur.ujian;if(!u)return;MT('<div class="skel"></div><br><div class="skel"></div>');
+  try{BT.d=await api('bank.stat',{Ujian_ID:u.Ujian_ID});BT.sel={};btDraw()}catch(e){fail(e);uSoalDraw()}}
+function btDraw(){const d=BT.d;
+  const bar=v=>`<div style="background:rgba(120,140,160,.25);border-radius:6px;height:10px;width:110px;display:inline-block;vertical-align:middle"><div style="width:${Math.max(0,Math.min(100,v))}%;height:10px;border-radius:6px;background:${v>=80?'#1fa89a':v>=40?'#3b7ddd':'#d9534f'}"></div></div>`;
+  const sebaran=x=>x.Jenis==='BS'?x.dist.map((v,i)=>`P${i+1}: ${v}%`).join(' &middot; '):x.dist.map((v,i)=>`${'ABCDE'[i]}: ${v}${String(x.Kunci).indexOf('ABCDE'[i])>=0?'*':''}`).join(' &middot; ');
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Statistik soal</h2><span class="row" style="gap:8px"><button class="btn ghost" id="bt-kb">Kembali</button></span></div>
+  <p><small>${esc(d.Judul)} &middot; ${d.n} murid sudah selesai &middot; skor rata-rata ${d.skorRata}</small></p>
+  ${d.n<5?'<p style="padding:12px 0;opacity:.85">Statistik baru berarti bila minimal 5 murid sudah selesai mengerjakan.</p>':''}
+  ${d.n&&!d.pembeda?'<p><small>Daya pembeda tampil mulai 10 murid selesai.</small></p>':''}
+  <div class="tw"><table><tr><th></th><th>No</th><th>Pertanyaan</th><th>Benar</th><th>Sebaran jawaban (* = kunci)</th><th>Pembeda</th><th>Saran</th></tr>`+d.soal.map(x=>`<tr>
+    <td>${x.Bank_ID&&x.saran&&x.saran!==x.TingkatBank?`<input type="checkbox" data-i="${esc(x.Bank_ID)}" data-t="${esc(x.saran)}" ${BT.sel[x.Bank_ID]?'checked':''} aria-label="Pilih untuk diterapkan">`:''}</td>
+    <td>${x.No}</td><td style="max-width:360px">${esc(x.Pertanyaan)||'<i>(tanpa teks)</i>'}${x.tanda.map(t=>`<br><small style="color:#d9534f">&#9888; ${esc(t)}</small>`).join('')}</td>
+    <td>${bar(x.pct)} <b>${x.pct}%</b><br><small>${x.kosong} kosong</small></td><td><small>${sebaran(x)}</small></td>
+    <td>${x.pembeda===null?'-':x.pembeda}</td><td>${x.saran?esc(x.saran)+(x.Bank_ID?`<br><small>di bank: ${esc(x.TingkatBank)}</small>`:''):'-'}</td></tr>`).join('')+`</table></div>
+  <p><small>Benar = rata-rata nilai soal (jawaban sebagian ikut aturan ujian). Saran tingkat: 80% ke atas Mudah, 40 sampai 79% Sedang, di bawah 40% Sulit. Pembeda = selisih nilai 27% murid teratas dan 27% terbawah; makin mendekati 1 makin baik, negatif berarti perlu diperiksa.</small></p><div id="bt-bar"></div>`);
+  $('#bt-kb').onclick=()=>uSoalDraw();
+  document.querySelector('.tw').onclick=e=>{const t=e.target;if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BT.sel[t.dataset.i]=t.dataset.t;else delete BT.sel[t.dataset.i];btBar()}};
+  btBar()}
+function btBar(){const n=Object.keys(BT.sel).length,el=$('#bt-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" id="bt-ok">Terapkan tingkat saran ke bank</button></div>`:'';
+  const b=$('#bt-ok');if(b)b.onclick=btTerapkan}
+async function btTerapkan(){const items=Object.keys(BT.sel).map(k=>({Bank_ID:k,Tingkat:BT.sel[k]}));
+  try{const r=await api('bank.terapkan',{items});toast(r.jumlah+' soal bank diperbarui tingkatnya');BT.d=await api('bank.stat',{Ujian_ID:BT.d.Ujian_ID});BT.sel={};btDraw()}catch(e){fail(e)}}
+
+/* ===== BANK SOAL - Tahap 3: BANK BERSAMA (soal yang dibagikan sesama pengampu mapel; hanya bisa disalin) ===== */
+const BS={mapel:'',bab:'',tg:'',jn:'',q:'',hal:1,sel:{},list:null,n:0,tmr:0};
+function bsBuka(){BS.mapel=BK.mapel;BS.bab='';BS.tg='';BS.jn='';BS.q='';BS.hal=1;BS.sel={};bsDraw()}
+function bsDraw(){const d=BK.d,m=d.mapel.find(x=>x.Mapel_ID===BS.mapel)||d.mapel[0];if(!m)return;BS.mapel=m.Mapel_ID;
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Bank Bersama</h2><button class="btn ghost" id="bs-kb">Kembali ke bank saya</button></div>
+  <p><small>Soal Aktif yang dibagikan guru lain di mapel yang sama. Anda hanya bisa menyalin: hasil salinan masuk ke bank Anda sebagai Draft dan pribadi, lalu bebas Anda ubah. Soal yang isinya sama persis dilewati.</small></p>
+  <div class="bk-f"><select id="bs-m" aria-label="Mata pelajaran">${d.mapel.map(x=>`<option value="${esc(x.Mapel_ID)}" ${x.Mapel_ID===BS.mapel?'selected':''}>${esc(x.Nama)}</option>`).join('')}</select>
+  <select id="bs-tg" aria-label="Tingkat"><option value="">Semua tingkat</option><option>Mudah</option><option>Sedang</option><option>Sulit</option></select>
+  <select id="bs-jn" aria-label="Jenis soal"><option value="">Semua jenis</option>${Object.keys(BK_JN).map(k=>`<option value="${k}">${BK_JN[k]}</option>`).join('')}</select>
+  <input id="bs-q" type="search" placeholder="Cari soal / tag" aria-label="Cari" value="${esc(BS.q)}"></div>
+  <div class="bk-bab" id="bs-bab"></div><div id="bs-l"><div class="skel"></div></div><div id="bs-bar"></div>`);
+  $('#bs-tg').value=BS.tg;$('#bs-jn').value=BS.jn;
+  $('#bs-kb').onclick=()=>bkDraw();
+  $('#bs-m').onchange=e=>{BS.mapel=e.target.value;BS.bab='';BS.hal=1;BS.sel={};bsDraw()};
+  [['bs-tg','tg'],['bs-jn','jn']].forEach(([i,k])=>$('#'+i).onchange=e=>{BS[k]=e.target.value;BS.hal=1;BS.sel={};bsLoad()});
+  $('#bs-q').oninput=e=>{BS.q=e.target.value;clearTimeout(BS.tmr);BS.tmr=setTimeout(()=>{BS.hal=1;BS.sel={};bsLoad()},350)};
+  $('#bs-bab').onclick=e=>{const b=e.target.closest('button[data-b]');if(!b)return;BS.bab=b.dataset.b;BS.hal=1;BS.sel={};bsLoad()};
+  bsLoad()}
+function bsLoad(){const my=++BS.n;
+  api('bank.bersama',{Mapel_ID:BS.mapel,Bab:BS.bab,Tingkat:BS.tg,Jenis_Soal:BS.jn,q:BS.q,hal:BS.hal}).then(r=>{if(my!==BS.n||!$('#bs-l'))return;BS.list=r;BS.hal=r.hal;bsList()}).catch(e=>{if(my===BS.n&&$('#bs-l')){fail(e);$('#bs-l').innerHTML='<p>Gagal memuat Bank Bersama.</p>'}})}
+function bsList(){const r=BS.list,el=$('#bs-l');if(!el)return;
+  const bb=$('#bs-bab');if(bb)bb.innerHTML=r.babList.length?`<button type="button" class="${BS.bab?'':'on'}" data-b="">Semua bab</button>`+r.babList.map(b=>`<button type="button" class="${BS.bab.toLowerCase()===b.Bab.toLowerCase()?'on':''}" data-b="${esc(b.Bab)}">${esc(b.Bab)} <small>${b.n}</small></button>`).join(''):'';
+  if(!r.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Belum ada soal bersama untuk mapel ini. Soal muncul di sini setelah guru lain membagikannya dan berstatus Aktif.</p>';bsBar();return}
+  el.innerHTML=r.items.map(x=>{const ks=String(x.Kunci||'').split(',');return `<div class="bk-k"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BS.sel[x.Bank_ID]?'checked':''} aria-label="Pilih soal">
+    <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">${BK_JN[x.Jenis_Soal]||esc(x.Jenis_Soal)}</span><span class="bk-c">${esc(x.Tingkat)}</span><span class="bk-c">Oleh ${esc(x.Pemilik)}</span>${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div>
+    <div class="bk-t">${esc(x.Pertanyaan)}</div>
+    <div class="bk-t" style="opacity:.85"><small>${x.Opsi.map((t,i)=>`${ks.indexOf('ABCDE'[i])>=0?'<b>':''}${'ABCDE'[i]}. ${esc(t)}${ks.indexOf('ABCDE'[i])>=0?' (benar)</b>':''}`).join(' &nbsp;|&nbsp; ')}</small></div></div></div>`}).join('')+
+    `<div class="bk-p"><button class="btn ghost sm" id="bs-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} soal)</small></span><button class="btn ghost sm" id="bs-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
+  el.onclick=e=>{const t=e.target;
+    if(t.id==='bs-pv'){BS.hal--;bsLoad()}else if(t.id==='bs-nx'){BS.hal++;bsLoad()}
+    else if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BS.sel[t.dataset.i]=1;else delete BS.sel[t.dataset.i];bsBar()}};
+  bsBar()}
+function bsBar(){const n=Object.keys(BS.sel).length,el=$('#bs-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar"><b>${n} dipilih</b><button class="btn sm" id="bs-sl">Salin ke bank saya</button></div>`:'';
+  const b=$('#bs-sl');if(b)b.onclick=bsSalin}
+async function bsSalin(){const ids=Object.keys(BS.sel),b=$('#bs-sl');if(b){b.disabled=true;b.textContent='Menyalin...'}
+  try{const r=await api('bank.salin',{Mapel_ID:BS.mapel,ids});let t=r.n+' soal disalin sebagai Draft';if(r.lewat)t+=', '+r.lewat+' dilewati (sudah ada atau bab penuh)';toast(t);
+    if(r.babPenuh&&r.babPenuh.length)toast('Bab penuh: '+r.babPenuh.join(', ')+'. Arsipkan soal lama dulu.');
+    BS.sel={};BK.d=await api('bank.mapel');bsLoad();bsBar()}
+  catch(e){fail(e);if(b){b.disabled=false;b.textContent='Salin ke bank saya'}}}
+
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BMT.d=null;BMT.list=null;BMT.sel={};BMT.mapel='';BMT.bab='';BMT.q='';BMT.st='berjalan';BMT.hal=1;BMT.n++;BMB.list=null;BMB.sel={};BMB.n++;BMB.mapel='';BMB.q='';BMB.bab='';BT.d=null;BT.sel={};BS.list=null;BS.sel={};BS.n++;BS.mapel='';BS.q='';BS.bab='';BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
+Object.assign(VIEWS,{'g-bank':vGBank,'g-bmateri':vGBMateri});
 </script>
 <style>
  
