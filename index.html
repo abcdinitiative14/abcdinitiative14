@@ -5645,6 +5645,46 @@ async function bmbSalin(){const ids=Object.keys(BMB.sel),b=$('#bmb-sl');if(b){b.
     BMB.sel={};BMT.d=await api('bm.mapel');bmbLoad();bmbBar()}
   catch(e){fail(e);if(b){b.disabled=false;b.textContent='Salin ke bank saya'}}}
 
+/* ===== AMBIL DARI BANK di halaman kelas (tab Materi): tombol "Ambil dari Bank" di samping "Tambah materi" ===== */
+const BMQ={pair:'',items:[],sel:{},bab:'',q:'',hal:1,n:0,tmr:0,babs:[],tab:'materi'};
+function bmqSisip(){if(GS.tab!=='materi')return;const t=document.querySelector('#gbody button[onclick="gFormMateri()"]');if(!t||document.getElementById('bmq-btn'))return;
+  const b=document.createElement('button');b.id='bmq-btn';b.type='button';b.className='btn ghost';b.style.marginLeft='8px';b.textContent='Ambil dari Bank';b.onclick=bmqBuka;t.parentNode.insertBefore(b,t.nextSibling)}
+if(typeof gDraw==='function'&&!gDraw.bmq){const o=gDraw;gDraw=function(){const r=o.apply(this,arguments);try{bmqSisip()}catch(e){}return r};gDraw.bmq=1}
+function bmqLabel(){try{const d=MEM.gd,[k,m]=GS.pair.split('|'),a=d&&d.ampu.find(x=>x.Kelas_ID===k&&x.Mapel_ID===m);return a?a.Kelas+' - '+a.Mapel:''}catch(e){return ''}}
+async function bmqBuka(){if(!GS.pair)return;BMQ.pair=GS.pair;BMQ.sel={};BMQ.bab='';BMQ.q='';BMQ.hal=1;BMQ.lbl=bmqLabel();const m=BMQ.pair.split('|')[1];
+  MT('<div class="skel"></div><br><div class="skel"></div>');
+  try{const d=await api('bm.mapel'),x=d.mapel.find(z=>z.Mapel_ID===m);if(!x){toast('Anda belum mengampu mapel ini.',1);bmqKembali();return}BMQ.babs=x.Bab;BMQ.aktif=x.Aktif}catch(e){fail(e);bmqKembali();return}
+  bmqDraw()}
+function bmqKembali(){const p=BMQ.pair;try{delete MEM.gd;MEM.gdT=0}catch(e){}GS.tab='materi';if(typeof MP==='object')MP.tab='materi';if(p){GS.pair=p;go('#/dashboard/g-mapel/'+p)}else go('#/dashboard/g-mapel')}
+function bmqDraw(){
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Ambil dari Bank Materi</h2><button class="btn ghost" id="bmq-kb">Kembali ke kelas</button></div>
+  <p><small>Tujuan: <b>${esc(BMQ.lbl||'kelas ini')}</b>. Centang materi dari bank Anda (hanya yang berstatus Aktif), lalu klik <b>Tarik ke kelas ini</b>. Materi disalin ke kelas, jadi mengubah materi di bank tidak mengubah materi yang sudah ada di kelas.</small></p>
+  <div class="bk-f"><select id="bmq-b" aria-label="Bab"><option value="">Semua bab</option>${BMQ.babs.map(b=>`<option value="${esc(b.Bab)}" ${b.Bab===BMQ.bab?'selected':''}>${esc(b.Bab)}</option>`).join('')}</select>
+  <input id="bmq-q" type="search" placeholder="Cari judul / tag" aria-label="Cari" value="${esc(BMQ.q)}"></div>
+  <div id="bmq-l"><div class="skel"></div></div><div id="bmq-bar"></div>`);
+  $('#bmq-kb').onclick=bmqKembali;
+  $('#bmq-b').onchange=e=>{BMQ.bab=e.target.value;BMQ.hal=1;bmqLoad()};
+  $('#bmq-q').oninput=e=>{BMQ.q=e.target.value;clearTimeout(BMQ.tmr);BMQ.tmr=setTimeout(()=>{BMQ.hal=1;bmqLoad()},350)};
+  bmqLoad()}
+function bmqLoad(){const my=++BMQ.n,m=BMQ.pair.split('|')[1];
+  api('bm.list',{Mapel_ID:m,Status:'Aktif',Bab:BMQ.bab,q:BMQ.q,hal:BMQ.hal}).then(r=>{if(my!==BMQ.n||!$('#bmq-l'))return;BMQ.r=r;BMQ.hal=r.hal;bmqList()}).catch(e=>{if(my===BMQ.n&&$('#bmq-l')){fail(e);$('#bmq-l').innerHTML='<p>Gagal memuat bank materi.</p>'}})}
+function bmqList(){const r=BMQ.r,el=$('#bmq-l');if(!el)return;
+  if(!r.items.length){el.innerHTML=`<p style="padding:18px 0;opacity:.85">${BMQ.aktif?'Tidak ada materi Aktif yang cocok.':'Bank materi mapel ini belum punya materi Aktif. Tambahkan di menu <b>Mata Pelajaran &rarr; Bank Materi</b> (buat sendiri atau impor dari kelas), lalu pastikan statusnya Aktif.'}</p>`;bmqBar();return}
+  el.innerHTML=r.items.map(x=>`<div class="bk-k"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BMQ.sel[x.Bank_ID]?'checked':''} aria-label="Pilih materi">
+    <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span>${x.Berkas?`<span class="bk-c">Berkas: ${esc(x.Berkas)}</span>`:''}${x.Link?'<span class="bk-c">Tautan</span>':''}${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div><div class="bk-t"><b>${esc(x.Judul)}</b></div></div></div>`).join('')+
+    `<div class="bk-p"><button class="btn ghost sm" id="bmq-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} materi)</small></span><button class="btn ghost sm" id="bmq-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
+  el.onclick=e=>{const t=e.target;
+    if(t.id==='bmq-pv'){BMQ.hal--;bmqLoad()}else if(t.id==='bmq-nx'){BMQ.hal++;bmqLoad()}
+    else if(t.type==='checkbox'&&t.dataset.i){if(t.checked)BMQ.sel[t.dataset.i]=1;else delete BMQ.sel[t.dataset.i];bmqBar()}};
+  bmqBar()}
+function bmqBar(){const n=Object.keys(BMQ.sel).length,el=$('#bmq-bar');if(!el)return;
+  el.innerHTML=n?`<div class="bk-bar" style="flex-wrap:wrap;gap:8px"><b>${n} dipilih</b><select id="bmq-s" aria-label="Status di kelas" style="max-width:260px"><option value="Draft">Draft: murid belum melihat</option><option value="Aktif">Aktif: langsung tampil ke murid</option></select><button class="btn sm" id="bmq-go">Tarik ke kelas ini</button></div>`:'';
+  const b=$('#bmq-go');if(b)b.onclick=bmqTarik}
+async function bmqTarik(){const ids=Object.keys(BMQ.sel),[k,m]=BMQ.pair.split('|'),b=$('#bmq-go');b.disabled=true;b.textContent='Menarik...';
+  try{const r=await api('bm.tarik',{Mapel_ID:m,Kelas_ID:k,ids,Status:$('#bmq-s').value});
+    let t=r.n+' materi ditarik ke kelas ('+r.Status+')';if(r.lewat)t+=', '+r.lewat+' dilewati karena sudah ada';if(r.tanpaBerkas)t+=', '+r.tanpaBerkas+' tanpa berkas';toast(t);BMQ.sel={};bmqKembali()}
+  catch(e){fail(e);b.disabled=false;b.textContent='Tarik ke kelas ini'}}
+
 /* ===== BANK SOAL - Tahap 4: STATISTIK SOAL setelah ujian (rute bank.stat dan bank.terapkan) ===== */
 const BT={d:null,sel:{}};
 async function bkStat(){const u=UJ.cur&&UJ.cur.ujian;if(!u)return;MT('<div class="skel"></div><br><div class="skel"></div>');
@@ -5712,7 +5752,7 @@ async function bsSalin(){const ids=Object.keys(BS.sel),b=$('#bs-sl');if(b){b.dis
     BS.sel={};BK.d=await api('bank.mapel');bsLoad();bsBar()}
   catch(e){fail(e);if(b){b.disabled=false;b.textContent='Salin ke bank saya'}}}
 
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BMT.d=null;BMT.list=null;BMT.sel={};BMT.mapel='';BMT.bab='';BMT.q='';BMT.st='berjalan';BMT.hal=1;BMT.n++;BMB.list=null;BMB.sel={};BMB.n++;BMI.items=[];BMI.sel={};BMI.n++;BMI.kelas='';BMB.mapel='';BMB.q='';BMB.bab='';BT.d=null;BT.sel={};BS.list=null;BS.sel={};BS.n++;BS.mapel='';BS.q='';BS.bab='';BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{BMT.d=null;BMT.list=null;BMT.sel={};BMT.mapel='';BMT.bab='';BMT.q='';BMT.st='berjalan';BMT.hal=1;BMT.n++;BMB.list=null;BMB.sel={};BMB.n++;BMI.items=[];BMI.sel={};BMI.n++;BMI.kelas='';BMQ.sel={};BMQ.n++;BMQ.pair='';BMB.mapel='';BMB.q='';BMB.bab='';BT.d=null;BT.sel={};BS.list=null;BS.sel={};BS.n++;BS.mapel='';BS.q='';BS.bab='';BK.d=null;BK.list=null;BK.sel={};BK.mapel='';BK.bab='';BK.q='';BK.st='berjalan';BK.tg='';BK.jn='';BK.hal=1;BK.n++;BKI.rows=null;BKI.res=null;BA.info=null;BA.sel={};BA.n++;const pr=document.querySelector('.bk-pr');if(pr)pr.remove()});
 Object.assign(VIEWS,{'g-bank':vGBank,'g-bmateri':vGBMateri});
 </script>
 <style>
