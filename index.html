@@ -213,7 +213,7 @@ footer{background:var(--ink);color:#b9d0da;padding:22px 0;font-size:14px}
 </form></div>
 <div id="toast"></div>
 
-<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{"school_name":"ABCD initiative","profil_sekolah":"\u003cp>\u003cstrong>Al Biruni Career Development (ABCD)\u003c/strong> adalah komunitas strategis yang hadir untuk \u003cstrong>membangun sinergi berkesinambungan antara alumni dan almamater Al-Biruni Mandiri.\u003c/strong> Komunitas ini berfungsi sebagai jembatan penghubung yang merekatkan kembali ikatan silaturahmi, sekaligus menjadi mitra aktif sekolah dalam mengakselerasi pengembangan potensi siswa. Melalui kolaborasi dengan para alumni yang telah berkiprah di berbagai sektor, ABCD berdedikasi untuk memberikan bimbingan, inspirasi, dan pembekalan nyata agar siswa-siswi Al-Biruni Mandiri siap menavigasi perjalanan karir mereka di masa depan.\u003c/p>","visi":"\u003cp>Menjadi pusat kolaborasi dan sinergi terdepan antara alumni dan Al-Biruni Mandiri untuk mencetak generasi penerus yang berkarakter, berdaya saing tinggi, dan tangguh dalam menghadapi tantangan karir masa depan.\u003c/p>","misi":"\u003cul>\u003cli>Memperkuat Jejaring: Membangun ekosistem komunikasi yang erat dan berkelanjutan antara alumni lintas angkatan dengan pihak sekolah.\u003c/li>\u003cli>Mentoring dan Edukasi: Menyelenggarakan program bimbingan karir, sharing session, dan pengembangan soft skill maupun hard skill bagi siswa dengan melibatkan alumni sebagai mentor.\u003c/li>\u003cli>Akselerasi Peluang: Menjadi pusat informasi dan fasilitator terkait peluang pendidikan lanjutan, beasiswa, magang, dan wawasan dunia kerja profesional bagi siswa.\u003c/li>\u003cli>Sinergi Kurikulum Karir: Berkolaborasi dengan pihak sekolah dalam merancang program atau kegiatan yang relevan dengan tren industri terkini untuk memaksimalkan kesiapan karir siswa.\u003c/li>\u003c/ul>","alamat":"","kontak":"abcdinitiative14@gmail.com"},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
+<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
   window.addEventListener('load', function () {
     fetch(window.API_URL + '?aksi=boot').then(function (r) { return r.json(); }).then(function (b) {
       if (!b || !Array.isArray(b.articles)) return;
@@ -254,17 +254,7 @@ function ask(msg,o){o=o||{};return new Promise(res=>{
   document.addEventListener('keydown',key,true);m.classList.add('on');
   setTimeout(()=>(inp?v:(o.bad?nob:okb)).focus(),30)})}
 function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3500)}
-window.TIMING=window.TIMING||[];var API_P={};
-var API_BACA=/\.(get|list|data|cek|cari|all|ringkasan|badge)$/;
-async function apiKirim(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}
-const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(window.TIMING.length>200)window.TIMING.shift();
-if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
-const apiSalin=d=>{try{return structuredClone(d)}catch(e){return d==null?d:JSON.parse(JSON.stringify(d))}};
-function api(a,p){
-if(!API_BACA.test(a)){API_P={};return apiKirim(a,p).finally(()=>{API_P={}})}
-const k=a+'|'+S.token+'|'+JSON.stringify(p||{});
-if(!API_P[k]){const q=apiKirim(a,p);API_P[k]=q;const b=()=>{if(API_P[k]===q)delete API_P[k]};q.then(b,b)}
-return API_P[k].then(apiSalin)}
+window.TIMING=window.TIMING||[];async function api(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
 function fail(e){if(e.message==='SESI_HABIS'){clearSess();toast('Sesi berakhir, silakan masuk lagi',1);go('#/login')}else toast(e.message,1)}
 function clearSess(){S={token:'',user:null};localStorage.removeItem('tk');localStorage.removeItem('us');for(const k in MEM)delete MEM[k];(window.LOGOUT_HOOKS||[]).forEach(f=>{try{f()}catch(e){}});if(typeof mrReset==='function')mrReset();navAuth()}
 
@@ -3499,6 +3489,11 @@ const SV_CSS=`.sv-paper{position:relative;z-index:0;background:#fff;color:#000;f
 .sv-paper table.f td{padding:.6mm 0;vertical-align:top}
 .sv-paper table.f td:first-child{width:46mm}
 .sv-paper table.f td:nth-child(2){width:4mm}
+.sv-paper table.f.rapat{margin-left:0}
+.sv-paper table.f.rapat td:first-child{width:28mm}
+.sv-paper table.f.ol{margin-left:0;width:100%}
+.sv-paper table.f.ol td:first-child{width:24mm}
+.sv-paper table.f.ol ol{margin:0;padding-left:5mm;text-align:justify}
 .sv-paper table.sv-tb{width:100%;border-collapse:collapse;margin:1mm 0 4mm;font-size:11pt}
 .sv-paper table.sv-tb th,.sv-paper table.sv-tb td{border:1px solid #000;padding:.8mm 1.6mm;vertical-align:top;text-align:left;line-height:1.3}
 .sv-paper table.sv-tb th{background:#dce6f1;font-weight:normal;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -3516,7 +3511,7 @@ const SV_IK={file:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M9 13h6M9 17h6"
  shield:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',award:'<circle cx="12" cy="9" r="5"/><path d="M8.5 13.500L7 21l5-3 5 3-1.5-7.5"/>',
  cek:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',panah:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 8l4 4-4 4"/>',piala:'<path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>',tas:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 13h18"/>'};
 const svIkon=(k,w)=>`<svg viewBox="0 0 24 24" width="${w||22}" height="${w||22}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SV_IK[k]||SV_IK.file}</svg>`;
-const SV_JT={aktif:['Aktif belajar (tabel)','tabel'],aktif1:['Aktif belajar','idcard'],baik:['Berperilaku baik','shield'],peringkat:['Peringkat kelas','award'],diterima:['Diterima sekolah','cek'],pindah:['Pindah sekolah','panah'],lomba:['Rekomendasi lomba','piala'],tugas:['Surat tugas guru','tas']};
+const SV_JT={aktif:['Aktif belajar (tabel)','tabel'],aktif1:['Aktif belajar','idcard'],baik:['Berperilaku baik','shield'],peringkat:['Peringkat kelas','award'],diterima:['Diterima sekolah','cek'],pindah:['Pindah sekolah','panah'],lomba:['Rekomendasi lomba','piala'],tugas:['Surat tugas guru','tas'],tugas1:['Surat tugas perorangan','tas'],sk:['SK pembagian tugas','file'],visa:['Keterangan visa','idcard'],kunjungan:['Izin kunjungan','sekolah']};
 // ubin pilihan jenis surat (menggantikan dropdown); yang dimatikan di cabang ini disembunyikan
 function svBJenisTile(){const e=$('#sb_jt');if(!e)return;const sp=svBSpec();
   e.innerHTML=svJenisPakai(sp.id).map(j=>{const m=SV_JT[j.id]||[j.nama,'file'];return `<button type="button" class="sv-jt${j.id===sp.id?' on':''}" id="sb_jt_${esc(j.id)}" title="${esc(j.nama)}" aria-pressed="${j.id===sp.id}" onclick="svBJenis('${esc(j.id)}')"><span class="ic">${svIkon(m[1],24)}</span><span>${esc(m[0])}</span></button>`}).join('')}
@@ -3565,13 +3560,13 @@ function svLayers(lapis,jangkar,edit,z){return (lapis||[]).map((l,i)=>({l:l,i:i}
 function svKop(t,lapis,edit){
   const ukr=(v,d)=>(+v>0?+v:d);
   const hex=v=>/^#[0-9a-fA-F]{6}$/.test(String(v||''))?v:'',ln=(c,v,pt,w)=>v?`<div class="${c}" style="font-size:${pt}pt${hex(w)?';color:'+hex(w):''}">${esc(v)}</div>`:'';
-  const alamat=[t.alamat,[t.kontak,t.web].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
+  const alamat=[t.alamat,t.kontak,t.web].filter(Boolean).join('\n');   // alamat, telepon/email, dan situs web masing-masing satu baris
   const rata=t.kop_rata==='kiri'?'left':t.kop_rata==='kanan'?'right':'center';
   const pl=+t.kop_pad||0, pr=t.kop_pad_kanan===undefined?pl:(+t.kop_pad_kanan||0);
   return `<div class="sv-kop${t.garis===false?'':' g'}" style="--kh:${+t.kop_tinggi||26}mm"><div class="t" style="text-align:${rata};padding:0 ${pr}mm 0 ${pl}mm">${ln('n',t.judul,ukr(t.uk_judul,17),t.warna)}${ln('s',t.slogan,ukr(t.uk_slogan,9.5),t.warna_slogan)}${ln('a',alamat,ukr(t.uk_alamat,9.5),t.warna_alamat)}</div>${svLayers(lapis,'kop',edit)}</div>`}
-function svTtd(t,tanggal,lapis,edit,mengetahui){
-  return `<div class="tt">${esc(t.kota||'')}, ${esc(tanggal)}<br>${mengetahui?'Mengetahui,<br>':''}${esc(t.ttd_jabatan||'')}<div class="sp"></div><b class="n">${esc(t.kepala_nama||'')}</b>${t.kepala_id?`<br>${esc(t.kepala_idlabel||'NIY')}. ${esc(t.kepala_id)}`:''}${svLayers(lapis,'ttd',edit)}</div>`}
-
+function svTtd(t,tanggal,lapis,edit,mengetahui,tanpaTgl){const mk=mengetahui===true?'Mengetahui,':(typeof mengetahui==='string'?mengetahui:'');
+  return `<div class="tt">${tanpaTgl?'':esc(t.kota||'')+', '+esc(tanggal)+'<br>'}${mk?esc(mk)+'<br>':''}${esc(t.ttd_jabatan||'')}<div class="sp"></div><b class="n">${esc(t.kepala_nama||'')}</b>${t.kepala_id?`<br>${esc(t.kepala_idlabel||'NIY')}. ${esc(t.kepala_id)}`:''}${svLayers(lapis,'ttd',edit)}</div>`}
+// satu halaman: gambar belakang, kop + isi, gambar depan. isi = HTML isi surat (sudah termasuk svTtd bila perlu).
 function svHalaman(t,lapis,isi,edit){
   return `<div class="sv-paper" style="--w:${esc(t.warna||'#0b3a5b')}"><div class="sv-lay bg">${svLayers(lapis,'halaman',edit,'belakang')}</div><div class="sv-body">${svKop(t,lapis,edit)}${isi}${svQr()}</div><div class="sv-lay fg">${svLayers(lapis,'halaman',edit,'depan')}</div></div>`}
 const svTgl=d=>{try{return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}};
@@ -3579,13 +3574,22 @@ const svRow=(a,b)=>`<tr><td>${a}</td><td>:</td><td>${b}</td></tr>`;
  
 const svJenis=id=>(SV.jenis||[]).find(j=>j.id===id)||null;
 
-function svFmtTgl(iso,hari){const a=String(iso||'').split('-');if(a.length!==3)return '';const d=new Date(+a[0],+a[1]-1,+a[2]);if(isNaN(d))return '';
-  let s=svTgl(d);if(hari){try{s=d.toLocaleDateString('id-ID',{weekday:'long'})+', '+s}catch(e){}}return s}
+const SV_BLN_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SV_BLN_ID=['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
+const svOrd=n=>n+(n%100>=11&&n%100<=13?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
+
+const svTglEn=(d,hari)=>svOrd(d.getDate())+' '+SV_BLN_EN[d.getMonth()]+' '+d.getFullYear();
+
+function svIdKeEn(t){const m=String(t||'').trim().split(/\s+/),i=SV_BLN_ID.indexOf((m[1]||'').toLowerCase());return m.length===3&&i>=0&&+m[0]>0?svOrd(+m[0])+' '+SV_BLN_EN[i]+' '+m[2]:String(t||'')}
+function svFmtTgl(iso,hari,en){const a=String(iso||'').split('-');if(a.length!==3)return '';const d=new Date(+a[0],+a[1]-1,+a[2]);if(isNaN(d))return '';
+  let s=en?svTglEn(d):svTgl(d);if(hari){try{s=d.toLocaleDateString(en?'en-GB':'id-ID',{weekday:'long'})+', '+s}catch(e){}}return s}
 
 function svNilai(n,ctx){if(n==='sekolah')return ctx.sek;
+  if(n==='nomor')return ctx.no||'';if(n==='tanggal')return ctx.tgl||'';if(n==='kota')return ctx.kota||'';
+  if(n==='kepala_nama'||n==='kepala_jabatan'||n==='kepala_id'||n==='ttd_jabatan')return (ctx.t&&ctx.t[n])||'';   
   if(ctx.row&&ctx.row[n]!==undefined)return ctx.row[n];
   const f=ctx.spec.f.find(x=>x.k===n),x=ctx.v[n];if(x===undefined||x===null)return '';
-  return f&&f.t==='tanggal'?svFmtTgl(x,f.hari):String(x)}
+  return f&&f.t==='tanggal'?svFmtTgl(x,f.hari,f.en):String(x)}
 const svBr=t=>esc(t).split('\n').join('<br>');
 
 function svTpl(str,ctx){let out='',i=0;str=String(str);
@@ -3596,29 +3600,32 @@ function svTpl(str,ctx){let out='',i=0;str=String(str);
   return out}
 
 function svRender(spec,t,lapis,sk,d,edit){
-  const nm=(sk&&(sk.nama_lengkap||sk.nama))||t.judul||'',v=d.v||{},ctx={spec:spec,v:v,sek:nm};
+  const nm=(sk&&(sk.nama_lengkap||sk.nama))||t.judul||'',v=d.v||{},tgl=(spec.en?svIdKeEn(d.tanggal):d.tanggal)||svTgl(new Date()),ctx={spec:spec,v:v,sek:nm,no:d.no||'',tgl:tgl,kota:t.kota||'',t:t};
   const daftar=k=>Array.isArray(v[k])?v[k]:[];
   const blok=spec.isi.map(b=>{
-    if(b.t==='p'){const h=svTpl(b.x,ctx);return `<p${b.tengah?' style="text-align:center"':''}>${b.tebal?'<b>'+h+'</b>':h}</p>`}
+    if(b.t==='p'){const c=b.dari?Object.assign({},ctx,{row:daftar(b.dari)[0]||{}}):ctx,h=svTpl(b.x,c);return `<p${b.tengah?' style="text-align:center"':b.kanan?' style="text-align:right"':''}>${b.tebal?'<b>'+h+'</b>':h}</p>`}
     if(b.t==='penanda')return `<table class="f">${svRow('Nama',`<b>${esc(t.kepala_nama||'')}</b>`)}${svRow(esc(t.kepala_idlabel||'NIY'),esc(t.kepala_id||''))}${svRow('Jabatan',esc(t.kepala_jabatan||''))}${b.sekolah?svRow('Sekolah',esc(nm)):''}</table>`;
-    if(b.t==='kv'){const c=b.dari?Object.assign({},ctx,{row:daftar(b.dari)[0]||{}}):ctx;return `<table class="f">${b.baris.map(r=>({l:r[0],h:svTpl(r[1],c)})).filter(r=>r.h).map(r=>svRow(esc(r.l),r.h)).join('')}</table>`}   
+    if(b.t==='kv'){const c=b.dari?Object.assign({},ctx,{row:daftar(b.dari)[0]||{}}):ctx;return `<table class="f${b.rapat?' rapat':''}">${b.baris.map(r=>({l:r[0],h:svTpl(r[1],c)})).filter(r=>r.h).map(r=>svRow(esc(r.l),r.h)).join('')}</table>`}   
+    if(b.t==='ol'){const it=(b.dari?String(v[b.dari]||'').split('\n'):(b.items||[])).map(x=>x.trim()).filter(Boolean);   
+      return it.length?`<table class="f ol"><tr><td>${esc(b.label||'')}</td><td>:</td><td><ol type="${b.tipe==='a'?'a':'1'}">${it.map(x=>'<li>'+svTpl(x,ctx)+'</li>').join('')}</ol></td></tr></table>`:''}
     if(b.t==='tabel'){const f=spec.f.find(x=>x.k===b.dari);
       return `<table class="sv-tb"><thead><tr><th>No.</th>${f.kol.map(c=>`<th>${esc(c.l)}</th>`).join('')}</tr></thead><tbody>${daftar(b.dari).map((r,i)=>`<tr><td class="no">${i+1}</td>${f.kol.map(c=>`<td>${esc(r[c.k]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
     return ''}).join('\n  ');
-  return svHalaman(t,lapis,`<div class="jd">${esc(spec.judul)}</div><div class="no">${esc(spec.nomorLabel)} ${d.no?esc(d.no):'&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;'}</div>
+  const tt=spec.ttdJabatan?Object.assign({},t,{ttd_jabatan:String(svNilai(spec.ttdJabatan,ctx)||t.ttd_jabatan||'')}):t;   // jabatan di blok tanda tangan dari isian (mis. surat visa berbahasa Inggris)
+  return svHalaman(t,lapis,`${spec.judul?'<div class="jd">'+esc(spec.judul)+'</div>':''}${spec.nomorLabel?'<div class="no">'+esc(spec.nomorLabel)+' '+(d.no?esc(d.no):'&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;')+'</div>':''}
   ${blok}
-  ${svTtd(t,d.tanggal||svTgl(new Date()),lapis,edit,!!spec.mengetahui)}`,edit)}
+  ${svTtd(tt,tgl,lapis,edit,spec.mengetahui,spec.ttdTgl===false)}`,edit)}
 const SV_CONTOH_V={siswa:[{nama:'Muhammad Kenzie Amadeuz',ttl:'Makassar, 2 Maret 2012',nisn:'0122540766',kelas:'IX (Sembilan)'},{nama:'Aisyah Putri',ttl:'Gowa, 9 Mei 2012',nisn:'0123456789',kelas:'IX (Sembilan)'}],ta:'2026-2027',semester:'Semester Ganjil'};
 function svContoh(t,lapis,sk,edit){const sp=svJenis('aktif');return sp?svRender(sp,t,lapis,sk,{no:'022/SMPIT ABMJ/JIPANG/IX/2026',tanggal:svTgl(new Date()),v:SV_CONTOH_V},edit):''}
 
-/* ---------- pratinjau dan cetak ---------- */
+ 
 const svSek=()=>SV.sek.find(x=>x.id===SV.sid)||null;
-// mengecilkan kertas 210 mm agar muat di lebar kolom pratinjau
+
 function svFit(){['sv_wrap','sb_wrap'].forEach(svFit1)}
 function svFit1(id){const w=$('#'+id),k0=w&&w.firstElementChild;if(!w||!k0||!w.clientWidth)return;const k=Math.min(1,w.clientWidth/k0.offsetWidth);k0.style.transform='scale('+k+')';w.style.height=Math.ceil(k0.offsetHeight*k)+'px'}
 function svPrev(){const w=$('#sv_wrap');if(!w||!SV.p)return;w.innerHTML=svContoh(SV.p,SV.lapis,svSek(),true);svFit()}
-// cetak lewat iframe tersembunyi: pengguna memilih "Simpan sebagai PDF" di dialog cetak. Margin diatur @page.
-// Gambar 'halaman' memakai position:fixed sehingga ikut tercetak di SETIAP halaman (watermark).
+
+
 const SV_KERTAS={A4:'210mm 297mm',F4:'215mm 330mm'};
 function svCetak(html,judul,kertas,opsi){
   const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
@@ -3627,9 +3634,66 @@ function svCetak(html,judul,kertas,opsi){
   f.onload=()=>{setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Cetak gagal: '+e.message,1)}setTimeout(()=>f.remove(),60000)},300)};
   document.body.appendChild(f)}
 function svCetakContoh(){svCetak(svContoh(SV.p,SV.lapis,svSek(),false),'Contoh surat',SV.p&&SV.p.kertas)}
+ 
+const SV_PDF_JS=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
+function svPdfMuat(url,siap){return siap()?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src=url;
+  s.onload=()=>siap()?ok():no(new Error('Pustaka PDF gagal dimuat'));s.onerror=()=>no(new Error('Pustaka PDF tidak bisa dimuat (periksa koneksi internet)'));document.head.appendChild(s)})}
 
-/* ---------- gambar: perkecil di peramban ---------- */
-// apakah gambar punya piksel tembus pandang (alpha < 255)?
+function svPdfKosong(g,w,a,b){const d=g.getImageData(0,a,w,b-a).data;for(let i=0;i<d.length;i+=4)if(d[i]<250||d[i+1]<250||d[i+2]<250)return false;return true}
+
+async function svPdf(units,nama,kertas,onProg){
+  await svPdfMuat(SV_PDF_JS[0],()=>window.html2canvas);await svPdfMuat(SV_PDF_JS[1],()=>window.jspdf&&window.jspdf.jsPDF);
+  svCssPasang();
+  const dim=kertas==='F4'?[215,330]:[210,297],W=dim[0],H=dim[1],S=2.5;
+  const host=document.createElement('div');host.setAttribute('aria-hidden','true');host.style.cssText='position:fixed;left:-30000px;top:0;width:'+W+'mm;background:#fff';document.body.appendChild(host);
+  const pdf=new window.jspdf.jsPDF({unit:'mm',format:[W,H],orientation:'portrait',compress:true}),foto=el=>window.html2canvas(el,{scale:S,backgroundColor:null,logging:false});
+  let awal=true;
+  try{
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    for(let u=0;u<units.length;u++){
+      if(onProg)onProg(u+1,units.length);
+      host.innerHTML=units[u];
+      const paper=host.querySelector('.sv-paper');if(!paper)continue;
+      paper.style.width=W+'mm';paper.style.minHeight=H+'mm';
+      
+      const lap={};
+      for(const kls of ['bg','fg']){const l=paper.querySelector('.sv-lay.'+kls);
+        if(l&&l.querySelector('img')){const w=document.createElement('div');w.className='sv-paper';w.style.cssText='width:'+W+'mm;height:'+H+'mm;min-height:0;padding:0;background:transparent;overflow:hidden';
+          w.appendChild(l.cloneNode(true));host.appendChild(w);lap[kls]=await foto(w);w.remove()}
+        if(l)l.remove()}
+      
+      const pr=paper.getBoundingClientRect(),blok=[...paper.querySelectorAll('.tt,.vq,.sv-tb tr')].map(el=>{const a=el.classList.contains('tt')&&el.previousElementSibling?el.previousElementSibling:el;
+        return [a.getBoundingClientRect().top-pr.top,el.getBoundingClientRect().bottom-pr.top]});
+      const cv=await foto(paper),kk=cv.height/pr.height,k=cv.width/W,top=Math.round(14*k),area=Math.round((H-28)*k),akhir=Math.max(top+1,cv.height-Math.round(14*k)),g=cv.getContext('2d'),potong=[];
+      let y=top;
+      while(y<akhir){let e=Math.min(y+area,akhir);
+        if(e<akhir){const hit=blok.find(b=>b[0]*kk>y+area*.3&&b[0]*kk<e&&b[1]*kk>e);   
+          if(hit)e=Math.round(hit[0]*kk);
+          else{const batas=Math.max(y+Math.round(area*.6),e-Math.round(25*k));for(let yy=e;yy>batas;yy-=2){if(svPdfKosong(g,cv.width,yy-4,yy)){e=yy;break}}}}   
+        potong.push([y,e]);y=e}
+      for(const ab of potong){
+        const pg=document.createElement('canvas');pg.width=cv.width;pg.height=Math.round(H*k);const c=pg.getContext('2d');
+        c.fillStyle='#fff';c.fillRect(0,0,pg.width,pg.height);
+        if(lap.bg)c.drawImage(lap.bg,0,0,pg.width,pg.height);
+        c.drawImage(cv,0,ab[0],cv.width,ab[1]-ab[0],0,top,cv.width,ab[1]-ab[0]);
+        if(lap.fg)c.drawImage(lap.fg,0,0,pg.width,pg.height);
+        if(!awal)pdf.addPage([W,H],'portrait');awal=false;
+        pdf.addImage(pg.toDataURL('image/jpeg',.92),'JPEG',0,0,W,H,undefined,'FAST');pg.width=0}
+      cv.width=0;if(lap.bg)lap.bg.width=0;if(lap.fg)lap.fg.width=0;
+      await new Promise(r=>setTimeout(r,0))}   
+    if(awal)throw new Error('Tidak ada surat yang bisa dibuat');
+    const a=document.createElement('a');a.href=URL.createObjectURL(pdf.output('blob'));
+    a.download=String(nama||'Surat').replace(/[\\\/:*?"<>|\r\n]+/g,'-').replace(/\s+/g,' ').trim().slice(0,120)+'.pdf';
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},10000)}
+  finally{host.remove()}}
+
+async function svPdfUnduh(units,nama,kertas,btn){const teks=btn?btn.textContent:'';
+  try{await svPdf(units,nama,kertas,(i,n)=>{if(btn)btn.textContent='Membuat PDF'+(n>1?' '+i+'/'+n:'')+'...'});return true}
+  catch(e){toast('Surat sudah tersimpan di arsip, tetapi PDF gagal dibuat: '+((e&&e.message)||e)+'. Pakai tombol cetak lalu pilih "Simpan sebagai PDF".',1);return false}
+  finally{if(btn)btn.textContent=teks}}
+
+ 
+
 function svAdaTembus(im){try{const k=Math.min(1,256/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*k)),h=Math.max(1,Math.round(im.naturalHeight*k)),cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');c.drawImage(im,0,0,w,h);const p=c.getImageData(0,0,w,h).data;for(let i=3;i<p.length;i+=4)if(p[i]<255)return true}catch(e){}return false}
 function svShrink(file,s0,smin){return new Promise((ok,no)=>{
   if(String(file.type).indexOf('image/')!==0)return no(new Error('File harus berupa gambar'));
@@ -3847,7 +3911,7 @@ const svBIsi=(f,r)=>f.kol.some(c=>String(r[c.k]||'').trim());
 function svBV0(sp,lama){const v={};lama=lama||{};
   sp.f.forEach(f=>{
     if(f.t==='daftar'){v[f.k]=[svBBaris(f)];return}
-    const x=lama[f.k];v[f.k]=(typeof x==='string'&&x&&(f.t==='ta'||(f.t==='pilih'&&f.opsi.indexOf(x)>=0)))?x:(f.t==='pilih'?(f.def||''):'')});
+    const x=lama[f.k];v[f.k]=(typeof x==='string'&&x&&(f.t==='ta'||(f.t==='pilih'&&f.opsi.indexOf(x)>=0)))?x:(f.def||'')});
   return v}
 // nomor surat: <nomor>/<kode sekolah>/<kode lokasi>/<bulan romawi>/<tahun>; bagian kosong dilewati; kosong semua bila nomor urut belum diisi
 function svBNomor(){const f=SB.f,sk=svSek();if(!String(f.no||'').trim())return '';
@@ -3876,7 +3940,8 @@ function svBMasUi(){const e=$('#sb_massal');if(!e)return;const k=svBKunci();
      <label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="radio" name="sb_mode" style="width:auto" ${SB.mode==='ketik'?'checked':''} onchange="svBMode('ketik')"> Ketik nomor tiap surat</label>
      <small>Pratinjau menampilkan surat pertama. Tambahkan penerima satu per satu dari kolom pencarian, atau impor sekaligus dari berkas CSV/Excel (templat per jenis surat bisa diunduh di bagian daftar penerima).</small></div>`:'');
   const no=$('#sb_no');if(no)no.disabled=SB.massal&&SB.mode==='ketik';const l=$('#sb_no_l');if(l)l.textContent=SB.massal&&SB.mode==='urut'?'Nomor urut awal':'Nomor urut';
-  const bt=$('#sb_cetak');if(bt)bt.textContent=SB.massal?'Simpan semua ke arsip dan cetak':'Simpan ke arsip dan cetak'}
+  const bt=$('#sb_cetak');if(bt)bt.textContent=SB.massal?'Simpan semua ke arsip dan cetak':'Simpan ke arsip dan cetak';
+  const bp=$('#sb_pdf');if(bp)bp.textContent=SB.massal?'Simpan semua ke arsip dan unduh PDF':'Simpan ke arsip dan unduh PDF'}
 function svBMasGanti(on){SB.massal=!!on;SB.arsipId='';const k=svBKunci();if(k&&!on){const r=SB.f.v[k.k]||[];SB.f.v[k.k]=r.length?[r[0]]:[svBBaris(k)]}
   svBMasUi();svBIsiForm();svBPrev();svBCek();svBSt()}
 function svBMode(m){SB.mode=m;svBMasUi();svBIsiForm();svBPrev();svBCek()}
@@ -3905,7 +3970,7 @@ async function svBuat(){
    <label for="sb_tgl">Tanggal surat</label><input id="sb_tgl" type="date" value="${esc(f.tgl)}" oninput="svBF('tgl',this.value)">
    <label for="sb_kertas" style="margin-top:14px">Ukuran kertas</label><select id="sb_kertas" style="max-width:260px"><option value="A4"${SB.t&&SB.t.kertas==='F4'?'':' selected'}>A4 (210 x 297 mm)</option><option value="F4"${SB.t&&SB.t.kertas==='F4'?' selected':''}>F4 (215 x 330 mm)</option></select>
    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="sb_qr" type="checkbox" style="width:auto" ${SB.t&&SB.t.qr===false?'':'checked'}> Cantumkan QR verifikasi pada surat ini</label>
-   <p class="row" style="margin-top:10px"><button class="btn" id="sb_cetak" onclick="svBCetak()">Simpan ke arsip dan cetak</button><button class="btn ghost" type="button" id="sb_baru" onclick="svBBaru()">Surat baru</button></p>
+   <p class="row" style="margin-top:10px"><button class="btn" id="sb_cetak" onclick="svBCetak()">Simpan ke arsip dan cetak</button><button class="btn" type="button" id="sb_pdf" onclick="svBCetak('pdf')">Simpan ke arsip dan unduh PDF</button><button class="btn ghost" type="button" id="sb_baru" onclick="svBBaru()">Surat baru</button></p>
    <small id="sb_st" style="display:block"></small>
   </div>
   <div style="position:sticky;top:8px"><h3 class="sv-h" style="margin-top:0">Pratinjau</h3><div id="sb_wrap" class="sv-wrap"></div></div></div>`;
@@ -3920,7 +3985,7 @@ function svBJenis(id){const sp=svJenis(id);if(!sp)return;SB.f.v=svBV0(sp,SB.f.v)
 function svBF(k,v){SB.f[k]=v;svBPrev();if(k==='no'||k==='thn')svBCek()}
 function svBV(k,v){SB.f.v[k]=v;svBPrev()}
 
-
+// ---- formulir isian dari spesifikasi (dibuat ulang hanya saat jenis/baris berubah, bukan saat mengetik, supaya kursor tidak lompat)
 function svBIsiForm(){const e=$('#sb_isi');if(!e)return;const sp=svBSpec(),v=SB.f.v,q={};
   sp.f.forEach(f=>{const i=$('#sb_q_'+f.k);if(i)q[f.k]=i.value});   
   e.innerHTML=sp.f.map(f=>f.t==='daftar'?svBDaftarHtml(svBEf(f)):svBFldHtml(f,v)).join('');
@@ -3998,7 +4063,7 @@ function svBCek(){clearTimeout(SB.cekTm);const n=++SB.cekN;if(SB.massal&&SB.mode
 function svBSt(){const e=$('#sb_st');if(!e)return;
   e.textContent=SB.arsipId?'Surat ini sudah ada di arsip. Mencetak lagi akan memperbarui isinya di arsip. Pilih "Surat baru" untuk membuat surat lain.':'Mencetak otomatis menyimpan surat ke arsip.'}
 
-async function svBCetakMas(){const f=SB.f,t=SB.t,sp=svBSpec(),k=svBKunci();if(!t||!k)return;
+async function svBCetakMas(mode){const f=SB.f,t=SB.t,sp=svBSpec(),k=svBKunci();if(!t||!k)return;
   const rows=(f.v[k.k]||[]).filter(r=>svBIsi(k,r)),kurang=new Set(),common={};
   if(!rows.length)kurang.add('penerima surat');
   sp.f.forEach(fl=>{if(fl.t==='daftar')return;common[fl.k]=f.v[fl.k];if(!fl.opsional&&!fl.orang&&!String(common[fl.k]||'').trim())kurang.add(fl.l.toLowerCase())});
@@ -4007,29 +4072,30 @@ async function svBCetakMas(){const f=SB.f,t=SB.t,sp=svBSpec(),k=svBKunci();if(!t
     if(!svBNoMas(i,r))kurang.add(SB.mode==='ketik'?'nomor urut penerima ke-'+(i+1):'nomor urut awal (angka)')});
   if(!String(t.kepala_nama||'').trim())kurang.add('nama penandatangan (isi di template)');
   if(kurang.size){toast('Lengkapi dulu: '+[...kurang].join(', '),1);return}
-  const b=$('#sb_cetak'),teks=b.textContent;b.disabled=true;b.textContent='Menyimpan '+rows.length+' surat...';
+  const ids=['#sb_cetak','#sb_pdf'].map(i=>$(i)).filter(Boolean),b=$(mode==='pdf'?'#sb_pdf':'#sb_cetak'),teks=b.textContent;ids.forEach(e=>{e.disabled=true});b.textContent='Menyimpan '+rows.length+' surat...';
   const bersih=r=>{const o=Object.assign({},r);delete o._no;delete o._v;return o};
   const body={sekolah:SV.sid,tpl:SB.tid,jenis:sp.id,kunci:k.k,bln:f.bln,thn:f.thn,tgl:f.tgl,v:common,surat:rows.map((r,i)=>({no:svBNoMas(i,r),baris:bersih(r),v:svBOv(sp,r)}))};
   try{let x=await api('surat.arsip.simpanBanyak',body);
     if(x.duplikat&&x.duplikat.length){const d=x.duplikat.slice(0,5).map(y=>'surat ke-'+y.urut+' ('+y.nama+', '+y.nomor+')').join('; ');
       const ok=await ask(x.duplikat.length+' nomor sudah pernah dipakai di arsip: '+d+(x.duplikat.length>5?' dan lainnya':'')+'. Dua surat dengan nomor yang sama bisa menyulitkan saat diperiksa. Tetap pakai nomor ini dan simpan semua?',{title:'Nomor sudah pernah dipakai',ok:'Ya, tetap simpan',bad:true});
       if(!ok)return;x=await api('surat.arsip.simpanBanyak',Object.assign({lanjut:true},body))}
-    SA.c={};const pakaiQr=!$('#sb_qr')||$('#sb_qr').checked;let html='';
+    SA.c={};const pakaiQr=!$('#sb_qr')||$('#sb_qr').checked;let html='';const unit=[];
     try{for(let i=0;i<x.hasil.length;i++){const h=x.hasil[i];if(pakaiQr)await svQrSiap(h.id);
-        html+='<div class="sv-pb">'+svRender(sp,t,SB.lapis,svSek(),{no:h.nomor,tanggal:svTglIso(f.tgl),v:svBGabung(sp,k,rows[i],common)},false)+'</div>'}}
+        const r1=svRender(sp,t,SB.lapis,svSek(),{no:h.nomor,tanggal:svTglIso(f.tgl),v:svBGabung(sp,k,rows[i],common)},false);unit.push(r1);html+='<div class="sv-pb">'+r1+'</div>'}}
     finally{SV_QR=''}
-    svCetak(html,sp.nama+' ('+x.hasil.length+' surat)',$('#sb_kertas')?$('#sb_kertas').value:t.kertas,{massal:true});
-    toast(x.hasil.length+' surat tersimpan di arsip ('+x.hasil[0].nomor+' sampai '+x.hasil[x.hasil.length-1].nomor+')');
+    const jd=sp.nama+' ('+x.hasil.length+' surat)',kt=$('#sb_kertas')?$('#sb_kertas').value:t.kertas;let pdfOk=true;
+    if(mode==='pdf')pdfOk=await svPdfUnduh(unit,jd,kt,b);else svCetak(html,jd,kt,{massal:true});
+    if(pdfOk)toast(x.hasil.length+' surat tersimpan di arsip ('+x.hasil[0].nomor+' sampai '+x.hasil[x.hasil.length-1].nomor+')'+(mode==='pdf'?' dan PDF diunduh':''));
     
     if(SB.mode==='urut'){const n=svBNoMas(rows.length,{});if(n){f.no=n;const e=$('#sb_no');if(e)e.value=n}}
     f.v[k.k]=[svBBaris(k)];svBIsiForm();svBPrev();svBCek()}
   catch(e){fail(e)}
-  finally{b.disabled=false;b.textContent=teks}}
+  finally{ids.forEach(e=>{e.disabled=false});b.textContent=teks}}
 function svBBaru(){const sp=svBSpec();SB.f.no='';SB.f.v=svBV0(sp,SB.f.v);SB.arsipId='';SB.hasil={};
   const e=$('#sb_no');if(e)e.value='';svBIsiForm();svBPrev();svBCek();svBSt()}
 
 function svBBersih(){const sp=svBSpec(),v={};sp.f.forEach(f=>{const x=SB.f.v[f.k];v[f.k]=f.t==='daftar'?(x||[]).filter(r=>svBIsi(f,r)):x});return v}
-async function svBCetak(){if(svBMas())return svBCetakMas();const f=SB.f,t=SB.t,sp=svBSpec();if(!t)return;const v=svBBersih(),kurang=[];
+async function svBCetak(mode){if(svBMas())return svBCetakMas(mode);const f=SB.f,t=SB.t,sp=svBSpec();if(!t)return;const v=svBBersih(),kurang=[];
   if(!svBNomor())kurang.push('nomor urut surat');
   sp.f.forEach(fl=>{
     if(fl.t==='daftar'){const r=v[fl.k];if(!r.length)kurang.push(fl.l.toLowerCase());
@@ -4037,7 +4103,7 @@ async function svBCetak(){if(svBMas())return svBCetakMas();const f=SB.f,t=SB.t,s
     else if(!fl.opsional&&!String(v[fl.k]||'').trim())kurang.push(fl.l.toLowerCase())});
   if(!String(t.kepala_nama||'').trim())kurang.push('nama penandatangan (isi di template)');
   if(kurang.length){toast('Lengkapi dulu: '+kurang.join(', '),1);return}
-  const b=$('#sb_cetak'),teks=b.textContent;b.disabled=true;b.textContent='Menyimpan...';
+  const ids=['#sb_cetak','#sb_pdf'].map(i=>$(i)).filter(Boolean),b=$(mode==='pdf'?'#sb_pdf':'#sb_cetak'),teks=b.textContent;ids.forEach(e=>{e.disabled=true});b.textContent='Menyimpan...';
   const body={id:SB.arsipId,sekolah:SV.sid,tpl:SB.tid,jenis:sp.id,no:f.no,bln:f.bln,thn:f.thn,tgl:f.tgl,v:v};
   try{let x=await api('surat.arsip.simpan',body);
     if(x.duplikat&&x.duplikat.length){const d=x.duplikat[0];
@@ -4047,10 +4113,12 @@ async function svBCetak(){if(svBMas())return svBCetakMas();const f=SB.f,t=SB.t,s
     SB.arsipId=x.id;SA.c={};svBSt();svBCek();
     const nm=((v[sp.ringkas]||[])[0]||{}).nama||'',n=(v[sp.ringkas]||[]).length;
     if(!$('#sb_qr')||$('#sb_qr').checked)await svQrSiap(x.id);
-    try{svCetak(svRender(sp,t,SB.lapis,svSek(),{no:x.nomor,tanggal:svTglIso(f.tgl),v:v},false),sp.nama+(nm?' - '+nm:'')+(n>1?' dan '+(n-1)+' lainnya':''),$('#sb_kertas')?$('#sb_kertas').value:t.kertas)}finally{SV_QR=''}
-    toast('Tersimpan di arsip: '+x.nomor)}
+    let h='';try{h=svRender(sp,t,SB.lapis,svSek(),{no:x.nomor,tanggal:svTglIso(f.tgl),v:v},false)}finally{SV_QR=''}
+    const jd=sp.nama+(nm?' - '+nm:'')+(n>1?' dan '+(n-1)+' lainnya':''),kt=$('#sb_kertas')?$('#sb_kertas').value:t.kertas;let pdfOk=true;
+    if(mode==='pdf')pdfOk=await svPdfUnduh([h],sp.nama+' - '+x.nomor,kt,b);else svCetak(h,jd,kt);
+    if(pdfOk)toast('Tersimpan di arsip: '+x.nomor+(mode==='pdf'?' (PDF diunduh)':''))}
   catch(e){fail(e)}
-  finally{b.disabled=false;b.textContent=teks}}
+  finally{ids.forEach(e=>{e.disabled=false});b.textContent=teks}}
 
 
 
@@ -4300,7 +4368,7 @@ function svArsipKartu(x){const c=x.status==='dicabut',lain=x.status==='lain',id=
   const cb=x.cabut?'<br><small class="sv-cb">Dicabut '+esc(String(x.cabut.tgl||'').slice(0,10))+(x.cabut.alasan?': '+esc(x.cabut.alasan):'')+'</small>':'';
   const aksi=SA.buka===x.id?`<div class="sv-cabut" style="margin-top:8px"><label for="sa_al_${id}">Alasan pencabutan (boleh dikosongkan)</label><input id="sa_al_${id}" maxlength="200" autocomplete="off"><p class="row" style="margin:6px 0 0"><button class="btn bad sm" onclick="svCabut('${id}')">Cabut surat</button><button class="btn ghost sm" onclick="SA.buka='';svArsipCari($('#sa_q').value,1)">Batal</button></p></div>`
     :`<p class="row" style="margin:6px 0 0">${x.status==='aktif'?`<button class="btn ghost sm" onclick="svBuka('${id}')">Buka di formulir</button><button class="btn ghost sm" onclick="svBuka('${id}',true)">Buat surat serupa</button><button class="btn ghost sm" onclick="SA.buka='${id}';svArsipCari($('#sa_q').value,1)">Cabut surat</button>`:c?`<button class="btn ghost sm" onclick="svPulihkan('${id}')">Pulihkan</button><button class="btn ghost sm" onclick="svBuka('${id}',true)">Buat surat serupa</button>`:''}</p>`;
-  return `<div class="sv-box" data-id="${id}"><b>${esc(x.nomor)}</b> ${lencana}<br><small>${esc(x.jenisNama)} &middot; ${esc(x.sekolahNama)} &middot; ${esc(x.tanggal?svTglIso(x.tanggal):'')} &middot; ${x.jumlah} ${x.jenis==='tugas'?'guru':'siswa'}</small><br>${esc(x.siswa)}${cb}${aksi}</div>`}
+  return `<div class="sv-box" data-id="${id}"><b>${esc(x.nomor)}</b> ${lencana}<br><small>${esc(x.jenisNama)} &middot; ${esc(x.sekolahNama)} &middot; ${esc(x.tanggal?svTglIso(x.tanggal):'')} ${x.jumlah?' &middot; '+x.jumlah+' '+((SV.jenis.find(j=>j.id===x.jenis)||{}).satuan||((x.jenis==='tugas'||x.jenis==='sk')?'guru':'siswa')):''}</small><br>${esc(x.siswa)}${cb}${aksi}</div>`}
 async function svCabut(id){const a=$('#sa_al_'+id),alasan=a?a.value:'';
   if(!await ask('Surat ini akan dinyatakan DICABUT. Orang yang memindai kodenya akan melihat "dicabut", dan surat tidak bisa dicetak ulang kecuali dipulihkan. Nomornya tetap dianggap terpakai. Lanjutkan?',{title:'Cabut surat',ok:'Ya, cabut',bad:true}))return;
   try{await api('surat.arsip.cabut',{id:id,alasan:alasan});SA.c={};SA.buka='';toast('Surat dicabut');svArsipCari($('#sa_q').value,1)}catch(e){fail(e)}}
