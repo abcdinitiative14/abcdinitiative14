@@ -213,7 +213,7 @@ footer{background:var(--ink);color:#b9d0da;padding:22px 0;font-size:14px}
 </form></div>
 <div id="toast"></div>
 
-<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
+<script>window.API_URL="https://script.google.com/macros/s/AKfycbxaj1gcIhnjUoDS5exn1H8xGX0GBUo9BmylFOiNoeEbWVJARugN5kvAiLHic4c4OwwZmA/exec";window.BOOT={"articles":[],"school":"ABCD initiative","profil":{"school_name":"ABCD initiative","profil_sekolah":"\u003cp>\u003cstrong>Al Biruni Career Development (ABCD)\u003c/strong> adalah komunitas strategis yang hadir untuk \u003cstrong>membangun sinergi berkesinambungan antara alumni dan almamater Al-Biruni Mandiri.\u003c/strong> Komunitas ini berfungsi sebagai jembatan penghubung yang merekatkan kembali ikatan silaturahmi, sekaligus menjadi mitra aktif sekolah dalam mengakselerasi pengembangan potensi siswa. Melalui kolaborasi dengan para alumni yang telah berkiprah di berbagai sektor, ABCD berdedikasi untuk memberikan bimbingan, inspirasi, dan pembekalan nyata agar siswa-siswi Al-Biruni Mandiri siap menavigasi perjalanan karir mereka di masa depan.\u003c/p>","visi":"\u003cp>Menjadi pusat kolaborasi dan sinergi terdepan antara alumni dan Al-Biruni Mandiri untuk mencetak generasi penerus yang berkarakter, berdaya saing tinggi, dan tangguh dalam menghadapi tantangan karir masa depan.\u003c/p>","misi":"\u003cul>\u003cli>Memperkuat Jejaring: Membangun ekosistem komunikasi yang erat dan berkelanjutan antara alumni lintas angkatan dengan pihak sekolah.\u003c/li>\u003cli>Mentoring dan Edukasi: Menyelenggarakan program bimbingan karir, sharing session, dan pengembangan soft skill maupun hard skill bagi siswa dengan melibatkan alumni sebagai mentor.\u003c/li>\u003cli>Akselerasi Peluang: Menjadi pusat informasi dan fasilitator terkait peluang pendidikan lanjutan, beasiswa, magang, dan wawasan dunia kerja profesional bagi siswa.\u003c/li>\u003cli>Sinergi Kurikulum Karir: Berkolaborasi dengan pihak sekolah dalam merancang program atau kegiatan yang relevan dengan tren industri terkini untuk memaksimalkan kesiapan karir siswa.\u003c/li>\u003c/ul>","alamat":"","kontak":"abcdinitiative14@gmail.com"},"jumbo":[{"tag":"ABCD initiative","h":"Yuk Mulai Digitalisasi Pembelajaran Kalian!","p":"Akses materi, tugas, nilai, buat sertifikat, buat prompt, bahkan Ujian CBT semuanya disini","img":"https://drive.google.com/thumbnail?id=1J3l6OjsWmzSBIoFqNS2C8WmkKvK5gIzf&sz=w1600","bt":"Buka LMS","bl":"#/login","px":50,"py":51.9,"z":1},{"tag":"Turki","h":"Kuliah Berstandar Eropa, Biaya Tetap Ramah.","p":"Studi Berkualitas, Pengalaman Internasional Tanpa Batas.","img":"https://drive.google.com/thumbnail?id=1ayD8GO17xISSkK_T0RpH4lZi8e-Bhtwh&sz=w1600","bt":"Lihat negara ini","bl":"#/kampus","px":83.4,"py":51.2,"z":1}],"cabang":[{"kode":"karunrung","nama":"Karunrung"},{"kode":"karantina","nama":"Karantina"}],"superOn":true};(function segarBootKlien_() {
   window.addEventListener('load', function () {
     fetch(window.API_URL + '?aksi=boot').then(function (r) { return r.json(); }).then(function (b) {
       if (!b || !Array.isArray(b.articles)) return;
@@ -254,7 +254,17 @@ function ask(msg,o){o=o||{};return new Promise(res=>{
   document.addEventListener('keydown',key,true);m.classList.add('on');
   setTimeout(()=>(inp?v:(o.bad?nob:okb)).focus(),30)})}
 function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',3500)}
-window.TIMING=window.TIMING||[];async function api(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
+window.TIMING=window.TIMING||[];var API_P={};
+var API_BACA=/\.(get|list|data|cek|cari|all|ringkasan|badge)$/;
+async function apiKirim(a,p){const t0=performance.now();let r;try{const res=await fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:S.token,payload:p||{}})});r=await res.json()}catch(e){throw new Error('Gagal terhubung')}
+const tot=Math.round(performance.now()-t0);window.TIMING.push({aksi:a,total_ms:tot,server_ms:r&&r._ms,jaringan_ms:r&&r._ms!=null?tot-r._ms:null,kb:Math.round(JSON.stringify(r).length/1024)});if(window.TIMING.length>200)window.TIMING.shift();
+if(r&&r.ok)return r.data;throw new Error(r?r.error:'Gagal terhubung')}
+const apiSalin=d=>{try{return structuredClone(d)}catch(e){return d==null?d:JSON.parse(JSON.stringify(d))}};
+function api(a,p){
+if(!API_BACA.test(a)){API_P={};return apiKirim(a,p).finally(()=>{API_P={}})}
+const k=a+'|'+S.token+'|'+JSON.stringify(p||{});
+if(!API_P[k]){const q=apiKirim(a,p);API_P[k]=q;const b=()=>{if(API_P[k]===q)delete API_P[k]};q.then(b,b)}
+return API_P[k].then(apiSalin)}
 function fail(e){if(e.message==='SESI_HABIS'){clearSess();toast('Sesi berakhir, silakan masuk lagi',1);go('#/login')}else toast(e.message,1)}
 function clearSess(){S={token:'',user:null};localStorage.removeItem('tk');localStorage.removeItem('us');for(const k in MEM)delete MEM[k];(window.LOGOUT_HOOKS||[]).forEach(f=>{try{f()}catch(e){}});if(typeof mrReset==='function')mrReset();navAuth()}
 
@@ -3490,6 +3500,8 @@ const SV_CSS=`.sv-paper{position:relative;z-index:0;background:#fff;color:#000;f
 .sv-paper table.f td:first-child{width:46mm}
 .sv-paper table.f td:nth-child(2){width:4mm}
 .sv-paper table.f.rapat{margin-left:0}
+.sv-paper table.f.kotak{margin:0 0 3mm;width:100%;border:1px solid #000;padding:1.5mm 2mm;border-collapse:separate}
+.sv-paper table.f.kotak td:first-child{width:38mm}
 .sv-paper table.f.rapat td:first-child{width:28mm}
 .sv-paper table.f.ol{margin-left:0;width:100%}
 .sv-paper table.f.ol td:first-child{width:24mm}
@@ -3511,7 +3523,7 @@ const SV_IK={file:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M9 13h6M9 17h6"
  shield:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',award:'<circle cx="12" cy="9" r="5"/><path d="M8.5 13.500L7 21l5-3 5 3-1.5-7.5"/>',
  cek:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',panah:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8M13 8l4 4-4 4"/>',piala:'<path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>',tas:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 13h18"/>'};
 const svIkon=(k,w)=>`<svg viewBox="0 0 24 24" width="${w||22}" height="${w||22}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SV_IK[k]||SV_IK.file}</svg>`;
-const SV_JT={aktif:['Aktif belajar (tabel)','tabel'],aktif1:['Aktif belajar','idcard'],baik:['Berperilaku baik','shield'],peringkat:['Peringkat kelas','award'],diterima:['Diterima sekolah','cek'],pindah:['Pindah sekolah','panah'],lomba:['Rekomendasi lomba','piala'],tugas:['Surat tugas guru','tas'],tugas1:['Surat tugas perorangan','tas'],sk:['SK pembagian tugas','file'],visa:['Keterangan visa','idcard'],kunjungan:['Izin kunjungan','sekolah']};
+const SV_JT={aktif:['Aktif belajar (tabel)','tabel'],aktif1:['Aktif belajar','idcard'],baik:['Berperilaku baik','shield'],peringkat:['Peringkat kelas','award'],diterima:['Diterima sekolah','cek'],pindah:['Pindah sekolah','panah'],lomba:['Rekomendasi lomba','piala'],tugas:['Surat tugas guru','tas'],tugas1:['Surat tugas perorangan','tas'],disposisi:['Lembar disposisi','daftar'],sk:['SK pembagian tugas','file'],visa:['Keterangan visa','idcard'],kunjungan:['Izin kunjungan','sekolah']};
 // ubin pilihan jenis surat (menggantikan dropdown); yang dimatikan di cabang ini disembunyikan
 function svBJenisTile(){const e=$('#sb_jt');if(!e)return;const sp=svBSpec();
   e.innerHTML=svJenisPakai(sp.id).map(j=>{const m=SV_JT[j.id]||[j.nama,'file'];return `<button type="button" class="sv-jt${j.id===sp.id?' on':''}" id="sb_jt_${esc(j.id)}" title="${esc(j.nama)}" aria-pressed="${j.id===sp.id}" onclick="svBJenis('${esc(j.id)}')"><span class="ic">${svIkon(m[1],24)}</span><span>${esc(m[0])}</span></button>`}).join('')}
@@ -3606,6 +3618,7 @@ function svRender(spec,t,lapis,sk,d,edit){
     if(b.t==='p'){const c=b.dari?Object.assign({},ctx,{row:daftar(b.dari)[0]||{}}):ctx,h=svTpl(b.x,c);return `<p${b.tengah?' style="text-align:center"':b.kanan?' style="text-align:right"':''}>${b.tebal?'<b>'+h+'</b>':h}</p>`}
     if(b.t==='penanda')return `<table class="f">${svRow('Nama',`<b>${esc(t.kepala_nama||'')}</b>`)}${svRow(esc(t.kepala_idlabel||'NIY'),esc(t.kepala_id||''))}${svRow('Jabatan',esc(t.kepala_jabatan||''))}${b.sekolah?svRow('Sekolah',esc(nm)):''}</table>`;
     if(b.t==='kv'){const c=b.dari?Object.assign({},ctx,{row:daftar(b.dari)[0]||{}}):ctx;return `<table class="f${b.rapat?' rapat':''}">${b.baris.map(r=>({l:r[0],h:svTpl(r[1],c)})).filter(r=>r.h).map(r=>svRow(esc(r.l),r.h)).join('')}</table>`}   
+    if(b.t==='kotak'){return `<table class="f kotak"${+b.tinggi>0?' style="min-height:'+(+b.tinggi)+'mm;height:'+(+b.tinggi)+'mm"':''}>${b.baris.map(r=>({l:r[0],h:svTpl(r[1],ctx)})).filter(r=>r.h).map(r=>svRow(esc(r.l),r.h)).join('')}</table>`}   // kotak berbingkai (lembar disposisi); baris kosong tidak dicetak
     if(b.t==='ol'){const it=(b.dari?String(v[b.dari]||'').split('\n'):(b.items||[])).map(x=>x.trim()).filter(Boolean);   
       return it.length?`<table class="f ol"><tr><td>${esc(b.label||'')}</td><td>:</td><td><ol type="${b.tipe==='a'?'a':'1'}">${it.map(x=>'<li>'+svTpl(x,ctx)+'</li>').join('')}</ol></td></tr></table>`:''}
     if(b.t==='tabel'){const f=spec.f.find(x=>x.k===b.dari);
@@ -3614,7 +3627,7 @@ function svRender(spec,t,lapis,sk,d,edit){
   const tt=spec.ttdJabatan?Object.assign({},t,{ttd_jabatan:String(svNilai(spec.ttdJabatan,ctx)||t.ttd_jabatan||'')}):t;   // jabatan di blok tanda tangan dari isian (mis. surat visa berbahasa Inggris)
   return svHalaman(t,lapis,`${spec.judul?'<div class="jd">'+esc(spec.judul)+'</div>':''}${spec.nomorLabel?'<div class="no">'+esc(spec.nomorLabel)+' '+(d.no?esc(d.no):'&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;')+'</div>':''}
   ${blok}
-  ${svTtd(tt,tgl,lapis,edit,spec.mengetahui,spec.ttdTgl===false)}`,edit)}
+  ${spec.tanpaTtd?'':svTtd(tt,tgl,lapis,edit,spec.mengetahui,spec.ttdTgl===false)}`,edit)}
 const SV_CONTOH_V={siswa:[{nama:'Muhammad Kenzie Amadeuz',ttl:'Makassar, 2 Maret 2012',nisn:'0122540766',kelas:'IX (Sembilan)'},{nama:'Aisyah Putri',ttl:'Gowa, 9 Mei 2012',nisn:'0123456789',kelas:'IX (Sembilan)'}],ta:'2026-2027',semester:'Semester Ganjil'};
 function svContoh(t,lapis,sk,edit){const sp=svJenis('aktif');return sp?svRender(sp,t,lapis,sk,{no:'022/SMPIT ABMJ/JIPANG/IX/2026',tanggal:svTgl(new Date()),v:SV_CONTOH_V},edit):''}
 
@@ -3939,7 +3952,7 @@ function svBMasUi(){const e=$('#sb_massal');if(!e)return;const k=svBKunci();
      <label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="radio" name="sb_mode" style="width:auto" ${SB.mode==='urut'?'checked':''} onchange="svBMode('urut')"> Berurutan otomatis dari nomor urut awal (mis. 021, 022, 023)</label>
      <label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="radio" name="sb_mode" style="width:auto" ${SB.mode==='ketik'?'checked':''} onchange="svBMode('ketik')"> Ketik nomor tiap surat</label>
      <small>Pratinjau menampilkan surat pertama. Tambahkan penerima satu per satu dari kolom pencarian, atau impor sekaligus dari berkas CSV/Excel (templat per jenis surat bisa diunduh di bagian daftar penerima).</small></div>`:'');
-  const no=$('#sb_no');if(no)no.disabled=SB.massal&&SB.mode==='ketik';const l=$('#sb_no_l');if(l)l.textContent=SB.massal&&SB.mode==='urut'?'Nomor urut awal':'Nomor urut';
+  const no=$('#sb_no');if(no)no.disabled=SB.massal&&SB.mode==='ketik';const lt=$('#sb_tgl_l');if(lt)lt.textContent=(svBSpec().tglLabel)||'Tanggal surat';const l=$('#sb_no_l');if(l)l.textContent=SB.massal&&SB.mode==='urut'?'Nomor urut awal':'Nomor urut';
   const bt=$('#sb_cetak');if(bt)bt.textContent=SB.massal?'Simpan semua ke arsip dan cetak':'Simpan ke arsip dan cetak';
   const bp=$('#sb_pdf');if(bp)bp.textContent=SB.massal?'Simpan semua ke arsip dan unduh PDF':'Simpan ke arsip dan unduh PDF'}
 function svBMasGanti(on){SB.massal=!!on;SB.arsipId='';const k=svBKunci();if(k&&!on){const r=SB.f.v[k.k]||[];SB.f.v[k.k]=r.length?[r[0]]:[svBBaris(k)]}
@@ -3967,7 +3980,7 @@ async function svBuat(){
    <small>Hasil: <b id="sb_nomor"></b></small><small id="sb_cek" style="display:block"></small>
    ${sk&&sk.kode&&SB.t.kode_lokasi?'':'<small style="display:block;color:#b3261e">'+(sk&&sk.kode?'':'Kode sekolah belum diisi (tab Sekolah, tombol Ubah nama sekolah). ')+(SB.t.kode_lokasi?'':'Kode lokasi belum diisi di template.')+'</small>'}
    <div id="sb_isi"></div>
-   <label for="sb_tgl">Tanggal surat</label><input id="sb_tgl" type="date" value="${esc(f.tgl)}" oninput="svBF('tgl',this.value)">
+   <label for="sb_tgl" id="sb_tgl_l">Tanggal surat</label><input id="sb_tgl" type="date" value="${esc(f.tgl)}" oninput="svBF('tgl',this.value)">
    <label for="sb_kertas" style="margin-top:14px">Ukuran kertas</label><select id="sb_kertas" style="max-width:260px"><option value="A4"${SB.t&&SB.t.kertas==='F4'?'':' selected'}>A4 (210 x 297 mm)</option><option value="F4"${SB.t&&SB.t.kertas==='F4'?' selected':''}>F4 (215 x 330 mm)</option></select>
    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="sb_qr" type="checkbox" style="width:auto" ${SB.t&&SB.t.qr===false?'':'checked'}> Cantumkan QR verifikasi pada surat ini</label>
    <p class="row" style="margin-top:10px"><button class="btn" id="sb_cetak" onclick="svBCetak()">Simpan ke arsip dan cetak</button><button class="btn" type="button" id="sb_pdf" onclick="svBCetak('pdf')">Simpan ke arsip dan unduh PDF</button><button class="btn ghost" type="button" id="sb_baru" onclick="svBBaru()">Surat baru</button></p>
