@@ -2592,9 +2592,11 @@ async function uTinjau(id){
   catch(e){fail(e)}}
 
  
-async function mTinjau(id){
-  M('<div class="skel"></div>');
-  try{mTinjauDraw(await api('um.tinjau',{id}))}catch(e){fail(e);vMUjian()}}
+let TJ_KLS=false;   
+function mTinjauBack(){if(TJ_KLS&&typeof MK==='object'&&MK.id&&typeof mkDetail==='function'){MK.tab='ujian';mkDetail(MK.id)}else vMUjian()}
+async function mTinjau(id,dariKelas){
+  TJ_KLS=!!dariKelas;M('<div class="skel"></div>');
+  try{mTinjauDraw(await api('um.tinjau',{id}))}catch(e){fail(e);mTinjauBack()}}
 function mTinjauKartu(q){
   const ar=ujArab(q.Opsi),bs=q.Jenis==='BS',lb=ujLabel(q.Label,ar),jw=q.Jawaban||'';
   const st=q.Nilai>=1?['Benar','var(--teal)']:q.Nilai>0?['Sebagian benar','#b7791f']:[jw?'Salah':'Tidak dijawab','var(--bad)'];
@@ -2611,7 +2613,7 @@ function mTinjauKartu(q){
     (q.Jenis==='PGK'?'<p><small>Pilih semua jawaban yang benar.</small></p>':'')+body+
     (q.Pembahasan?`<div style="margin-top:10px;padding:10px 12px;background:var(--mist);border-radius:8px"><b>Pembahasan</b><div>${ujPa(q.Pembahasan)}</div></div>`:'')+'</div></div>'}
 function mTinjauDraw(d){
-  M(`<div class="row" style="justify-content:space-between"><h2>Tinjauan: ${esc(d.Judul)}</h2><button class="btn ghost" onclick="vMUjian()">Kembali</button></div><p><b>Skor: ${esc(d.Skor)}</b></p>`+d.soal.map(mTinjauKartu).join(''));
+  M(`<div class="row" style="justify-content:space-between"><h2>Tinjauan: ${esc(d.Judul)}</h2><button class="btn ghost" onclick="mTinjauBack()">Kembali</button></div><p><b>Skor: ${esc(d.Skor)}</b></p>`+d.soal.map(mTinjauKartu).join(''));
   if(typeof mxLoad==='function')mxLoad()}
 </script>
 <style>
@@ -2683,7 +2685,7 @@ function mkBody(d){const el=$('#mkb');if(!el)return;
     el.innerHTML=d.ujian.length?'<div class="grid">'+d.ujian.map(u=>`<div class="card"><div class="cb"><span class="tag" style="color:${mCol[u.State]||'inherit'}">${esc(u.State)}</span><h3>${esc(u.Judul)}</h3><small>${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${u.Soal} soal</small><br><small>${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small>`+
       (u.State==='Siap'?`<p><button class="btn sm" onclick="mkMulai('${esc(u.Ujian_ID)}',this)">Mulai ujian</button></p>`:
        u.State==='Berjalan'?`<p><button class="btn sm" onclick="mkMulai('${esc(u.Ujian_ID)}',this)">Lanjutkan</button></p>`:
-       u.State==='Selesai'?`<p><b>Skor: ${esc(u.Skor)}</b></p>`:
+       u.State==='Selesai'?`<p><b>Skor: ${esc(u.Skor)}</b>${u.Tinjau?` <button class="btn ghost sm" onclick="mTinjau('${esc(u.Ujian_ID)}',1)">Tinjau soal</button>`:''}</p>`:
        u.State==='Terlewat'?'<p><small>Waktu ujian sudah lewat.</small></p>':'<p><small>Belum dibuka.</small></p>')+'</div></div>').join('')+'</div>':'<div class="empty">Belum ada ujian untuk mata pelajaran ini.</div>'}
 
 /* ---------- Tugas: lihat & kirim jawaban ---------- */
