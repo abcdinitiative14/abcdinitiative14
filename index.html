@@ -2395,7 +2395,7 @@ async function uPlay(uid,sid,b){const t=b.textContent;b.disabled=true;b.textCont
 async function uHasil(id){UJ.hid=id;MT(uSkel);
   try{UJ.res=await api('u.hasil',{id,Semester:UJ.sem});uHasilDraw()}catch(e){fail(e);uHome()}}
 function uHasilDraw(){const r=UJ.res,u=r.ujian;
-  MT(`<div class="row" style="justify-content:space-between"><h2>Hasil: ${esc(u.Judul)}</h2><span class="row"><button class="btn ghost" onclick="uHasil(UJ.hid)">Muat ulang</button><button class="btn ghost" onclick="uHome()">Kembali</button></span></div>
+  MT(`<div class="row" style="justify-content:space-between"><h2>Hasil: ${esc(u.Judul)}</h2><span class="row"><button class="btn ghost" onclick="uHasilUnduh()">Unduh Excel</button><button class="btn ghost" onclick="uHasil(UJ.hid)">Muat ulang</button><button class="btn ghost" onclick="uHome()">Kembali</button></span></div>
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Selesai_N} dari ${u.Siswa} siswa selesai</small></p>
   <div class="row" style="margin:10px 0"><span>Salin skor ke Nilai:</span><select id="hs" style="max-width:130px" onchange="UJ.sem=this.value;uHasil(UJ.hid)">${USEM.map(x=>`<option ${x===UJ.sem?'selected':''}>${x}</option>`).join('')}</select><select id="hk" style="max-width:190px">${r.komponen.map(k=>`<option>${esc(k)}</option>`).join('')}</select><button class="btn sm" onclick="uKeNilai()">Salin skor</button></div>
   <p><small>Hanya murid yang sudah selesai yang disalin. Nilai lama pada komponen itu diganti dan perlu diverifikasi ulang wali kelas. Tidak bisa jika rapor sudah final.</small></p>`+
@@ -2615,6 +2615,39 @@ function mTinjauKartu(q){
 function mTinjauDraw(d){
   M(`<div class="row" style="justify-content:space-between"><h2>Tinjauan: ${esc(d.Judul)}</h2><button class="btn ghost" onclick="mTinjauBack()">Kembali</button></div><p><b>Skor: ${esc(d.Skor)}</b></p>`+d.soal.map(mTinjauKartu).join(''));
   if(typeof mxLoad==='function')mxLoad()}
+
+ 
+function unNama(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'ujian'}
+
+function unXlsx(sheet,aoa,hRow,lebar,fmt){
+  const L=n=>{let s='';n++;while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
+  let sd='';
+  aoa.forEach((r,ri)=>{let cs='';(r||[]).forEach((v,ci)=>{if(v===''||v==null)return;
+    const ref=L(ci)+(ri+1),isN=typeof v==='number',st=ri===0?1:ri===hRow?2:ri<hRow?6:isN?(fmt&&fmt[ci]===2?4:fmt&&fmt[ci]===1?5:0):3;
+    cs+=isN?`<c r="${ref}" s="${st}"><v>${v}</v></c>`:`<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${bkxXe(v)}</t></is></c>`});
+    sd+=`<row r="${ri+1}">${cs}</row>`});
+  const P='http://schemas.openxmlformats.org/',S=P+'spreadsheetml/2006/main',R=P+'officeDocument/2006/relationships',ct='application/vnd.openxmlformats-officedocument.spreadsheetml.';
+  const nm=bkxXe(String(sheet).replace(/[\[\]:*?\/\\]/g,' ').slice(0,31)||'Data');
+  return bkxZip({
+    '[Content_Types].xml':BKX_X+'<Types xmlns="'+P+'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="'+ct+'sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="'+ct+'worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="'+ct+'styles+xml"/></Types>',
+    '_rels/.rels':BKX_X+'<Relationships xmlns="'+P+'package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    'xl/workbook.xml':BKX_X+'<workbook xmlns="'+S+'" xmlns:r="'+R+'"><sheets><sheet name="'+nm+'" sheetId="1" r:id="rId1"/></sheets></workbook>',
+    'xl/_rels/workbook.xml.rels':BKX_X+'<Relationships xmlns="'+P+'package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="'+R+'/styles" Target="styles.xml"/></Relationships>',
+    'xl/styles.xml':BKX_X+'<style'+'Sheet xmlns="'+S+'"><numFmts count="1"><numFmt numFmtId="164" formatCode="0.0"/></numFmts><fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><color rgb="FF0A2540"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF5B7083"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1F6F78"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></style'+'Sheet>',
+    'xl/worksheets/sheet1.xml':BKX_X+'<worksheet xmlns="'+S+'"><sheetViews><sheetView workbookViewId="0"><pane ySplit="'+(hRow+1)+'" topLeftCell="A'+(hRow+2)+'" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+lebar.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols><sheetData>'+sd+'</sheetData></worksheet>'})}
+function uHasilUnduh(){
+  const r=typeof UJ==='object'&&UJ.res;if(!r||!r.ujian||typeof bkxZip!=='function'){toast('Data hasil belum dimuat. Muat ulang halaman.',1);return}
+  const u=r.ujian,num=v=>v===''||v==null||isNaN(Number(v))?'':Number(v),sel=r.siswa.filter(x=>x.Status==='Selesai'&&num(x.Skor)!=='');
+  const rata=sel.length?Math.round(sel.reduce((t,x)=>t+num(x.Skor),0)/sel.length*100)/100:'';
+  const a=[['Hasil ujian: '+u.Judul],[[u.Kelas,u.Mapel,u.Jenis].filter(Boolean).join(' - ')+' | '+u.Selesai_N+' dari '+u.Siswa+' siswa selesai'+(rata!==''?' | skor rata-rata '+rata:'')],[],['No','Nama','NIS','Status','Skor','Mulai','Selesai']];
+  r.siswa.forEach((x,i)=>a.push([i+1,x.Nama_Siswa||'',String(x.NIS||''),x.Status||'',num(x.Skor),x.Mulai_Teks||'',x.Selesai_Teks||'']));
+  bkxSimpanBerkas(unXlsx('Hasil',a,3,[5,34,16,14,10,18,18],{4:2}),'hasil-'+unNama(u.Judul)+'.xlsx');toast('File diunduh')}
+function btUnduh(){
+  const d=typeof BT==='object'&&BT.d;if(!d||typeof bkxZip!=='function'){toast('Data statistik belum dimuat',1);return}
+  const a=[['Statistik soal: '+d.Judul],['Murid selesai: '+d.n+' | skor rata-rata '+d.skorRata+(d.pembeda?'':' | daya pembeda tampil mulai 10 murid')],[],['No','Pertanyaan','Jenis','Kunci','Benar (%)','Tidak dijawab','Sebaran jawaban','Daya pembeda','Saran tingkat','Catatan']];
+  d.soal.forEach(x=>{const seb=x.Jenis==='BS'?x.dist.map((v,i)=>'P'+(i+1)+': '+v+'%').join(' | '):x.dist.map((v,i)=>'ABCDE'[i]+': '+v).join(' | ');
+    a.push([x.No,x.Pertanyaan||'(tanpa teks)',x.Jenis,String(x.Kunci||''),x.pct,x.kosong,seb,x.pembeda===null?'':x.pembeda,x.saran||'',(x.tanda||[]).join('; ')])});
+  bkxSimpanBerkas(unXlsx('Statistik',a,3,[5,60,8,10,11,13,34,13,14,50],{4:1,7:2}),'statistik-soal-'+unNama(d.Judul)+'.xlsx');toast('File diunduh')}
 </script>
 <style>
 .mkchip{display:inline-block;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--mist);color:var(--ink);margin:2px 4px 2px 0}
@@ -5738,7 +5771,7 @@ async function bkStat(){const u=UJ.cur&&UJ.cur.ujian;if(!u)return;MT('<div class
 function btDraw(){const d=BT.d;
   const bar=v=>`<div style="background:rgba(120,140,160,.25);border-radius:6px;height:10px;width:110px;display:inline-block;vertical-align:middle"><div style="width:${Math.max(0,Math.min(100,v))}%;height:10px;border-radius:6px;background:${v>=80?'#1fa89a':v>=40?'#3b7ddd':'#d9534f'}"></div></div>`;
   const sebaran=x=>x.Jenis==='BS'?x.dist.map((v,i)=>`P${i+1}: ${v}%`).join(' &middot; '):x.dist.map((v,i)=>`${'ABCDE'[i]}: ${v}${String(x.Kunci).indexOf('ABCDE'[i])>=0?'*':''}`).join(' &middot; ');
-  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Statistik soal</h2><span class="row" style="gap:8px"><button class="btn ghost" id="bt-kb">Kembali</button></span></div>
+  MT(`<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Statistik soal</h2><span class="row" style="gap:8px"><button class="btn ghost" onclick="btUnduh()">Unduh Excel</button><button class="btn ghost" id="bt-kb">Kembali</button></span></div>
   <p><small>${esc(d.Judul)} &middot; ${d.n} murid sudah selesai &middot; skor rata-rata ${d.skorRata}</small></p>
   ${d.n<5?'<p style="padding:12px 0;opacity:.85">Statistik baru berarti bila minimal 5 murid sudah selesai mengerjakan.</p>':''}
   ${d.n&&!d.pembeda?'<p><small>Daya pembeda tampil mulai 10 murid selesai.</small></p>':''}
