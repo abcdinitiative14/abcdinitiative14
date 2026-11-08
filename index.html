@@ -2191,7 +2191,7 @@ function vGUjian(){UJ.req=0;UJ.pair='';
 function uLoad(){if(UJ.req)return;UJ.req=1;if(MEM.ug)uDraw();
   api('u.data').then(l=>{MEM.ug=l;uDraw()}).catch(e=>{if(e.message==='SESI_HABIS')return fail(e);if($('#ub')&&!MEM.ug)$('#ub').innerHTML=`<div class="empty">${esc(e.message)}</div>`;else toast(e.message,1)})}
 function uDraw(){const l=MEM.ug&&MEM.ug.filter(u=>!UJ.pair||u.Kelas_ID+'|'+u.Mapel_ID===UJ.pair);if(!MEM.ug||!$('#ub'))return;
-  $('#ub').innerHTML=l.length?`<table><tr><th>Ujian</th><th>Kelas &amp; mapel</th><th>Jadwal</th><th>Soal</th><th>Selesai</th><th></th></tr>`+l.map(u=>`<tr><td><b>${esc(u.Judul)}</b><br>${uTag(u.Status)}${u.Tinjau?' <span class="tag" style="color:var(--teal)">Tinjauan terbuka</span>':''} <small>${esc(u.Jenis)} &middot; ${u.Durasi} menit</small></td><td>${esc(u.Kelas)}<br><small>${esc(u.Mapel)}</small></td><td><small>${esc(u.Mulai_Teks)}<br>s.d. ${esc(u.Selesai_Teks)}</small></td><td>${u.Soal}</td><td>${u.Selesai_N}/${u.Siswa}<br><small>${u.Mulai_N} sudah mulai</small></td><td class="row"><button class="btn sm" onclick="uSoal('${esc(u.Ujian_ID)}')">Soal</button><button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Hasil</button><button class="btn ghost sm" onclick="uTinjau('${esc(u.Ujian_ID)}')">${u.Tinjau?'Tutup tinjauan':'Buka tinjauan'}</button><button class="btn ghost sm" onclick="uForm('${esc(u.Ujian_ID)}')">Edit</button><button class="btn bad sm" onclick="uDel('${esc(u.Ujian_ID)}')">Hapus</button></td></tr>`).join('')+'</table>':'<div class="empty">Belum ada ujian. Klik "Buat ujian".</div>'}
+  $('#ub').innerHTML=l.length?`<table><tr><th>Ujian</th><th>Kelas &amp; mapel</th><th>Jadwal</th><th>Soal</th><th>Selesai</th><th></th></tr>`+l.map(u=>`<tr><td><b>${esc(u.Judul)}</b><br>${uTag(u.Status)}${u.Tinjau?' <span class="tag" style="color:var(--teal)">Tinjauan terbuka</span>':''} ${ujSbTag(u)} <small>${esc(u.Jenis)} &middot; ${u.Durasi} menit</small></td><td>${esc(u.Kelas)}<br><small>${esc(u.Mapel)}</small></td><td><small>${esc(u.Mulai_Teks)}<br>s.d. ${esc(u.Selesai_Teks)}</small></td><td>${u.Soal}</td><td>${u.Selesai_N}/${u.Siswa}<br><small>${u.Mulai_N} sudah mulai</small></td><td class="row"><button class="btn sm" onclick="uSoal('${esc(u.Ujian_ID)}')">Soal</button><button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Hasil</button><button class="btn ghost sm" onclick="uTinjau('${esc(u.Ujian_ID)}')">${u.Tinjau?'Tutup tinjauan':'Buka tinjauan'}</button><button class="btn ghost sm" onclick="uForm('${esc(u.Ujian_ID)}')">Edit</button><button class="btn bad sm" onclick="uDel('${esc(u.Ujian_ID)}')">Hapus</button></td></tr>`).join('')+'</table>':'<div class="empty">Belum ada ujian. Klik "Buat ujian".</div>'}
 
 function uForm(id){const d=MEM.gd,r=id?(MEM.ug||[]).find(x=>x.Ujian_ID===id)||{}:{},lock=r.Mulai_N>0,cur=r.Kelas_ID?r.Kelas_ID+'|'+r.Mapel_ID:GS.pair;UJ.acakSentuh=0;const ac=id?(r.Acak||{soal:false,opsi:false}):{soal:true,opsi:true};
   MT(`<h2>${id?'Edit':'Buat'} ujian</h2><div style="max-width:560px">${lock?'<p><small>Sudah ada murid yang mulai: kelas, mapel, jenis, dan durasi tidak bisa diubah.</small></p>':''}
@@ -2236,7 +2236,7 @@ function uSoalDraw(){const c=UJ.cur,u=c.ujian,l=c.soal,lock=c.terkunci,ac=u.Acak
   MT(`<div class="row" style="justify-content:space-between"><h2>${esc(u.Judul)}</h2><button class="btn ghost" onclick="uHome()">Kembali</button></div>
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small><br><small>Acak urutan soal: ${ac.soal?'ya':'tidak'} &middot; Acak pilihan jawaban: ${ac.opsi?'ya':'tidak'}</small></p>
   <p class="row">${uTag(u.Status)}${u.Status!=='Aktif'?`<button class="btn sm" onclick="uStatus('Aktif')">Aktifkan</button>`:`<button class="btn ghost sm" onclick="uStatus('Ditutup')">Tutup ujian</button><button class="btn ghost sm" onclick="uStatus('Draft')">Kembalikan ke Draft</button>`}<button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Lihat hasil</button></p>
-  ${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button><button class="btn ghost" onclick="ujImport()">Impor soal</button></p>`}`+
+  ${ujSbPanel()}${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button><button class="btn ghost" onclick="ujImport()">Impor soal</button></p>`}`+
   (l.length?`<div class="tw"><table><tr><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(q.Pertanyaan.length>140?q.Pertanyaan.slice(0,140)+'...':q.Pertanyaan):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan')+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
 async function uStatus(st){const u=UJ.cur.ujian;
   try{const r=await api('u.save',{id:u.Ujian_ID,Kelas_ID:u.Kelas_ID,Mapel_ID:u.Mapel_ID,Judul:u.Judul,Jenis:u.Jenis,Durasi:u.Durasi,Mulai:u.Mulai_Input,Selesai:u.Selesai_Input,Status:st});
@@ -2393,10 +2393,10 @@ async function uPlay(uid,sid,b){const t=b.textContent;b.disabled=true;b.textCont
 
 /* ---------- GURU / WALI KELAS: hasil & salin skor ---------- */
 async function uHasil(id){UJ.hid=id;MT(uSkel);
-  try{UJ.res=await api('u.hasil',{id,Semester:UJ.sem});uHasilDraw()}catch(e){fail(e);uHome()}}
+  try{await ujSbSinkron(id);UJ.res=await api('u.hasil',{id,Semester:UJ.sem});uHasilDraw()}catch(e){fail(e);uHome()}}
 function uHasilDraw(){const r=UJ.res,u=r.ujian;
   MT(`<div class="row" style="justify-content:space-between"><h2>Hasil: ${esc(u.Judul)}</h2><span class="row"><button class="btn ghost" onclick="uHasilUnduh()">Unduh Excel</button><button class="btn ghost" onclick="uHasil(UJ.hid)">Muat ulang</button><button class="btn ghost" onclick="uHome()">Kembali</button></span></div>
-  <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Selesai_N} dari ${u.Siswa} siswa selesai</small></p>
+  <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Selesai_N} dari ${u.Siswa} siswa selesai</small></p>${ujSbInfo(u.Ujian_ID)}
   <div class="row" style="margin:10px 0"><span>Salin skor ke Nilai:</span><select id="hs" style="max-width:130px" onchange="UJ.sem=this.value;uHasil(UJ.hid)">${USEM.map(x=>`<option ${x===UJ.sem?'selected':''}>${x}</option>`).join('')}</select><select id="hk" style="max-width:190px">${r.komponen.map(k=>`<option>${esc(k)}</option>`).join('')}</select><button class="btn sm" onclick="uKeNilai()">Salin skor</button></div>
   <p><small>Hanya murid yang sudah selesai yang disalin. Nilai lama pada komponen itu diganti dan perlu diverifikasi ulang wali kelas. Tidak bisa jika rapor sudah final.</small></p>`+
   (r.siswa.length?`<div class="tw"><table><tr><th>Siswa</th><th>Status</th><th>Skor</th><th>Mulai</th><th>Selesai</th><th></th></tr>`+r.siswa.map((x,i)=>`<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td>${esc(x.Status)}</td><td><b>${esc(x.Skor)}</b></td><td>${esc(x.Mulai_Teks)}</td><td>${esc(x.Selesai_Teks)}</td><td>${x.Status==='Belum mulai'?'':`<button class="btn ghost sm" onclick="uReset(${i})">Izinkan ulang</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada siswa di kelas ini.</div>'))}
@@ -2405,10 +2405,32 @@ async function uReset(i){const x=UJ.res.siswa[i];
   try{await api('u.reset',{id:UJ.hid,Siswa_ID:x.Siswa_ID});toast('Siswa dapat mengulang ujian');api('u.data').then(l=>{MEM.ug=l}).catch(()=>{});uHasil(UJ.hid)}catch(e){fail(e)}}
 async function uKeNilai(){const k=$('#hk').value;if(!k){toast('Belum ada komponen nilai',1);return}
   if(!await ask('Salin skor ujian ini ke komponen "'+k+'" semester '+UJ.sem+'? Nilai lama pada komponen itu akan diganti.',{title:'Salin ke nilai',ok:'Salin'}))return;
-  try{const r=await api('u.keNilai',{id:UJ.hid,Semester:UJ.sem,Jenis:k});toast(r&&r.diubah?r.diubah+' nilai disalin':'Sudah sama, tidak ada perubahan')}catch(e){fail(e)}}
+  try{await ujSbSinkron(UJ.hid,true);const r=await api('u.keNilai',{id:UJ.hid,Semester:UJ.sem,Jenis:k});toast(r&&r.diubah?r.diubah+' nilai disalin':'Sudah sama, tidak ada perubahan')}catch(e){fail(e)}}
 
 /* uHome: tujuan setelah simpan/batal/kembali di layar guru. Halaman lama memuat ulang daftar ujian; MapelUI menimpanya agar tetap di tab Ujian CBT. */
 function uHome(){vGUjian()}
+/* ---------- MODE SUPABASE (F2): mode ujian, Terbitkan, Sinkron ---------- */
+function ujSbOf(id){const k=[UJ.cur&&UJ.cur.ujian,UJ.res&&UJ.res.ujian,...(MEM.ug||[])].find(x=>x&&x.Ujian_ID===id&&x.Sb);return k?k.Sb:{Mode:'sheets',Terbit:'',Perlu_Ulang:false}}
+function ujSbSet(id,r){const sb={Mode:r.Mode,Terbit:r.Terbit,Perlu_Ulang:r.Perlu_Ulang,Sinkron_Akhir:r.Sinkron_Akhir};[UJ.cur&&UJ.cur.ujian,UJ.res&&UJ.res.ujian,...(MEM.ug||[])].forEach(x=>{if(x&&x.Ujian_ID===id)x.Sb=sb})}
+function ujSbWaktu(t){try{return new Date(t).toLocaleString('id-ID')}catch(e){return t}}
+function ujSbTag(u){const s=u.Sb;if(!s||s.Mode!=='supabase')return '';return '<span class="tag" style="color:var(--teal)">Supabase</span>'+(!s.Terbit?' <span class="tag" style="color:var(--bad)">Belum diterbitkan</span>':s.Perlu_Ulang?' <span class="tag" style="color:var(--bad)">Perlu terbit ulang</span>':'')}
+function ujSbSig(){return JSON.stringify(UJ.cur.soal.map(q=>[q.Soal_ID,q.Jenis,q.Pertanyaan,q.Kunci,q.Opsi,q.Gambar,q.Media]))}
+function ujSbPanel(){const u=UJ.cur.ujian,s=ujSbOf(u.Ujian_ID),lock=UJ.cur.terkunci;
+  if(s.Mode!=='supabase')return `<p class="row"><small>Mode ujian: biasa (Google Sheets).</small>${lock?'':`<button class="btn ghost sm" onclick="ujSbMode('supabase')">Pakai Supabase</button>`}</p>`;
+  if(UJ.sbRef!==UJ.cur){UJ.sbRef=UJ.cur;UJ.sbSig=ujSbSig()}
+  const kotor=s.Terbit&&(s.Perlu_Ulang||UJ.sbSig!==ujSbSig());
+  return `<p class="row"><span class="tag" style="color:var(--teal)">Mode Supabase</span>${!s.Terbit?'<span class="tag" style="color:var(--bad)">Belum diterbitkan</span>':'<small>Terbit: '+esc(ujSbWaktu(s.Terbit))+'</small>'}${kotor?' <span class="tag" style="color:var(--bad)">Soal berubah, perlu terbit ulang</span>':''}<button class="btn sm" id="ujsbt" onclick="ujSbTerbit()">${s.Terbit?'Terbitkan ulang':'Terbitkan'}</button><button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Sinkron &amp; lihat hasil</button>${lock?'':`<button class="btn ghost sm" onclick="ujSbMode('sheets')">Kembali ke mode biasa</button>`}</p>
+  <p><small>Urutan: selesaikan soal, tekan Terbitkan, lalu Aktifkan. Setiap soal diubah, tekan Terbitkan ulang. Murid yang masih mengerjakan baru tampil di hasil setelah mengumpulkan atau waktunya habis.</small></p>`}
+async function ujSbMode(m){const u=UJ.cur.ujian;
+  if(m==='supabase'&&!await ask('Ujian ini akan dikerjakan lewat Supabase. Setelah itu soal harus diterbitkan sebelum murid bisa mulai. Mode hanya bisa diubah selama belum ada murid yang mulai.',{title:'Pakai Supabase',ok:'Lanjut'}))return;
+  try{const r=await api('u.mode',{id:u.Ujian_ID,mode:m});ujSbSet(u.Ujian_ID,r);toast(m==='supabase'?'Mode Supabase aktif. Tekan Terbitkan.':'Kembali ke mode biasa');uSoalDraw()}catch(e){fail(e)}}
+async function ujSbTerbit(){const u=UJ.cur.ujian,b=$('#ujsbt');if(b){b.disabled=true;b.textContent='Menerbitkan...'}
+  try{const r=await api('u.publikasi',{id:u.Ujian_ID});ujSbSet(u.Ujian_ID,r);UJ.sbSig=ujSbSig();toast('Diterbitkan: '+r.Soal+' soal');uSoalDraw()}catch(e){fail(e);if(b){b.disabled=false;b.textContent='Terbitkan'}}}
+async function ujSbSinkron(id){UJ.sbLast=null;const s=ujSbOf(id);if(s.Mode!=='supabase'||!s.Terbit)return;
+  try{UJ.sbLast=await api('u.sinkron',{id})}catch(e){toast(e.message,1)}}
+function ujSbInfo(id){const s=ujSbOf(id);if(s.Mode!=='supabase')return '';const r=UJ.sbLast;
+  return `<p><small>Mode Supabase. ${r?'Hasil terbaru sudah disinkronkan ('+r.Diambil+' baru'+(r.Berjalan?'; '+r.Berjalan+' murid masih mengerjakan dan tampil setelah selesai atau waktunya habis':'')+').':(s.Terbit?'':'Ujian belum diterbitkan.')}</small></p>`}
+
 
 /* ---------- MURID: daftar ujian ---------- */
 const EX={u:null,jw:{},i:0,end:0,dirty:0,busy:0,fin:0,done:0,hold:0,t1:null,t2:null,aud:{},audKey:'',res:null,img:{},imgBusy:{},tk:''};
@@ -8443,6 +8465,141 @@ if(BHS_ON)(function(){
     document.addEventListener('keydown',e=>{if(e.key==='Escape')tutup()})}
   if(typeof mnuTerapkan==='function'){const o=mnuTerapkan;mnuTerapkan=function(){const r=o.apply(this,arguments);try{pasang()}catch(e){console.warn(e)}return r}}
   try{pasang()}catch(e){console.warn(e)}
+})();
+</script>
+<script>
+
+
+const USB_JEDA=60000;                       
+UJ.sbAt=UJ.sbAt||{};UJ.sbBusy=UJ.sbBusy||{};UJ.sbLast=UJ.sbLast||null;UJ.sbLastId=UJ.sbLastId||'';
+const usbSemua=id=>[UJ.cur&&UJ.cur.ujian,UJ.res&&UJ.res.ujian,...(MEM.ug||[])].filter(x=>x&&x.Ujian_ID===id);
+const usbInfo=(m,t)=>ask(m,{title:t,ok:'Mengerti',no:'Tutup'});
+
+ 
+function ujSbWaktu(t){if(typeof t==='boolean')return 'sudah dilakukan';const d=new Date(t);return isNaN(d)?String(t):d.toLocaleString('id-ID')}
+
+
+function uSbLokal(id,t){try{if(t===undefined)return localStorage.getItem('usbs_'+id)||'';localStorage.setItem('usbs_'+id,t)}catch(e){return ''}}
+function uSbAkhirTeks(id){let v=UJ.sbAt[id]?new Date(UJ.sbAt[id]).toISOString():uSbLokal(id);return v?ujSbWaktu(v):''}
+const uSbPernah=(id,s)=>!!uSbAkhirTeks(id)||(s||ujSbOf(id)).Sinkron_Akhir===true;
+const uSbAkhirKet=(id,s)=>{const a=uSbAkhirTeks(id);return a?'Sinkron terakhir: '+a:s.Sinkron_Akhir===true?'Sinkron akhir sudah dilakukan':'Belum ada catatan sinkron di peramban ini'};
+function ujSbTag(u){const s=u.Sb;if(!s||s.Mode!=='supabase')return '';
+  return '<span class="tag" style="color:var(--teal)">Supabase</span>'+
+    (!s.Terbit?' <span class="tag" style="color:var(--bad)">Belum terbit</span>':s.Perlu_Ulang?' <span class="tag" style="color:var(--bad)">Perlu terbit ulang</span>':' <span class="tag">Terbit</span>')+
+    (s.Terbit?'<br><small>'+esc(uSbAkhirKet(u.Ujian_ID,s))+'</small>':'')+'<br>'}
+
+ 
+function uSbBtns(u){const id=esc(u.Ujian_ID),s=u.Sb||{},sb=s.Mode==='supabase';
+  let h=`<button class="btn ghost sm" onclick="uSbMode('${id}')">Mode</button>`;
+  if(sb){h+=`<button class="btn${s.Terbit&&s.Perlu_Ulang?' bad':''} sm" onclick="uSbTerbit('${id}',this)">${s.Terbit?'Terbitkan ulang':'Terbitkan'}</button>`;
+    if(s.Terbit)h+=`<button class="btn ghost sm" onclick="uSbSinkron('${id}',this)">Sinkron</button>`}
+  return h}
+// menyisipkan tombol di samping tombol Hapus tiap baris, tanpa mengubah markup Fase5UI/MapelUI (aman bila berkas itu diubah di percakapan lain)
+function uSbHias(){
+  document.querySelectorAll('button[onclick^="uDel("]').forEach(b=>{if(b.dataset.usb)return;b.dataset.usb='1';
+    const m=/^uDel\('([^']*)'\)/.exec(b.getAttribute('onclick')||''),u=m&&(MEM.ug||[]).find(x=>x.Ujian_ID===m[1]);if(!u)return;
+    b.insertAdjacentHTML('beforebegin',uSbBtns(u))});
+  const h=$('#ub');if(h&&!$('#usbcek')&&(MEM.ug||[]).some(x=>x.Sb&&x.Sb.Mode==='supabase'))   
+    h.insertAdjacentHTML('beforebegin','<p><button class="btn ghost sm" id="usbcek" onclick="uSbCek()">Cek Supabase</button></p>')}
+function uSbRedraw(){if($('#ub'))uDraw()}
+
+ 
+async function uSbMode(id){
+  if(UJ.sbBusy['m'+id])return;UJ.sbBusy['m'+id]=1;
+  try{const u=usbSemua(id)[0];if(!u)return;
+    const s=u.Sb||{Mode:'sheets'},ke=s.Mode==='supabase'?'sheets':'supabase';let c;
+    try{c=await api('u.soal',{id})}catch(e){return fail(e)}
+    const L=c.soal||[];
+    if(c.terkunci||u.Mulai_N>0){await usbInfo('Sudah ada murid yang mulai mengerjakan ujian ini, jadi mode tidak bisa diubah lagi.','Mode tidak bisa diubah');return}
+    if(ke==='supabase'&&L.some(q=>q.Jenis==='SESI')){await usbInfo('Ujian ini punya soal bersesi (SESI). Mode Supabase belum mendukung ujian bersesi, jadi ujian ini tetap memakai Sheets.','Belum bisa pakai Supabase');return}
+    const g=L.some(q=>q.Gambar),a=L.some(q=>q.Media);let msg,ok;
+    if(ke==='supabase'){
+      msg='Ujian "'+u.Judul+'" akan dikerjakan lewat Supabase (cocok untuk banyak murid serentak).\n\nSetelah ini: tekan Terbitkan agar soal masuk ke Supabase, lalu Aktifkan. Hasil baru tampil di sini setelah Sinkron.\n\nMode hanya bisa diubah selama belum ada murid yang mulai.';
+      if(g||a)msg+='\n\nPERINGATAN: ujian ini memakai '+(g&&a?'gambar dan audio':g?'gambar':'audio')+'. Untuk sementara lampiran masih lewat Apps Script, jadi tidak disarankan untuk 200 murid sekaligus.';
+      ok='Pakai Supabase'}
+    else{msg='Ujian "'+u.Judul+'" kembali memakai Sheets (jalur lama). Mode hanya bisa diubah selama belum ada murid yang mulai, dan server akan menolak bila sudah ada hasil.';ok='Kembali ke Sheets'}
+    if(!await ask(msg,{title:'Mode ujian: sekarang '+(s.Mode==='supabase'?'Supabase':'Sheets (lama)'),ok,no:'Batal'}))return;
+    try{const r=await api('u.mode',{id,mode:ke});ujSbSet(id,r);toast(ke==='supabase'?'Mode Supabase aktif. Tekan Terbitkan.':'Kembali ke mode Sheets');uSbRedraw()}
+    catch(e){fail(e)}}
+  finally{delete UJ.sbBusy['m'+id]}}
+
+ 
+async function uSbTerbit(id,b){const t=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Menerbitkan...'}
+  try{const r=await api('u.publikasi',{id});ujSbSet(id,r);const u=usbSemua(id)[0];
+    toast('Diterbitkan'+(r.Soal!=null?': '+r.Soal+' soal':'')+(u&&u.Status==='Draft'?'. Ujian masih Draft; Aktifkan agar murid bisa mulai.':''));uSbRedraw()}
+  catch(e){fail(e);if(b){b.disabled=false;b.textContent=t}}}
+
+ 
+async function ujSbSinkron(id,force){
+  const s=ujSbOf(id);if(s.Mode!=='supabase'||!s.Terbit)return false;
+  if(!force&&Date.now()-(UJ.sbAt[id]||0)<USB_JEDA)return true;
+  if(UJ.sbBusy[id])return UJ.sbBusy[id];
+  const p=(async()=>{try{const r=await api('u.sinkron',{id});UJ.sbLast=r;UJ.sbLastId=id;UJ.sbAt[id]=Date.now();
+      uSbLokal(id,new Date().toISOString());return true}
+    catch(e){if(e.message==='SESI_HABIS'){fail(e);return false}toast(e.message,1);return false}
+    finally{delete UJ.sbBusy[id]}})();
+  UJ.sbBusy[id]=p;return p}
+async function uSbSinkron(id,b){const t=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Menyinkronkan...'}
+  const ok=await ujSbSinkron(id,true);
+  if(b){b.disabled=false;b.textContent=t}
+  if(!ok)return;
+  const r=UJ.sbLast;toast('Sinkron selesai'+(r&&r.Diambil!=null?': '+r.Diambil+' hasil baru':'')+(r&&r.Berjalan?'; '+r.Berjalan+' murid masih mengerjakan':''));
+  if(UJ.hid===id&&$('#hs')&&UJ.res)uHasil(id);
+  else if($('#ub')){api('u.data').then(l=>{MEM.ug=l;uSbRedraw()}).catch(()=>uSbRedraw())}}
+
+function ujSbInfo(id){const s=ujSbOf(id);if(s.Mode!=='supabase')return '';
+  const r=UJ.sbLastId===id?UJ.sbLast:null,a=s.Terbit?uSbAkhirTeks(id):'';let h;
+  if(!s.Terbit)h='<small>Mode Supabase. Ujian belum diterbitkan.</small>';
+  else h='<small>Mode Supabase. '+(a?'Sinkron terakhir: <b>'+esc(a)+'</b>.':s.Sinkron_Akhir===true?'Sinkron akhir sudah dilakukan.':'<b style="color:var(--bad)">Belum ada catatan sinkron di peramban ini: daftar hasil, Unduh Excel, dan Statistik soal bisa belum lengkap.</b>')+
+    (r&&r.Diambil!=null?' ('+esc(r.Diambil)+' hasil baru'+(r.Berjalan?'; '+esc(r.Berjalan)+' murid masih mengerjakan dan tampil setelah mengumpulkan atau waktunya habis':'')+')':'')+
+    ' Data di sini bisa tertinggal dari yang sebenarnya sampai Anda sinkron lagi.</small>';
+  return '<div id="usbinfo" class="row" style="margin:6px 0">'+h+(s.Terbit?`<button class="btn ghost sm" onclick="uSbSinkron('${esc(id)}',this)">Sinkron sekarang</button>`:'')+'</div>'}
+
+/* ---- Cek Supabase (proyek gratis bisa dijeda) ---- */
+function uSbCekTeks(r){
+  if(typeof r==='string')return r;r=r||{};
+  const bad=r.Ok===false||r.ok===false||r.Aktif===false,pesan=r.Pesan||r.pesan||r.message||'',ms=r.Ms!=null?r.Ms:r.ms;
+  if(!bad)return 'Supabase aktif dan menjawab'+(ms!=null?' (dalam '+ms+' milidetik)':'')+'.'+(pesan?'\n'+pesan:'')+'\n\nProyek siap dipakai untuk ujian.';
+  return 'Supabase belum menjawab dengan benar.'+(pesan?'\n'+pesan:'')+uSbCekSaran()}
+const uSbCekSaran=()=>'\n\nKemungkinan proyek gratis sedang dijeda karena lama tidak dipakai. Buka dasbor Supabase (supabase.com/dashboard), pilih proyek, tekan Restore, tunggu beberapa menit, lalu cek lagi. Sebaiknya cek sehari sebelum ujian.';
+async function uSbCek(){const b=$('#usbcek'),t=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Memeriksa...'}
+  try{const r=await api('u.cekSb');await usbInfo(uSbCekTeks(r),'Cek Supabase')}
+  catch(e){if(e.message==='SESI_HABIS')fail(e);else await usbInfo('Supabase belum bisa dipakai.\n'+e.message+(/belum lengkap|tidak ditemukan|menolak kunci/i.test(e.message)?'':uSbCekSaran()),'Cek Supabase')}
+  const c=$('#usbcek');if(c){c.disabled=false;c.textContent=t||'Cek Supabase'}}
+
+/* ---- pembungkus fungsi yang sudah ada (dipasang sekali) ---- */
+(function(){if(window._usbF2b)return;window._usbF2b=1;
+  const ada=n=>{try{return typeof eval(n)==='function'}catch(e){return false}};
+  // soal diubah: tandai "perlu terbit ulang" langsung di layar (server tetap yang menentukan)
+  if(ada('uSyncCount')){const o=uSyncCount;uSyncCount=function(){const r=o.apply(this,arguments);
+    try{const id=UJ.cur.ujian.Ujian_ID;usbSemua(id).forEach(x=>{if(x.Sb&&x.Sb.Mode==='supabase'&&x.Sb.Terbit)x.Sb.Perlu_Ulang=true})}catch(e){}return r}}
+  else console.warn('F2b: uSyncCount tidak ditemukan');
+  // layar Hasil: bila keterangan sinkron belum tampil (markup beda), sisipkan sendiri
+  if(ada('uHasilDraw')){const o=uHasilDraw;uHasilDraw=function(){const r=o.apply(this,arguments);
+    try{const u=UJ.res&&UJ.res.ujian;if(u&&ujSbOf(u.Ujian_ID).Mode==='supabase'&&!$('#usbinfo')){const h=$('#hs'),row=h&&h.closest('.row');if(row)row.insertAdjacentHTML('beforebegin',ujSbInfo(u.Ujian_ID))}}catch(e){}return r}}
+  else console.warn('F2b: uHasilDraw tidak ditemukan');
+  // Unduh Excel: sinkron dulu dan muat ulang hasil
+  if(ada('uHasilUnduh')){const o=uHasilUnduh;uHasilUnduh=async function(){
+    const id=UJ.hid,s=ujSbOf(id);
+    if(s.Mode==='supabase'&&s.Terbit&&Date.now()-(UJ.sbAt[id]||0)>=USB_JEDA){
+      const lama=uSbAkhirTeks(id);toast('Menyinkronkan dulu...');
+      if(await ujSbSinkron(id,true)){try{UJ.res=await api('u.hasil',{id,Semester:UJ.sem});uHasilDraw()}catch(e){return fail(e)}}
+      else if(!await ask('Sinkron gagal. '+(lama?'Data terakhir disinkron '+lama+'.':'Data belum pernah berhasil disinkron.')+' File yang diunduh bisa tertinggal atau kosong. Tetap unduh?',{title:'Sinkron gagal',ok:'Tetap unduh',no:'Batal'}))return}
+    return o.apply(this,arguments)}}
+  else console.warn('F2b: uHasilUnduh tidak ditemukan');
+  // Statistik soal: peringatan bila belum pernah sinkron (data statistik dimuat oleh layar lain)
+  if(ada('btUnduh')){const o=btUnduh;btUnduh=async function(){
+    const d=(typeof BT==='object'&&BT&&BT.d)||{},id=d.Ujian_ID||(typeof BT==='object'&&BT&&(BT.id||BT.uid))||UJ.hid,s=id?ujSbOf(id):{};
+    if(s.Mode==='supabase'&&s.Terbit&&!uSbPernah(id,s)&&!await ask('Belum ada catatan sinkron dari Supabase di peramban ini, jadi statistik bisa kosong atau tidak lengkap. Buka Hasil (otomatis sinkron), lalu buka statistik lagi. Tetap unduh sekarang?',{title:'Belum ada catatan sinkron',ok:'Tetap unduh',no:'Batal'}))return;
+    return o.apply(this,arguments)}}
+  else console.warn('F2b: btUnduh tidak ditemukan');
+  // layar Statistik soal (MapelUI: bkStat): sinkron dulu (dengan jeda 60 detik) supaya statistik memakai data terbaru
+  if(ada('bkStat')){const o=bkStat;bkStat=async function(){
+    try{const u=UJ.cur&&UJ.cur.ujian,s=u&&ujSbOf(u.Ujian_ID);if(s&&s.Mode==='supabase'&&s.Terbit){toast('Menyinkronkan dulu...');await ujSbSinkron(u.Ujian_ID)}}catch(e){}
+    return o.apply(this,arguments)}}
+  (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{UJ.sbAt={};UJ.sbBusy={};UJ.sbLast=null;UJ.sbLastId=''});
+  // pasang tombol setiap kali tampilan guru digambar ulang
+  try{let h;new MutationObserver(()=>{clearTimeout(h);h=setTimeout(()=>{try{uSbHias()}catch(e){}},40)}).observe(document.getElementById('dmain')||document.body,{childList:true,subtree:true})}catch(e){}
 })();
 </script>
 </body>
