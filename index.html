@@ -2536,6 +2536,187 @@ Object.assign(VIEWS,{'g-ujian':vGUjian,'m-ujian':vMUjian});
 (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{try{exStop(false);EX.u=null;EX.done=0;EX.dirty=0}catch(e){}});
 </script>
 <script>
+
+
+
+var SB={on:false,t2:0,id:'',sid:'',soal:[],perm:{},sent:{},force:false,lastSnap:null,w:0,
+  cfg:{url:'',key:''},tok:{t:'',until:0,tk:'',p:null},busy:null,
+  delaySave:[800,2000,5000],            
+  delayFin:[1000,2000,4000,8000,15000,30000],   
+  finMaxMs:20*60*1000,                   
+  sleep:ms=>new Promise(r=>setTimeout(r,ms)),
+  now:()=>performance.now()};
+
+ 
+const SB_MSG={SUDAH_SELESAI:'Anda sudah menyelesaikan ujian ini',TIDAK_ADA:'Ujian tidak ditemukan',
+  BELUM_AKTIF:'Ujian ini belum aktif atau sudah ditutup',TANPA_SOAL:'Ujian belum memiliki soal',
+  BELUM_DIBUKA:'Ujian belum dibuka',LEWAT:'Waktu ujian sudah lewat',HABIS:'Waktu ujian Anda sudah habis',
+  TOKEN:'Sesi habis, silakan coba lagi',BELUM_MULAI:'Ujian belum dimulai'};
+function sbErr(kode,msg,net){const e=new Error(msg||SB_MSG[kode]||'Terjadi gangguan pada server ujian');e.kode=kode;e.net=!!net;return e}
+const sbNet=()=>sbErr('NET','Gagal terhubung',true);
+function sbKode(j,st){const m=j&&typeof j.message==='string'?j.message.trim().toUpperCase():'';
+  if(SB_MSG[m])return m;if(st===401)return 'TOKEN';if(st>=500||st===429||st===408)return 'NET';return 'GALAT'}
+
+ 
+function hash32_(s){s=String(s);let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function seedOrder_(n,key){let a=hash32_(key);const rnd=()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
+  const o=[];for(let i=0;i<n;i++)o.push(i);for(let i=n-1;i>0;i--){const j=Math.floor(rnd()*(i+1)),x=o[i];o[i]=o[j];o[j]=x}return o}
+function opsiTetap_(ops){return (ops||[]).some(o=>{o=String(o);
+  return /di atas|tidak ada (jawaban )?(yang )?(benar|salah)|semua (jawaban )?(benar|salah)|benar semua|salah semua/i.test(o)||/(^|\s)[A-E]\s*(dan|&|atau|,)\s*[A-E](\s|$|[.,])/.test(o)})}
+const SB_L='ABCDE';
+
+function ansToCanon_(q,perm,v){v=String(v||'').toUpperCase();if(q.Jenis==='BS')return v;const m=[];
+  for(const ch of v){const k=SB_L.indexOf(ch);if(k<0||k>=perm.length)return '';m.push(SB_L[perm[k]])}   
+  return q.Jenis==='PGK'?[...new Set(m)].sort().join(''):(m.length===1?m[0]:'')}
+
+function ansToView_(q,perm,c){c=String(c||'').toUpperCase();if(q.Jenis==='BS')return c;const inv=[];perm.forEach((o,k)=>inv[o]=k);const m=[];
+  for(const ch of c){const o=SB_L.indexOf(ch);if(o<0||inv[o]===undefined)continue;m.push(SB_L[inv[o]])}
+  return q.Jenis==='PGK'?m.sort().join(''):(m.length===1?m[0]:'')}
+
+ 
+function sbJwt(t){try{let b=String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(atob(b))}catch(e){return null}}
+function sbUrl(){return String(SB.cfg.url||window.SB_URL||'').replace(/\/+$/,'')}
+function sbKey(){return SB.cfg.key||window.SB_PUBLISHABLE_KEY||''}
+async function sbToken(force){const tk=exTok();
+  if(!force&&SB.tok.t&&SB.tok.tk===tk&&SB.now()<SB.tok.until)return SB.tok.t;
+  if(SB.busy)return SB.busy;
+  SB.busy=(async()=>{try{
+    let d;try{d=await SB.api0('um.token',{})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
+    if(!d||!d.token)throw sbErr('TOKEN');
+    const ttl=typeof d.ttl==='number'?d.ttl:(typeof d.exp==='number'?d.exp-Date.now()/1000:3600);   
+    SB.tok={t:d.token,until:SB.now()+Math.max(0,ttl-120)*1000,tk,p:sbJwt(d.token)};
+    if(d.url)SB.cfg.url=d.url;if(d.key)SB.cfg.key=d.key;
+    return SB.tok.t}finally{SB.busy=null}})();
+  return SB.busy}
+
+ 
+async function sbRpc(nama,badan,o){o=o||{};let again=true;
+  for(;;){const t=await sbToken(false);let res,txt;
+    const ac=typeof AbortController!=='undefined'?new AbortController():null,to=ac&&!o.keepalive?setTimeout(()=>ac.abort(),o.timeout||20000):0;
+    try{res=await fetch(sbUrl()+'/rest/v1/rpc/'+nama,{method:'POST',keepalive:!!o.keepalive,signal:ac?ac.signal:undefined,
+        headers:{'Content-Type':'application/json',apikey:sbKey(),Authorization:'Bearer '+t},body:JSON.stringify(badan||{})});
+      txt=await res.text()}
+    catch(e){throw sbNet()}finally{if(to)clearTimeout(to)}
+    let j=null;try{j=txt?JSON.parse(txt):null}catch(e){}
+    if(res.ok)return j;
+    const k=sbKode(j,res.status);
+    if(k==='TOKEN'&&again){again=false;SB.tok.until=0;await sbToken(true);continue}   
+    throw sbErr(k,null,k==='NET')}}
+
+async function sbRpcRetry(nama,badan,delays,o){for(let i=0;;i++){try{return await sbRpc(nama,badan,o)}catch(e){if(!e.net||i>=delays.length)throw e;await SB.sleep(sbJit(delays[i]))}}}
+const sbJit=ms=>Math.round(ms*(0.5+Math.random()));
+
+ 
+const sbQK=(sid,id)=>'sbq1:'+sid+':'+id;
+function sbQLoad(sid,id){try{const v=JSON.parse(localStorage.getItem(sbQK(sid,id)));if(v&&v.jw&&Date.now()-v.t<12*3600*1000)return v}catch(e){}return null}
+function sbQSave(s,fin){try{localStorage.setItem(sbQK(SB.sid,SB.id),JSON.stringify({jw:s.jw,cl:s.cl,fin:fin?1:0,t:Date.now()}))}catch(e){}}
+function sbQClear(sid,id){try{localStorage.removeItem(sbQK(sid||SB.sid,id||SB.id))}catch(e){}}
+
+function sbSnap(){const jw={},send={},cl=[];
+  for(const q of SB.soal){const v=EX.jw[q.Soal_ID],c=v?ansToCanon_(q,SB.perm[q.Soal_ID],v):'';
+    if(c){jw[q.Soal_ID]=c;send[q.Soal_ID]=c}else if(SB.sent[q.Soal_ID]){send[q.Soal_ID]='';cl.push(q.Soal_ID)}}
+  return {jw,send,cl}}
+function sbSent(s){for(const k in s.jw)SB.sent[k]=1}
+
+ 
+function sbBanner(m){if(typeof document==='undefined')return;let e=document.getElementById('sb-stat');
+  if(!m){if(e)e.style.display='none';return}
+  if(!e){e=document.createElement('div');e.id='sb-stat';e.setAttribute('role','status');
+    e.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:60;max-width:520px;margin:0 auto;padding:10px 14px;border-radius:10px;background:#fff7e0;border:1px solid #e0b84a;color:#5a4300;font-size:.9rem;box-shadow:0 2px 10px rgba(0,0,0,.15)';
+    document.body.appendChild(e)}
+  e.textContent=m;e.style.display='block'}
+
+ 
+async function sbMulai(id){SB.on=false;
+  await sbToken(false);const sid=(SB.tok.p&&(SB.tok.p.siswa_id||SB.tok.p.sub))||'';
+  
+  const q0=sbQLoad(sid,id);
+  if(q0&&q0.fin){const s={};for(const k in q0.jw)s[k]=q0.jw[k];(q0.cl||[]).forEach(k=>s[k]='');
+    const r=await sbRpcRetry('cbt_selesai',{p_ujian_id:id,p_jawaban:s},SB.delaySave);sbQClear(sid,id);
+    throw new Error('Jawaban Anda dari ujian ini sudah dikumpulkan. Skor: '+(r&&r.skor))}
+  const t0=SB.now(),r=await sbRpcRetry('cbt_mulai',{p_ujian_id:id},SB.delaySave),rtt=(SB.now()-t0)/1000;
+  const acak=r.Acak||{},src=r.soal||[],n=src.length;
+  const ord=acak.soal?seedOrder_(n,'S|'+sid+'|'+id):src.map((_,i)=>i);
+  const perm={},soal=ord.map(i=>{const s=src[i],ops=s.Opsi||[];let p=ops.map((_,k)=>k);
+    if(acak.opsi&&s.Jenis!=='BS'&&ops.length>=2&&!opsiTetap_(ops))p=seedOrder_(ops.length,'O|'+sid+'|'+s.Soal_ID);
+    perm[s.Soal_ID]=p;
+    return {Soal_ID:s.Soal_ID,Jenis:s.Jenis,Pertanyaan:s.Pertanyaan||'',Opsi:p.map(k=>ops[k]),Label:s.Label||'',Media:s.Media||'',Gambar:s.Gambar||''}});
+  const can=Object.assign({},r.jawaban||{});SB.sent={};for(const k in can)SB.sent[k]=1;
+  let force=false;
+  if(q0){Object.assign(can,q0.jw);(q0.cl||[]).forEach(k=>{delete can[k];SB.sent[k]=1});force=Object.keys(q0.jw).length>0||(q0.cl||[]).length>0}
+  const jawaban={};for(const s of soal){const c=can[s.Soal_ID];if(c){const v=ansToView_(s,perm[s.Soal_ID],c);if(v)jawaban[s.Soal_ID]=v}}
+  Object.assign(SB,{on:true,id,sid,soal,perm,force,lastSnap:null});
+  sbWatch();
+  return {Ujian_ID:r.Ujian_ID||id,Judul:r.Judul,Jenis:r.Jenis,Durasi:r.Durasi,Acak:acak,soal,jawaban,sisa:Math.max(0,(r.sisa||0)-rtt)}}   
+
+ 
+async function sbSimpan(){const id=SB.id;
+  for(let i=0;;i++){if(!SB.on||!EX.u||EX.u.Ujian_ID!==id)return {};
+    const s=sbSnap();SB.lastSnap=s;sbQSave(s,false);const t0=SB.now();
+    try{const r=await sbRpc('cbt_simpan',{p_ujian_id:id,p_jawaban:s.send});sbSent(s);sbBanner('');
+      if(r&&r.selesai)return {sisa:0};   
+      return typeof(r&&r.sisa)==='number'?{sisa:Math.max(0,r.sisa-(SB.now()-t0)/1000)}:{}}
+    catch(e){if(!e.net)throw e;
+      if(i>=SB.delaySave.length){sbBanner('Koneksi terputus. Jawaban Anda aman di perangkat ini dan akan dikirim otomatis saat koneksi pulih.');throw e}
+      await SB.sleep(sbJit(SB.delaySave[i]))}}}
+
+ 
+async function sbSelesai(){const id=SB.id,t00=SB.now();let s=SB.lastSnap||sbSnap();
+  for(let i=0;;i++){if(EX.u&&EX.u.Ujian_ID===id&&SB.id===id)s=sbSnap();SB.lastSnap=s;sbQSave(s,true);
+    try{const r=await sbRpc('cbt_selesai',{p_ujian_id:id,p_jawaban:s.send},{timeout:25000});sbQClear(SB.sid,id);sbBanner('');return r}
+    catch(e){if(!e.net)throw e;
+      if(SB.now()-t00>SB.finMaxMs){sbBanner('Belum bisa mengirim jawaban. Jawaban tersimpan di perangkat ini; buka kembali ujian ini saat koneksi pulih.');throw e}
+      sbBanner('Koneksi bermasalah. Mengirim jawaban, mencoba lagi (percobaan '+(i+2)+'). Jangan tutup halaman ini.');
+      await SB.sleep(sbJit(SB.delayFin[Math.min(i,SB.delayFin.length-1)]))}}}
+
+ 
+function sbB64(ab){const u=new Uint8Array(ab);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
+async function sbMedia(a,p){const q=EX.u&&EX.u.soal.find(x=>x.Soal_ID===p.Soal_ID),v=q&&(a==='gambar.get'?q.Gambar:q.Media);
+  if(!v||String(v).indexOf('/')<0)return SB.api0(a,p);
+  for(let again=true;;){const t=await sbToken(false);let res;
+    try{res=await fetch(sbUrl()+'/storage/v1/object/authenticated/cbt-media/'+String(v).split('/').map(encodeURIComponent).join('/'),{headers:{apikey:sbKey(),Authorization:'Bearer '+t}})}
+    catch(e){throw sbNet()}
+    if(res.status===401&&again){again=false;SB.tok.until=0;await sbToken(true);continue}
+    if(!res.ok)throw new Error('Media gagal dimuat');
+    return {b64:sbB64(await res.arrayBuffer()),mime:(res.headers.get('content-type')||'application/octet-stream').split(';')[0]}}}
+
+
+
+function sbRoute(a,p){
+  if(a==='um.mulai'){const u=exFind(p.id);if(u&&u.Mode==='supabase')return sbMulai(p.id);SB.on=false;return null}
+  if(SB.on&&EX.u&&EX.u.Ujian_ID===SB.id){
+    if(a==='um.simpan')return sbSimpan();
+    if(a==='um.selesai')return sbSelesai();
+    if((a==='gambar.get'||a==='audio.get')&&p&&p.Ujian_ID===SB.id)return sbMedia(a,p)}
+  return null}
+window.exApi=(a,p)=>sbRoute(a,p)||SB.api0(a,p);   
+
+ 
+function sbBye(){if(!SB.on||!EX.u||EX.done||EX.fin)return;
+  try{sbQSave(sbSnap(),false)}catch(e){}
+  if(!EX.dirty||EX.busy||!SB.tok.t||SB.tok.tk!==exTok()||SB.now()>SB.tok.until+100000)return;   
+  try{const s=sbSnap();fetch(sbUrl()+'/rest/v1/rpc/cbt_simpan',{method:'POST',keepalive:true,
+    headers:{'Content-Type':'application/json',apikey:sbKey(),Authorization:'Bearer '+SB.tok.t},body:JSON.stringify({p_ujian_id:SB.id,p_jawaban:s.send})}).catch(()=>{})}catch(e){}}
+function sbWatch(){if(SB.w||typeof document==='undefined')return;SB.w=1;
+  
+  setInterval(()=>{if(SB.on&&EX.t2&&EX.t2!==SB.t2){clearInterval(EX.t2);SB.t2=EX.t2=setInterval(exSave,30000)}   
+    if(!SB.on||!EX.u||EX.done)return;if(SB.force){EX.dirty=1;SB.force=false}if(EX.dirty&&!EX.fin){try{sbQSave(sbSnap(),false)}catch(e){}}},1500);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')sbBye();else if(SB.on&&EX.u&&!EX.done&&EX.dirty)exSave()});
+  window.addEventListener('pagehide',sbBye);
+  window.addEventListener('online',()=>{if(SB.on&&EX.u&&!EX.done&&EX.dirty)exSave()})}
+
+ 
+async function sbTumpuk(list){if(!list.some(u=>u&&u.Mode==='supabase'))return;
+  try{const a=await Promise.race([sbRpc('cbt_status_saya',{}),SB.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;
+    const m={};a.forEach(h=>m[h.Ujian_ID]=h);
+    list.forEach(u=>{const h=u&&u.Mode==='supabase'&&m[u.Ujian_ID];if(!h)return;
+      if(h.selesai){u.State='Selesai';u.Skor=h.skor}else u.State='Berjalan'})}
+  catch(e){}}   
+if(typeof api==='function'&&!api.sbw){SB.api0=api;const w=async function(a,p){const x=sbRoute(a,p);if(x)return x;
+  const r=await SB.api0(a,p);if(r&&Array.isArray(r.ujian))await sbTumpuk(r.ujian);return r};w.sbw=1;api=w}
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{SB.on=false;SB.tok={t:'',until:0,tk:'',p:null};SB.soal=[];SB.perm={};SB.lastSnap=null;SB.sent={};sbBanner('')});
+</script>
+<script>
  
 const UJX_XLSX_MAX=3*1024*1024;
 function ujXmlDec(s){return String(s).replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g,(m,e)=>{
