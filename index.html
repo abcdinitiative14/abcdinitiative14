@@ -2539,7 +2539,7 @@ Object.assign(VIEWS,{'g-ujian':vGUjian,'m-ujian':vMUjian});
 
 
 
-var SB={on:false,t2:0,id:'',sid:'',soal:[],perm:{},sent:{},force:false,lastSnap:null,w:0,
+var SBU={on:false,t2:0,id:'',sid:'',soal:[],perm:{},sent:{},force:false,lastSnap:null,w:0,
   cfg:{url:'',key:''},tok:{t:'',until:0,tk:'',p:null},busy:null,
   delaySave:[800,2000,5000],            
   delayFin:[1000,2000,4000,8000,15000,30000],   
@@ -2575,19 +2575,19 @@ function ansToView_(q,perm,c){c=String(c||'').toUpperCase();if(q.Jenis==='BS')re
 
  
 function sbJwt(t){try{let b=String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(atob(b))}catch(e){return null}}
-function sbUrl(){return String(SB.cfg.url||window.SB_URL||'').replace(/\/+$/,'')}
-function sbKey(){return SB.cfg.key||window.SB_PUBLISHABLE_KEY||''}
+function sbUrl(){return String(SBU.cfg.url||window.SB_URL||'').replace(/\/+$/,'')}
+function sbKey(){return SBU.cfg.key||window.SB_PUBLISHABLE_KEY||''}
 async function sbToken(force){const tk=exTok();
-  if(!force&&SB.tok.t&&SB.tok.tk===tk&&SB.now()<SB.tok.until)return SB.tok.t;
-  if(SB.busy)return SB.busy;
-  SB.busy=(async()=>{try{
-    let d;try{d=await SB.api0('um.token',{})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
+  if(!force&&SBU.tok.t&&SBU.tok.tk===tk&&SBU.now()<SBU.tok.until)return SBU.tok.t;
+  if(SBU.busy)return SBU.busy;
+  SBU.busy=(async()=>{try{
+    let d;try{d=await SBU.api0('um.token',{})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
     if(!d||!d.token)throw sbErr('TOKEN');
     const ttl=typeof d.ttl==='number'?d.ttl:(typeof d.exp==='number'?d.exp-Date.now()/1000:3600);   
-    SB.tok={t:d.token,until:SB.now()+Math.max(0,ttl-120)*1000,tk,p:sbJwt(d.token)};
-    if(d.url)SB.cfg.url=d.url;if(d.key)SB.cfg.key=d.key;
-    return SB.tok.t}finally{SB.busy=null}})();
-  return SB.busy}
+    SBU.tok={t:d.token,until:SBU.now()+Math.max(0,ttl-120)*1000,tk,p:sbJwt(d.token)};
+    if(d.url)SBU.cfg.url=d.url;if(d.key)SBU.cfg.key=d.key;
+    return SBU.tok.t}finally{SBU.busy=null}})();
+  return SBU.busy}
 
  
 async function sbRpc(nama,badan,o){o=o||{};let again=true;
@@ -2600,23 +2600,23 @@ async function sbRpc(nama,badan,o){o=o||{};let again=true;
     let j=null;try{j=txt?JSON.parse(txt):null}catch(e){}
     if(res.ok)return j;
     const k=sbKode(j,res.status);
-    if(k==='TOKEN'&&again){again=false;SB.tok.until=0;await sbToken(true);continue}   
+    if(k==='TOKEN'&&again){again=false;SBU.tok.until=0;await sbToken(true);continue}   
     throw sbErr(k,null,k==='NET')}}
 
-async function sbRpcRetry(nama,badan,delays,o){for(let i=0;;i++){try{return await sbRpc(nama,badan,o)}catch(e){if(!e.net||i>=delays.length)throw e;await SB.sleep(sbJit(delays[i]))}}}
+async function sbRpcRetry(nama,badan,delays,o){for(let i=0;;i++){try{return await sbRpc(nama,badan,o)}catch(e){if(!e.net||i>=delays.length)throw e;await SBU.sleep(sbJit(delays[i]))}}}
 const sbJit=ms=>Math.round(ms*(0.5+Math.random()));
 
  
 const sbQK=(sid,id)=>'sbq1:'+sid+':'+id;
 function sbQLoad(sid,id){try{const v=JSON.parse(localStorage.getItem(sbQK(sid,id)));if(v&&v.jw&&Date.now()-v.t<12*3600*1000)return v}catch(e){}return null}
-function sbQSave(s,fin){try{localStorage.setItem(sbQK(SB.sid,SB.id),JSON.stringify({jw:s.jw,cl:s.cl,fin:fin?1:0,t:Date.now()}))}catch(e){}}
-function sbQClear(sid,id){try{localStorage.removeItem(sbQK(sid||SB.sid,id||SB.id))}catch(e){}}
+function sbQSave(s,fin){try{localStorage.setItem(sbQK(SBU.sid,SBU.id),JSON.stringify({jw:s.jw,cl:s.cl,fin:fin?1:0,t:Date.now()}))}catch(e){}}
+function sbQClear(sid,id){try{localStorage.removeItem(sbQK(sid||SBU.sid,id||SBU.id))}catch(e){}}
 
 function sbSnap(){const jw={},send={},cl=[];
-  for(const q of SB.soal){const v=EX.jw[q.Soal_ID],c=v?ansToCanon_(q,SB.perm[q.Soal_ID],v):'';
-    if(c){jw[q.Soal_ID]=c;send[q.Soal_ID]=c}else if(SB.sent[q.Soal_ID]){send[q.Soal_ID]='';cl.push(q.Soal_ID)}}
+  for(const q of SBU.soal){const v=EX.jw[q.Soal_ID],c=v?ansToCanon_(q,SBU.perm[q.Soal_ID],v):'';
+    if(c){jw[q.Soal_ID]=c;send[q.Soal_ID]=c}else if(SBU.sent[q.Soal_ID]){send[q.Soal_ID]='';cl.push(q.Soal_ID)}}
   return {jw,send,cl}}
-function sbSent(s){for(const k in s.jw)SB.sent[k]=1}
+function sbSent(s){for(const k in s.jw)SBU.sent[k]=1}
 
  
 function sbBanner(m){if(typeof document==='undefined')return;let e=document.getElementById('sb-stat');
@@ -2627,94 +2627,94 @@ function sbBanner(m){if(typeof document==='undefined')return;let e=document.getE
   e.textContent=m;e.style.display='block'}
 
  
-async function sbMulai(id){SB.on=false;
-  await sbToken(false);const sid=(SB.tok.p&&(SB.tok.p.siswa_id||SB.tok.p.sub))||'';
+async function sbMulai(id){SBU.on=false;
+  await sbToken(false);const sid=(SBU.tok.p&&(SBU.tok.p.siswa_id||SBU.tok.p.sub))||'';
   
   const q0=sbQLoad(sid,id);
   if(q0&&q0.fin){const s={};for(const k in q0.jw)s[k]=q0.jw[k];(q0.cl||[]).forEach(k=>s[k]='');
-    const r=await sbRpcRetry('cbt_selesai',{p_ujian_id:id,p_jawaban:s},SB.delaySave);sbQClear(sid,id);
+    const r=await sbRpcRetry('cbt_selesai',{p_ujian_id:id,p_jawaban:s},SBU.delaySave);sbQClear(sid,id);
     throw new Error('Jawaban Anda dari ujian ini sudah dikumpulkan. Skor: '+(r&&r.skor))}
-  const t0=SB.now(),r=await sbRpcRetry('cbt_mulai',{p_ujian_id:id},SB.delaySave),rtt=(SB.now()-t0)/1000;
+  const t0=SBU.now(),r=await sbRpcRetry('cbt_mulai',{p_ujian_id:id},SBU.delaySave),rtt=(SBU.now()-t0)/1000;
   const acak=r.Acak||{},src=r.soal||[],n=src.length;
   const ord=acak.soal?seedOrder_(n,'S|'+sid+'|'+id):src.map((_,i)=>i);
   const perm={},soal=ord.map(i=>{const s=src[i],ops=s.Opsi||[];let p=ops.map((_,k)=>k);
     if(acak.opsi&&s.Jenis!=='BS'&&ops.length>=2&&!opsiTetap_(ops))p=seedOrder_(ops.length,'O|'+sid+'|'+s.Soal_ID);
     perm[s.Soal_ID]=p;
     return {Soal_ID:s.Soal_ID,Jenis:s.Jenis,Pertanyaan:s.Pertanyaan||'',Opsi:p.map(k=>ops[k]),Label:s.Label||'',Media:s.Media||'',Gambar:s.Gambar||''}});
-  const can=Object.assign({},r.jawaban||{});SB.sent={};for(const k in can)SB.sent[k]=1;
+  const can=Object.assign({},r.jawaban||{});SBU.sent={};for(const k in can)SBU.sent[k]=1;
   let force=false;
-  if(q0){Object.assign(can,q0.jw);(q0.cl||[]).forEach(k=>{delete can[k];SB.sent[k]=1});force=Object.keys(q0.jw).length>0||(q0.cl||[]).length>0}
+  if(q0){Object.assign(can,q0.jw);(q0.cl||[]).forEach(k=>{delete can[k];SBU.sent[k]=1});force=Object.keys(q0.jw).length>0||(q0.cl||[]).length>0}
   const jawaban={};for(const s of soal){const c=can[s.Soal_ID];if(c){const v=ansToView_(s,perm[s.Soal_ID],c);if(v)jawaban[s.Soal_ID]=v}}
-  Object.assign(SB,{on:true,id,sid,soal,perm,force,lastSnap:null});
+  Object.assign(SBU,{on:true,id,sid,soal,perm,force,lastSnap:null});
   sbWatch();
   return {Ujian_ID:r.Ujian_ID||id,Judul:r.Judul,Jenis:r.Jenis,Durasi:r.Durasi,Acak:acak,soal,jawaban,sisa:Math.max(0,(r.sisa||0)-rtt)}}   
 
  
-async function sbSimpan(){const id=SB.id;
-  for(let i=0;;i++){if(!SB.on||!EX.u||EX.u.Ujian_ID!==id)return {};
-    const s=sbSnap();SB.lastSnap=s;sbQSave(s,false);const t0=SB.now();
+async function sbSimpan(){const id=SBU.id;
+  for(let i=0;;i++){if(!SBU.on||!EX.u||EX.u.Ujian_ID!==id)return {};
+    const s=sbSnap();SBU.lastSnap=s;sbQSave(s,false);const t0=SBU.now();
     try{const r=await sbRpc('cbt_simpan',{p_ujian_id:id,p_jawaban:s.send});sbSent(s);sbBanner('');
       if(r&&r.selesai)return {sisa:0};   
-      return typeof(r&&r.sisa)==='number'?{sisa:Math.max(0,r.sisa-(SB.now()-t0)/1000)}:{}}
+      return typeof(r&&r.sisa)==='number'?{sisa:Math.max(0,r.sisa-(SBU.now()-t0)/1000)}:{}}
     catch(e){if(!e.net)throw e;
-      if(i>=SB.delaySave.length){sbBanner('Koneksi terputus. Jawaban Anda aman di perangkat ini dan akan dikirim otomatis saat koneksi pulih.');throw e}
-      await SB.sleep(sbJit(SB.delaySave[i]))}}}
+      if(i>=SBU.delaySave.length){sbBanner('Koneksi terputus. Jawaban Anda aman di perangkat ini dan akan dikirim otomatis saat koneksi pulih.');throw e}
+      await SBU.sleep(sbJit(SBU.delaySave[i]))}}}
 
  
-async function sbSelesai(){const id=SB.id,t00=SB.now();let s=SB.lastSnap||sbSnap();
-  for(let i=0;;i++){if(EX.u&&EX.u.Ujian_ID===id&&SB.id===id)s=sbSnap();SB.lastSnap=s;sbQSave(s,true);
-    try{const r=await sbRpc('cbt_selesai',{p_ujian_id:id,p_jawaban:s.send},{timeout:25000});sbQClear(SB.sid,id);sbBanner('');return r}
+async function sbSelesai(){const id=SBU.id,t00=SBU.now();let s=SBU.lastSnap||sbSnap();
+  for(let i=0;;i++){if(EX.u&&EX.u.Ujian_ID===id&&SBU.id===id)s=sbSnap();SBU.lastSnap=s;sbQSave(s,true);
+    try{const r=await sbRpc('cbt_selesai',{p_ujian_id:id,p_jawaban:s.send},{timeout:25000});sbQClear(SBU.sid,id);sbBanner('');return r}
     catch(e){if(!e.net)throw e;
-      if(SB.now()-t00>SB.finMaxMs){sbBanner('Belum bisa mengirim jawaban. Jawaban tersimpan di perangkat ini; buka kembali ujian ini saat koneksi pulih.');throw e}
+      if(SBU.now()-t00>SBU.finMaxMs){sbBanner('Belum bisa mengirim jawaban. Jawaban tersimpan di perangkat ini; buka kembali ujian ini saat koneksi pulih.');throw e}
       sbBanner('Koneksi bermasalah. Mengirim jawaban, mencoba lagi (percobaan '+(i+2)+'). Jangan tutup halaman ini.');
-      await SB.sleep(sbJit(SB.delayFin[Math.min(i,SB.delayFin.length-1)]))}}}
+      await SBU.sleep(sbJit(SBU.delayFin[Math.min(i,SBU.delayFin.length-1)]))}}}
 
  
 function sbB64(ab){const u=new Uint8Array(ab);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
 async function sbMedia(a,p){const q=EX.u&&EX.u.soal.find(x=>x.Soal_ID===p.Soal_ID),v=q&&(a==='gambar.get'?q.Gambar:q.Media);
-  if(!v||String(v).indexOf('/')<0)return SB.api0(a,p);
+  if(!v||String(v).indexOf('/')<0)return SBU.api0(a,p);
   for(let again=true;;){const t=await sbToken(false);let res;
     try{res=await fetch(sbUrl()+'/storage/v1/object/authenticated/cbt-media/'+String(v).split('/').map(encodeURIComponent).join('/'),{headers:{apikey:sbKey(),Authorization:'Bearer '+t}})}
     catch(e){throw sbNet()}
-    if(res.status===401&&again){again=false;SB.tok.until=0;await sbToken(true);continue}
+    if(res.status===401&&again){again=false;SBU.tok.until=0;await sbToken(true);continue}
     if(!res.ok)throw new Error('Media gagal dimuat');
     return {b64:sbB64(await res.arrayBuffer()),mime:(res.headers.get('content-type')||'application/octet-stream').split(';')[0]}}}
 
 
 
 function sbRoute(a,p){
-  if(a==='um.mulai'){const u=exFind(p.id);if(u&&u.Mode==='supabase')return sbMulai(p.id);SB.on=false;return null}
-  if(SB.on&&EX.u&&EX.u.Ujian_ID===SB.id){
+  if(a==='um.mulai'){const u=exFind(p.id);if(u&&u.Mode==='supabase')return sbMulai(p.id);SBU.on=false;return null}
+  if(SBU.on&&EX.u&&EX.u.Ujian_ID===SBU.id){
     if(a==='um.simpan')return sbSimpan();
     if(a==='um.selesai')return sbSelesai();
-    if((a==='gambar.get'||a==='audio.get')&&p&&p.Ujian_ID===SB.id)return sbMedia(a,p)}
+    if((a==='gambar.get'||a==='audio.get')&&p&&p.Ujian_ID===SBU.id)return sbMedia(a,p)}
   return null}
-window.exApi=(a,p)=>sbRoute(a,p)||SB.api0(a,p);   
+window.exApi=(a,p)=>sbRoute(a,p)||SBU.api0(a,p);   
 
  
-function sbBye(){if(!SB.on||!EX.u||EX.done||EX.fin)return;
+function sbBye(){if(!SBU.on||!EX.u||EX.done||EX.fin)return;
   try{sbQSave(sbSnap(),false)}catch(e){}
-  if(!EX.dirty||EX.busy||!SB.tok.t||SB.tok.tk!==exTok()||SB.now()>SB.tok.until+100000)return;   
+  if(!EX.dirty||EX.busy||!SBU.tok.t||SBU.tok.tk!==exTok()||SBU.now()>SBU.tok.until+100000)return;   
   try{const s=sbSnap();fetch(sbUrl()+'/rest/v1/rpc/cbt_simpan',{method:'POST',keepalive:true,
-    headers:{'Content-Type':'application/json',apikey:sbKey(),Authorization:'Bearer '+SB.tok.t},body:JSON.stringify({p_ujian_id:SB.id,p_jawaban:s.send})}).catch(()=>{})}catch(e){}}
-function sbWatch(){if(SB.w||typeof document==='undefined')return;SB.w=1;
+    headers:{'Content-Type':'application/json',apikey:sbKey(),Authorization:'Bearer '+SBU.tok.t},body:JSON.stringify({p_ujian_id:SBU.id,p_jawaban:s.send})}).catch(()=>{})}catch(e){}}
+function sbWatch(){if(SBU.w||typeof document==='undefined')return;SBU.w=1;
   
-  setInterval(()=>{if(SB.on&&EX.t2&&EX.t2!==SB.t2){clearInterval(EX.t2);SB.t2=EX.t2=setInterval(exSave,30000)}   
-    if(!SB.on||!EX.u||EX.done)return;if(SB.force){EX.dirty=1;SB.force=false}if(EX.dirty&&!EX.fin){try{sbQSave(sbSnap(),false)}catch(e){}}},1500);
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')sbBye();else if(SB.on&&EX.u&&!EX.done&&EX.dirty)exSave()});
+  setInterval(()=>{if(SBU.on&&EX.t2&&EX.t2!==SBU.t2){clearInterval(EX.t2);SBU.t2=EX.t2=setInterval(exSave,30000)}   
+    if(!SBU.on||!EX.u||EX.done)return;if(SBU.force){EX.dirty=1;SBU.force=false}if(EX.dirty&&!EX.fin){try{sbQSave(sbSnap(),false)}catch(e){}}},1500);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')sbBye();else if(SBU.on&&EX.u&&!EX.done&&EX.dirty)exSave()});
   window.addEventListener('pagehide',sbBye);
-  window.addEventListener('online',()=>{if(SB.on&&EX.u&&!EX.done&&EX.dirty)exSave()})}
+  window.addEventListener('online',()=>{if(SBU.on&&EX.u&&!EX.done&&EX.dirty)exSave()})}
 
  
 async function sbTumpuk(list){if(!list.some(u=>u&&u.Mode==='supabase'))return;
-  try{const a=await Promise.race([sbRpc('cbt_status_saya',{}),SB.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;
+  try{const a=await Promise.race([sbRpc('cbt_status_saya',{}),SBU.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;
     const m={};a.forEach(h=>m[h.Ujian_ID]=h);
     list.forEach(u=>{const h=u&&u.Mode==='supabase'&&m[u.Ujian_ID];if(!h)return;
       if(h.selesai){u.State='Selesai';u.Skor=h.skor}else u.State='Berjalan'})}
   catch(e){}}   
-if(typeof api==='function'&&!api.sbw){SB.api0=api;const w=async function(a,p){const x=sbRoute(a,p);if(x)return x;
-  const r=await SB.api0(a,p);if(r&&Array.isArray(r.ujian))await sbTumpuk(r.ujian);return r};w.sbw=1;api=w}
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{SB.on=false;SB.tok={t:'',until:0,tk:'',p:null};SB.soal=[];SB.perm={};SB.lastSnap=null;SB.sent={};sbBanner('')});
+if(typeof api==='function'&&!api.sbw){SBU.api0=api;const w=async function(a,p){const x=sbRoute(a,p);if(x)return x;
+  const r=await SBU.api0(a,p);if(r&&Array.isArray(r.ujian))await sbTumpuk(r.ujian);return r};w.sbw=1;api=w}
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{SBU.on=false;SBU.tok={t:'',until:0,tk:'',p:null};SBU.soal=[];SBU.perm={};SBU.lastSnap=null;SBU.sent={};sbBanner('')});
 </script>
 <script>
  
