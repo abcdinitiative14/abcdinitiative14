@@ -2577,15 +2577,15 @@ function ansToView_(q,perm,c){c=String(c||'').toUpperCase();if(q.Jenis==='BS')re
 function sbJwt(t){try{let b=String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(atob(b))}catch(e){return null}}
 function sbUrl(){return String(SBU.cfg.url||window.SB_URL||'').replace(/\/+$/,'')}
 function sbKey(){return SBU.cfg.key||window.SB_PUBLISHABLE_KEY||''}
-async function sbToken(force){const tk=exTok();
+async function sbToken(force,id){const tk=exTok();id=id||SBU.id||SBU.tokId||'';
   if(!force&&SBU.tok.t&&SBU.tok.tk===tk&&SBU.now()<SBU.tok.until)return SBU.tok.t;
   if(SBU.busy)return SBU.busy;
   SBU.busy=(async()=>{try{
-    let d;try{d=await SBU.api0('um.token',{})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
+    let d;try{d=await SBU.api0('um.token',{id})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
     if(!d||!d.token)throw sbErr('TOKEN');
     const ttl=typeof d.ttl==='number'?d.ttl:(typeof d.exp==='number'?d.exp-Date.now()/1000:3600);   
     SBU.tok={t:d.token,until:SBU.now()+Math.max(0,ttl-120)*1000,tk,p:sbJwt(d.token)};
-    if(d.url)SBU.cfg.url=d.url;if(d.key)SBU.cfg.key=d.key;
+    if(d.url)SBU.cfg.url=d.url;if(d.kunci_publik||d.key)SBU.cfg.key=d.kunci_publik||d.key;
     return SBU.tok.t}finally{SBU.busy=null}})();
   return SBU.busy}
 
@@ -2628,7 +2628,7 @@ function sbBanner(m){if(typeof document==='undefined')return;let e=document.getE
 
  
 async function sbMulai(id){SBU.on=false;
-  await sbToken(false);const sid=(SBU.tok.p&&(SBU.tok.p.siswa_id||SBU.tok.p.sub))||'';
+  SBU.tokId=id;await sbToken(false,id);const sid=(SBU.tok.p&&(SBU.tok.p.siswa_id||SBU.tok.p.sub))||'';
   
   const q0=sbQLoad(sid,id);
   if(q0&&q0.fin){const s={};for(const k in q0.jw)s[k]=q0.jw[k];(q0.cl||[]).forEach(k=>s[k]='');
@@ -2707,7 +2707,7 @@ function sbWatch(){if(SBU.w||typeof document==='undefined')return;SBU.w=1;
 
  
 async function sbTumpuk(list){if(!list.some(u=>u&&u.Mode==='supabase'))return;
-  try{const a=await Promise.race([sbRpc('cbt_status_saya',{}),SBU.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;
+  try{if(!SBU.on){const f=list.find(u=>u&&u.Mode==='supabase');if(f)SBU.tokId=f.Ujian_ID}const a=await Promise.race([sbRpc('cbt_status_saya',{}),SBU.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;
     const m={};a.forEach(h=>m[h.Ujian_ID]=h);
     list.forEach(u=>{const h=u&&u.Mode==='supabase'&&m[u.Ujian_ID];if(!h)return;
       if(h.selesai){u.State='Selesai';u.Skor=h.skor}else u.State='Berjalan'})}
