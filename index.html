@@ -71,6 +71,7 @@ textarea{min-height:130px}
 .stat{border:1px solid var(--line);border-radius:var(--r);padding:14px;background:#fff}.stat b{display:block;font:700 28px Georgia,serif}
 .tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+td.row{display:table-cell}td.row>.btn{margin:2px 6px 2px 0}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:99;max-width:90vw}
 #toast.err{background:var(--bad)}
  
@@ -2539,7 +2540,7 @@ Object.assign(VIEWS,{'g-ujian':vGUjian,'m-ujian':vMUjian});
 
 
 
-var SBU={on:false,t2:0,id:'',sid:'',soal:[],perm:{},sent:{},force:false,lastSnap:null,w:0,
+var SBU={on:false,t2:0,mc:new Map(),id:'',tokId:'',sid:'',soal:[],perm:{},sent:{},force:false,lastSnap:null,w:0,
   cfg:{url:'',key:''},tok:{t:'',until:0,tk:'',p:null},busy:null,
   delaySave:[800,2000,5000],            
   delayFin:[1000,2000,4000,8000,15000,30000],   
@@ -2577,21 +2578,27 @@ function ansToView_(q,perm,c){c=String(c||'').toUpperCase();if(q.Jenis==='BS')re
 function sbJwt(t){try{let b=String(t).split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(atob(b))}catch(e){return null}}
 function sbUrl(){return String(SBU.cfg.url||window.SB_URL||'').replace(/\/+$/,'')}
 function sbKey(){return SBU.cfg.key||window.SB_PUBLISHABLE_KEY||''}
-async function sbToken(force,id){const tk=exTok();id=id||SBU.id||SBU.tokId||'';
+
+function sbTokId(a){return a||(SBU.on&&SBU.id)||SBU.tokId||''}
+async function sbToken(force,idArg){const tk=exTok();
   if(!force&&SBU.tok.t&&SBU.tok.tk===tk&&SBU.now()<SBU.tok.until)return SBU.tok.t;
   if(SBU.busy)return SBU.busy;
+  const uid=sbTokId(idArg);
+  if(!uid)throw sbErr('GALAT','Ujian belum dipilih');
   SBU.busy=(async()=>{try{
-    let d;try{d=await SBU.api0('um.token',{id})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
+    let d;try{d=await SBU.api0('um.token',{id:uid})}catch(e){if(e.message==='Gagal terhubung')e.net=true;throw e}
     if(!d||!d.token)throw sbErr('TOKEN');
     const ttl=typeof d.ttl==='number'?d.ttl:(typeof d.exp==='number'?d.exp-Date.now()/1000:3600);   
     SBU.tok={t:d.token,until:SBU.now()+Math.max(0,ttl-120)*1000,tk,p:sbJwt(d.token)};
-    if(d.url)SBU.cfg.url=d.url;if(d.kunci_publik||d.key)SBU.cfg.key=d.kunci_publik||d.key;
+    SBU.tokId=uid;
+    if(d.url)SBU.cfg.url=d.url;
+    const kk=d.kunci_publik||d.key;if(kk)SBU.cfg.key=kk;   
     return SBU.tok.t}finally{SBU.busy=null}})();
   return SBU.busy}
 
  
 async function sbRpc(nama,badan,o){o=o||{};let again=true;
-  for(;;){const t=await sbToken(false);let res,txt;
+  for(;;){const t=await sbToken(false,o.tokId);let res,txt;
     const ac=typeof AbortController!=='undefined'?new AbortController():null,to=ac&&!o.keepalive?setTimeout(()=>ac.abort(),o.timeout||20000):0;
     try{res=await fetch(sbUrl()+'/rest/v1/rpc/'+nama,{method:'POST',keepalive:!!o.keepalive,signal:ac?ac.signal:undefined,
         headers:{'Content-Type':'application/json',apikey:sbKey(),Authorization:'Bearer '+t},body:JSON.stringify(badan||{})});
@@ -2600,7 +2607,7 @@ async function sbRpc(nama,badan,o){o=o||{};let again=true;
     let j=null;try{j=txt?JSON.parse(txt):null}catch(e){}
     if(res.ok)return j;
     const k=sbKode(j,res.status);
-    if(k==='TOKEN'&&again){again=false;SBU.tok.until=0;await sbToken(true);continue}   
+    if(k==='TOKEN'&&again){again=false;SBU.tok.until=0;await sbToken(true,o.tokId);continue}   
     throw sbErr(k,null,k==='NET')}}
 
 async function sbRpcRetry(nama,badan,delays,o){for(let i=0;;i++){try{return await sbRpc(nama,badan,o)}catch(e){if(!e.net||i>=delays.length)throw e;await SBU.sleep(sbJit(delays[i]))}}}
@@ -2628,13 +2635,22 @@ function sbBanner(m){if(typeof document==='undefined')return;let e=document.getE
 
  
 async function sbMulai(id){SBU.on=false;
-  SBU.tokId=id;await sbToken(false,id);const sid=(SBU.tok.p&&(SBU.tok.p.siswa_id||SBU.tok.p.sub))||'';
+  SBU.tokId=id;   
+  await sbToken(false,id);const sid=(SBU.tok.p&&(SBU.tok.p.siswa_id||SBU.tok.p.sub))||'';
   
   const q0=sbQLoad(sid,id);
   if(q0&&q0.fin){const s={};for(const k in q0.jw)s[k]=q0.jw[k];(q0.cl||[]).forEach(k=>s[k]='');
     const r=await sbRpcRetry('cbt_selesai',{p_ujian_id:id,p_jawaban:s},SBU.delaySave);sbQClear(sid,id);
     throw new Error('Jawaban Anda dari ujian ini sudah dikumpulkan. Skor: '+(r&&r.skor))}
-  const t0=SBU.now(),r=await sbRpcRetry('cbt_mulai',{p_ujian_id:id},SBU.delaySave),rtt=(SBU.now()-t0)/1000;
+  SBU.mc=new Map();const t0=SBU.now();let r;
+  try{r=await sbRpcRetry('cbt_mulai',{p_ujian_id:id},SBU.delaySave)}
+  catch(e){
+    
+    if(e&&e.kode==='HABIS'){const f=await sbRpcRetry('cbt_selesai',{p_ujian_id:id,p_jawaban:{}},SBU.delaySave);
+      try{localStorage.removeItem(sbQK(sid,id))}catch(x){}
+      throw new Error('Waktu ujian Anda sudah habis. Jawaban yang sudah tersimpan dikumpulkan. Skor: '+(f&&f.skor))}
+    throw e}
+  const rtt=(SBU.now()-t0)/1000;
   const acak=r.Acak||{},src=r.soal||[],n=src.length;
   const ord=acak.soal?seedOrder_(n,'S|'+sid+'|'+id):src.map((_,i)=>i);
   const perm={},soal=ord.map(i=>{const s=src[i],ops=s.Opsi||[];let p=ops.map((_,k)=>k);
@@ -2669,16 +2685,26 @@ async function sbSelesai(){const id=SBU.id,t00=SBU.now();let s=SBU.lastSnap||sbS
       sbBanner('Koneksi bermasalah. Mengirim jawaban, mencoba lagi (percobaan '+(i+2)+'). Jangan tutup halaman ini.');
       await SBU.sleep(sbJit(SBU.delayFin[Math.min(i,SBU.delayFin.length-1)]))}}}
 
- 
+
+
 function sbB64(ab){const u=new Uint8Array(ab);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
-async function sbMedia(a,p){const q=EX.u&&EX.u.soal.find(x=>x.Soal_ID===p.Soal_ID),v=q&&(a==='gambar.get'?q.Gambar:q.Media);
-  if(!v||String(v).indexOf('/')<0)return SBU.api0(a,p);
-  for(let again=true;;){const t=await sbToken(false);let res;
+
+const sbTokBad=(st,body)=>st===401||/jwt|exp claim|expired|token/i.test(body||'');
+async function sbMediaGet(v){let again=true,tries=0;const dl=[800,2000];
+  for(;;){const t=await sbToken(false);let res;
     try{res=await fetch(sbUrl()+'/storage/v1/object/authenticated/cbt-media/'+String(v).split('/').map(encodeURIComponent).join('/'),{headers:{apikey:sbKey(),Authorization:'Bearer '+t}})}
-    catch(e){throw sbNet()}
-    if(res.status===401&&again){again=false;SBU.tok.until=0;await sbToken(true);continue}
-    if(!res.ok)throw new Error('Media gagal dimuat');
-    return {b64:sbB64(await res.arrayBuffer()),mime:(res.headers.get('content-type')||'application/octet-stream').split(';')[0]}}}
+    catch(e){if(tries<dl.length){await SBU.sleep(sbJit(dl[tries++]));continue}throw sbNet()}
+    if(res.ok)return {b64:sbB64(await res.arrayBuffer()),mime:(res.headers.get('content-type')||'application/octet-stream').split(';')[0]};
+    let body='';try{body=await res.text()}catch(e){}
+    if(again&&sbTokBad(res.status,body)){again=false;SBU.tok.until=0;await sbToken(true);continue}
+    if((res.status>=500||res.status===429)&&tries<dl.length){await SBU.sleep(sbJit(dl[tries++]));continue}
+    throw new Error('Media gagal dimuat')}}
+
+function sbMedia(a,p){const q=EX.u&&EX.u.soal.find(x=>x.Soal_ID===p.Soal_ID),v=q&&(a==='gambar.get'?q.Gambar:q.Media);
+  if(!v||String(v).indexOf('/')<0)return SBU.api0(a,p);
+  let pr=SBU.mc.get(v);if(pr)return pr;
+  pr=sbMediaGet(v).then(r=>{if(!/^image\//.test(r.mime))SBU.mc.delete(v);return r},e=>{SBU.mc.delete(v);throw e});
+  SBU.mc.set(v,pr);return pr}
 
 
 
@@ -2706,15 +2732,15 @@ function sbWatch(){if(SBU.w||typeof document==='undefined')return;SBU.w=1;
   window.addEventListener('online',()=>{if(SBU.on&&EX.u&&!EX.done&&EX.dirty)exSave()})}
 
  
-async function sbTumpuk(list){if(!list.some(u=>u&&u.Mode==='supabase'))return;
-  try{if(!SBU.on){const f=list.find(u=>u&&u.Mode==='supabase');if(f)SBU.tokId=f.Ujian_ID}const a=await Promise.race([sbRpc('cbt_status_saya',{}),SBU.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;
+async function sbTumpuk(list){const u0=list.find(u=>u&&u.Mode==='supabase');if(!u0)return;
+  try{const a=await Promise.race([sbRpc('cbt_status_saya',{},{tokId:u0.Ujian_ID}),SBU.sleep(6000).then(()=>null)]);if(!Array.isArray(a))return;   
     const m={};a.forEach(h=>m[h.Ujian_ID]=h);
     list.forEach(u=>{const h=u&&u.Mode==='supabase'&&m[u.Ujian_ID];if(!h)return;
       if(h.selesai){u.State='Selesai';u.Skor=h.skor}else u.State='Berjalan'})}
   catch(e){}}   
 if(typeof api==='function'&&!api.sbw){SBU.api0=api;const w=async function(a,p){const x=sbRoute(a,p);if(x)return x;
   const r=await SBU.api0(a,p);if(r&&Array.isArray(r.ujian))await sbTumpuk(r.ujian);return r};w.sbw=1;api=w}
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{SBU.on=false;SBU.tok={t:'',until:0,tk:'',p:null};SBU.soal=[];SBU.perm={};SBU.lastSnap=null;SBU.sent={};sbBanner('')});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{SBU.on=false;SBU.tok={t:'',until:0,tk:'',p:null};SBU.tokId='';SBU.soal=[];SBU.perm={};SBU.lastSnap=null;SBU.sent={};SBU.mc=new Map();sbBanner('')});
 </script>
 <script>
  
@@ -3922,6 +3948,15 @@ function svPdfMuat(url,siap){return siap()?Promise.resolve():new Promise((ok,no)
 
 function svPdfKosong(g,w,a,b){const d=g.getImageData(0,a,w,b-a).data;for(let i=0;i<d.length;i+=4)if(d[i]<250||d[i+1]<250||d[i+2]<250)return false;return true}
 
+
+function svPdfGambar(src){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(new Error('Gambar watermark tidak bisa dibaca'));im.src=src})}
+async function svPdfLapis(l,W,H,k){const imgs=[...l.querySelectorAll('img.sv-l')];if(!imgs.length)return null;
+  const cv=document.createElement('canvas');cv.width=Math.round(W*k);cv.height=Math.round(H*k);const g=cv.getContext('2d'),bx=18*k,by=14*k,bw=(W-36)*k,bh=(H-28)*k;
+  for(const im of imgs){const el=await svPdfGambar(im.getAttribute('src')),w=(parseFloat(im.style.width)||0)/100*bw;if(!(w>0)||!el.naturalWidth)continue;
+    const h=w*el.naturalHeight/el.naturalWidth,cx=bx+(parseFloat(im.style.left)||0)/100*bw,cy=by+(parseFloat(im.style.top)||0)/100*bh,o=parseFloat(im.style.opacity);
+    g.globalAlpha=isNaN(o)?1:Math.max(0,Math.min(1,o));g.drawImage(el,cx-w/2,cy-h/2,w,h)}
+  g.globalAlpha=1;return cv}
+
 async function svPdf(units,nama,kertas,onProg){
   await svPdfMuat(SV_PDF_JS[0],()=>window.html2canvas);await svPdfMuat(SV_PDF_JS[1],()=>window.jspdf&&window.jspdf.jsPDF);
   svCssPasang();
@@ -3939,8 +3974,7 @@ async function svPdf(units,nama,kertas,onProg){
       
       const lap={};
       for(const kls of ['bg','fg']){const l=paper.querySelector('.sv-lay.'+kls);
-        if(l&&l.querySelector('img')){const w=document.createElement('div');w.className='sv-paper';w.style.cssText='width:'+W+'mm;height:'+H+'mm;min-height:0;padding:0;background:transparent;overflow:hidden';
-          w.appendChild(l.cloneNode(true));host.appendChild(w);lap[kls]=await foto(w);w.remove()}
+        if(l&&l.querySelector('img'))lap[kls]=await svPdfLapis(l,W,H,S*96/25.4);
         if(l)l.remove()}
       
       const pr=paper.getBoundingClientRect(),blok=[...paper.querySelectorAll('.tt,.vq,.sv-tb tr')].map(el=>{const a=el.classList.contains('tt')&&el.previousElementSibling?el.previousElementSibling:el;
@@ -8696,7 +8730,7 @@ async function uSbMode(id){
     const g=L.some(q=>q.Gambar),a=L.some(q=>q.Media);let msg,ok;
     if(ke==='supabase'){
       msg='Ujian "'+u.Judul+'" akan dikerjakan lewat Supabase (cocok untuk banyak murid serentak).\n\nSetelah ini: tekan Terbitkan agar soal masuk ke Supabase, lalu Aktifkan. Hasil baru tampil di sini setelah Sinkron.\n\nMode hanya bisa diubah selama belum ada murid yang mulai.';
-      if(g||a)msg+='\n\nPERINGATAN: ujian ini memakai '+(g&&a?'gambar dan audio':g?'gambar':'audio')+'. Untuk sementara lampiran masih lewat Apps Script, jadi tidak disarankan untuk 200 murid sekaligus.';
+      if(g||a)msg+='\n\ncatatan: ujian ini memakai '+(g&&a?'gambar dan audio':g?'gambar':'audio')+'. Lampiran ikut diunggah ke Supabase Storage saat Terbitkan (gambar maksimal 1,5 MB, audio maksimal 9 MB). Bila lampiran diganti, tekan Terbitkan ulang.';
       ok='Pakai Supabase'}
     else{msg='Ujian "'+u.Judul+'" kembali memakai Sheets (jalur lama). Mode hanya bisa diubah selama belum ada murid yang mulai, dan server akan menolak bila sudah ada hasil.';ok='Kembali ke Sheets'}
     if(!await ask(msg,{title:'Mode ujian: sekarang '+(s.Mode==='supabase'?'Supabase':'Sheets (lama)'),ok,no:'Batal'}))return;
