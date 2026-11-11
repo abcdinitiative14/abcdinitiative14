@@ -509,7 +509,7 @@ navAuth();route();kampusLoad();
 
 const ROLES=['Admin','Guru','Wali Kelas','Murid'];
 const PG={tab:'',sel:new Set(),tampil:[]};   
-const PGU={id:'',role:'',ta:'',rows:[],wali:'',kotor:0,bg:0};   
+const PGU={id:'',role:'',ta:'',rows:[],wali:[],kotor:0,bg:0};   
 const PGR={sibuk:false};                            
 const PGI_KOLOM={nama:'nama',namalengkap:'nama',username:'username',user:'username',password:'password',katasandi:'password',sandi:'password',email:'email',role:'role',peran:'role',aktif:'aktif',status:'aktif',ta:'ta',tahunajaran:'ta',nis:'nis',kelas:'kelas',mengajar:'mengajar',wali:'wali',walikelas:'wali',niy:'niy',tempat:'tempat',tempatlahir:'tempat',tanggal:'tanggal',tanggallahir:'tanggal',tgllahir:'tanggal'};
 const PGI_MAX=300, PGI_CHUNK=15;   
@@ -715,35 +715,40 @@ function pgGuruHtml(u,d){
     <p><small>Isian di bawah menggantikan seluruh penugasan guru ini untuk tahun ajaran yang dipilih. Simpan dulu sebelum mengganti tahun ajaran. Bila kelas dan mata pelajaran masih tercatat pada guru yang akunnya sudah dihapus, penugasannya otomatis dialihkan ke guru ini.</small></p>
     <h4 style="margin:12px 0 4px">Mengajar</h4><div id="pgrows"></div>
     <p><button class="btn ghost sm" type="button" onclick="pgBaris()">+ Tambah baris</button></p>
-    ${u.Role==='Wali Kelas'?'<label for="pgw">Wali kelas untuk kelas</label><select id="pgw" onchange="PGU.wali=this.value"></select>':''}
+    ${u.Role==='Wali Kelas'?'<h4 style="margin:14px 0 4px">Wali kelas untuk kelas</h4><div id="pgwl"></div><p><button class="btn ghost sm" type="button" onclick="pgWaliBaris()">+ Tambah kelas wali</button></p><p><small>Satu guru boleh menjadi wali beberapa kelas (mis. dua kelas dalam satu ruangan). Satu kelas hanya punya satu wali.</small></p>':''}
     <p><button class="btn" id="pgsv" onclick="pgSimpanGuru()">Simpan penugasan</button></p>`)}
 function pgGuruMuat(d){const g=d.guru.find(x=>x.User_ID===PGU.id);
   PGU.rows=g?d.pengampu.filter(r=>r.Guru_ID===g.Guru_ID&&String(r.Tahun_Ajaran)===PGU.ta).map(r=>[r.Kelas_ID,r.Mapel_ID]):[];
-  const w=g?d.wali.find(r=>r.Guru_ID===g.Guru_ID&&String(r.Tahun_Ajaran)===PGU.ta):null;PGU.wali=w?w.Kelas_ID:''}
+  const w=g?d.wali.filter(r=>r.Guru_ID===g.Guru_ID&&String(r.Tahun_Ajaran)===PGU.ta):[];PGU.wali=w.map(r=>r.Kelas_ID)}
 function pgRowsDraw(){const d=MEM.master,el=$('#pgrows');if(!d||!el)return;
   el.innerHTML=PGU.rows.length?PGU.rows.map((r,i)=>`<div class="row" style="margin:6px 0"><select style="flex:1 1 150px;min-width:0" onchange="pgBarisSet(${i},0,this.value)" aria-label="Kelas">${pgOptKelas(d,PGU.ta,r[0])}</select><select style="flex:2 1 200px;min-width:0" onchange="pgBarisSet(${i},1,this.value)" aria-label="Mata pelajaran">${pgOptMapel(d,r[1])}</select><button class="btn bad sm" style="flex:none" type="button" onclick="pgBarisHapus(${i})" aria-label="Hapus baris">Hapus</button></div>`).join(''):'<p><small>Belum ada mata pelajaran. Klik "+ Tambah baris".</small></p>';
-  const w=$('#pgw');if(w)w.innerHTML='<option value="">- tidak menjadi wali kelas -</option>'+pgOptKelas(d,PGU.ta,PGU.wali).replace('<option value="">- pilih kelas -</option>','')}
+  const wl=$('#pgwl');if(wl)wl.innerHTML=PGU.wali.length?PGU.wali.map((k,i)=>`<div class="row" style="margin:6px 0"><select style="flex:1 1 200px;min-width:0" onchange="pgWaliSet(${i},this.value)" aria-label="Kelas wali">${pgOptKelas(d,PGU.ta,k)}</select><button class="btn bad sm" style="flex:none" type="button" onclick="pgWaliHapus(${i})" aria-label="Hapus kelas wali">Hapus</button></div>`).join(''):'<p><small>Tidak menjadi wali kelas. Klik "+ Tambah kelas wali" bila perlu.</small></p>'}
+function pgWaliBaris(){PGU.kotor=1;PGU.wali.push('');pgRowsDraw()}
+function pgWaliSet(i,v){if(i<PGU.wali.length)PGU.wali[i]=v}
+function pgWaliHapus(i){PGU.kotor=1;PGU.wali.splice(i,1);pgRowsDraw()}
 function pgGuruTa(){PGU.kotor=1;PGU.ta=$('#pgta').value;pgGuruMuat(MEM.master);pgRowsDraw()}
 function pgBaris(){PGU.kotor=1;PGU.rows.push(['','']);pgRowsDraw()}
 function pgBarisSet(i,k,v){if(PGU.rows[i])PGU.rows[i][k]=v}
 function pgBarisHapus(i){PGU.kotor=1;PGU.rows.splice(i,1);pgRowsDraw()}
 async function pgSimpanGuru(){const b=$('#pgsv'),rows=PGU.rows.filter(r=>r[0]||r[1]);
   if(rows.some(r=>!r[0]||!r[1])){toast('Setiap baris harus berisi kelas DAN mata pelajaran',1);return}
+  const wali=PGU.role==='Wali Kelas'?PGU.wali.filter(Boolean):[];
+  if(new Set(wali).size!==wali.length){toast('Ada kelas wali yang dipilih dua kali',1);return}
   b.disabled=true;b.textContent='Menyimpan...';
-  try{await api('user.tugas.save',{id:PGU.id,ta:PGU.ta,pairs:rows,wali:PGU.role==='Wali Kelas'?PGU.wali:''});
+  try{await api('user.tugas.save',{id:PGU.id,ta:PGU.ta,pairs:rows,wali:wali});
     delete MEM.stats;toast('Penugasan tersimpan');
-    if(pgPatchGuru(rows)){const n=++PGU.bg;   
+    if(pgPatchGuru(rows)){const n=++PGU.bg;   // simpanan diperbarui di tempat; data lengkap disegarkan di belakang (hanya jawaban terbaru yang dipakai)
       api('master.all').then(d=>{if(n===PGU.bg&&S&&S.token){MEM.master=d;MEM.masterT=Date.now()}}).catch(()=>{})}
     else{const d=await api('master.all');MEM.master=d;MEM.masterT=Date.now();if($('#pgrows')){pgGuruMuat(d);pgRowsDraw()}}}
   catch(e){fail(e)}
   if($('#pgsv')){b.disabled=false;b.textContent='Simpan penugasan'}}
 
 function pgPatchGuru(rows){const d=MEM.master;if(!d)return false;const g=d.guru.find(x=>x.User_ID===PGU.id);if(!g)return false;
-  const ta=String(PGU.ta),wl=PGU.role==='Wali Kelas'?PGU.wali:'';
+  const ta=String(PGU.ta),wl=PGU.role==='Wali Kelas'?PGU.wali.filter(Boolean):[];
   d.pengampu=d.pengampu.filter(r=>!(String(r.Tahun_Ajaran)===ta&&(r.Guru_ID===g.Guru_ID||rows.some(p=>p[0]===String(r.Kelas_ID)&&p[1]===String(r.Mapel_ID)))));   
   rows.forEach(p=>d.pengampu.push({Pengampu_ID:'',Guru_ID:g.Guru_ID,Mapel_ID:p[1],Kelas_ID:p[0],Tahun_Ajaran:ta}));
-  d.wali=d.wali.filter(r=>!(String(r.Tahun_Ajaran)===ta&&(r.Guru_ID===g.Guru_ID||(wl&&String(r.Kelas_ID)===wl))));
-  if(wl)d.wali.push({Relasi_ID:'',Guru_ID:g.Guru_ID,Kelas_ID:wl,Tahun_Ajaran:ta});return true}
+  d.wali=d.wali.filter(r=>!(String(r.Tahun_Ajaran)===ta&&(r.Guru_ID===g.Guru_ID||wl.indexOf(String(r.Kelas_ID))>=0)));
+  wl.forEach(k=>d.wali.push({Relasi_ID:'',Guru_ID:g.Guru_ID,Kelas_ID:k,Tahun_Ajaran:ta}));return true}
 
  
 function delUser(id){hapusPenggunaDialog([id],()=>{PG.sel=new Set();vPengguna2()})}   
@@ -870,7 +875,7 @@ function vImpor(){
   PGI=pgImBaru();PGI.ta=pgTaBawaan();
   M(`<div class="row" style="justify-content:space-between"><h2>Impor akun dari CSV</h2><button class="btn ghost" id="imback" onclick="vPengguna2()">Kembali</button></div>
   <div class="dcard" style="max-width:760px;margin-bottom:14px"><p style="margin-top:0"><b>Langkah:</b> (1) unduh contoh, isi, simpan sebagai <b>CSV UTF-8</b>; (2) pilih file; (3) klik <b>Periksa</b>; (4) klik <b>Buat akun</b>.</p>
-   <p><small>Kolom wajib: <b>nama, username, role</b> (Guru, Wali Kelas, atau Murid). Kolom opsional: <b>password</b> (kosong = dibuatkan acak), email, aktif (ya/tidak), <b>ta</b> (tahun ajaran, mis. 2026/2027), <b>nis</b> dan <b>kelas</b> (untuk Murid), <b>mengajar</b> (untuk Guru dan Wali Kelas, contoh <code>MTK@X-1|IPA@X-2</code>), <b>wali</b> (nama kelas, untuk Wali Kelas), <b>niy</b> (untuk Guru dan Wali Kelas), <b>tempat</b> dan <b>tanggal</b> (tempat dan tanggal lahir; tanggal berformat 2010-05-12 atau 12/05/2010). Maksimal ${PGI_MAX} baris per file. Role Admin tidak bisa diimpor.</small></p>
+   <p><small>Kolom wajib: <b>nama, username, role</b> (Guru, Wali Kelas, atau Murid). Kolom opsional: <b>password</b> (kosong = dibuatkan acak), email, aktif (ya/tidak), <b>ta</b> (tahun ajaran, mis. 2026/2027), <b>nis</b> dan <b>kelas</b> (untuk Murid), <b>mengajar</b> (untuk Guru dan Wali Kelas, contoh <code>MTK@X-1|IPA@X-2</code>), <b>wali</b> (nama kelas, untuk Wali Kelas; boleh beberapa kelas dipisah <code>|</code>, mis. <code>7A|7A-ICP</code>), <b>niy</b> (untuk Guru dan Wali Kelas), <b>tempat</b> dan <b>tanggal</b> (tempat dan tanggal lahir; tanggal berformat 2010-05-12 atau 12/05/2010). Maksimal ${PGI_MAX} baris per file. Role Admin tidak bisa diimpor.</small></p>
    <p><button class="btn ghost sm" onclick="pgImContoh()">Unduh contoh CSV</button></p></div>
   <div class="dcard" style="max-width:760px"><label for="imta">Tahun ajaran bawaan (dipakai bila kolom <b>ta</b> kosong)</label><input id="imta" value="${esc(PGI.ta)}" style="max-width:200px">
    <label for="imf">File CSV</label><input id="imf" type="file" accept=".csv,.txt,text/csv" onchange="pgImFile(this)"><div id="imi" style="margin-top:10px"></div></div>
@@ -917,7 +922,7 @@ function pgImUnduh(){const L=[['baris','username','nama','role','password_baru',
   pgUnduh('hasil-impor-akun.csv','\uFEFF'+L.join('\r\n'),'text/csv;charset=utf-8')}
 
 // bersihkan data impor (termasuk password acak) saat logout atau sesi habis; memakai mekanisme LOGOUT_HOOKS dari Index.html
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{PGI=pgImBaru();PGU.id='';PGU.rows=[];PGU.wali='';PGW={ids:[],pw:'',sibuk:false,hasil:null}});
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{PGI=pgImBaru();PGU.id='';PGU.rows=[];PGU.wali=[];PGW={ids:[],pw:'',sibuk:false,hasil:null}});
 
 VIEWS.pengguna=vPengguna2;
 </script>
