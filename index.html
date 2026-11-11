@@ -2563,6 +2563,7 @@ function exDraw(){const u=EX.u;
   <div class="exau" id="ex-au" style="display:none"></div><div class="card"><div class="cb" id="ex-q"></div></div>
   <div class="expal" id="ex-p"></div>
   <p class="row"><button class="btn ghost" id="ex-prev" onclick="exGo(EX.i-1)">Sebelumnya</button><button class="btn ghost" id="ex-next" onclick="exGo(EX.i+1)">Berikutnya</button><button class="btn" id="ex-fin" style="margin-left:auto" onclick="exFinish()">Kumpulkan</button></p>
+  <p id="ex-finhint" style="display:none"><small>Tombol Kumpulkan akan muncul di soal terakhir.</small></p>
   <p><small>Jawaban tersimpan otomatis. Waktu dihitung oleh server; saat habis, jawaban dikumpulkan sendiri.</small></p></div>`);
   exTick();exQ()}
 function exGo(i){const n=EX.u.soal.length;if(i<0||i>=n)return;EX.i=i;exQ();window.scrollTo(0,0)}
