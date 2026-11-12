@@ -1062,7 +1062,7 @@ button.kchip{border:1px solid var(--line);cursor:pointer;font:inherit;font-size:
 const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const lnk=u=>okUrl(u)?`<a href="${esc(okUrl(u))}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">Buka tautan</a>`:'';
-const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
+const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${typeof mxRich==='function'?mxRich(h):h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
 const gEditor=id=>{if(typeof rtMount!=='function')return;try{rtMount(id,1);if(typeof rtGrid==='function')rtGrid()}catch(e){console.warn(e)}};
 const NOAMPU='<div class="empty">Anda belum ditetapkan sebagai pengampu mapel. Minta admin mengisinya di menu Pengampu Mapel.</div>';
 
@@ -1147,8 +1147,8 @@ async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi
     try{const x=await api('materi.get',{id});r=Object.assign({},r,{Isi:x.Isi})}catch(e){if($('#gfm-wait')){fail(e);gHome()}return}
     if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
-  <label>Judul</label><input id="mj" value="${esc(r.Judul)}">
-  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
+  <label>Judul</label><input id="mj" class="mx-f" value="${esc(r.Judul)}">
+  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mi" class="mx-f" style="min-height:200px">${esc(r.Isi)}</textarea>
   <label>Tautan dokumen / video (opsional)</label><input id="ml" placeholder="https://..." value="${esc(r.File_URL)}">
   <small>Tempel tautan Google Drive atau YouTube. Atur akses tautan agar siswa dapat membukanya.</small>
   <label for="mst">Status</label><select id="mst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
@@ -1234,8 +1234,8 @@ const tgBtn=(tipe,id,nama)=>`<button class="btn ghost sm" data-id="${esc(id)}" o
 
 function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}:{};
   MT(`<h2>${id?'Edit':'Buat'} tugas</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
-  <label>Judul</label><input id="tj" value="${esc(r.Judul)}">
-  <label>Petunjuk tugas</label><textarea id="td" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
+  <label>Judul</label><input id="tj" class="mx-f" value="${esc(r.Judul)}">
+  <label>Petunjuk tugas</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="td" class="mx-f" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
   <label for="tst">Status</label><select id="tst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
   <small>Tugas yang sudah ada pengumpulan tidak bisa dikembalikan ke draft.</small>
   <label>Tenggat (opsional, waktu setempat)</label><input id="tt" type="datetime-local" value="${esc(r.Tenggat_Input)}">
@@ -1423,11 +1423,59 @@ function mxArPanel(){
   let k=0;
   const g=MXAK.map(([nm,l])=>`<div class="mxg"><small>${nm}</small><span class="mxakr">`+l.map(b=>{const i=k++,ch=b[0],lab=/[ً-ٰٓ]/.test(ch)?'◌'+ch:ch;return `<button type="button" class="mxb mxab" title="${esc(b[1])}" aria-label="${esc(b[1])}" onmousedown="event.preventDefault()" onclick="mxArIns(${i})">${esc(lab)}</button>`}).join('')+'</span></div>').join('');
   return `<details class="mxarp"><summary><span class="mxarp-ic" aria-hidden="true">ع</span><span>Papan ketik Arab <small>huruf dan harakat</small></span></summary><div class="mxarb">${g}<p class="mxarh">Klik kolom soal atau pilihan, lalu klik huruf. Harakat ditaruh setelah hurufnya. Jika komputer sudah punya keyboard Arab, boleh mengetik langsung. Teks Arab otomatis rata kanan di layar murid. Urutan harakat dari kanan: fathah, dhammah, kasrah, fathatain, dhammatain, kasratain, sukun, syaddah, mad, alif kecil (arahkan kursor ke tombol untuk melihat namanya).</p></div></details>`}
+ 
+const MXCE={el:null,r:null};
+function mxCeRoot(n){
+  while(n&&n!==document.body){
+    if(n.nodeType===1&&n.isContentEditable&&n.getAttribute('contenteditable')==='true')return n;
+    n=n.parentNode}
+  return null}
+function mxActiveTarget(){
+  if(MXQ.f&&document.body.contains(MXQ.f)&&MXQ.f.offsetParent!==null)return{k:'in',el:MXQ.f};
+  if(MXCE.el&&document.body.contains(MXCE.el)&&MXCE.el.offsetParent!==null)return{k:'ce',el:MXCE.el};
+  const vis=[].slice.call(document.querySelectorAll('.rte[contenteditable="true"],.mx-f')).find(x=>x.offsetParent!==null);
+  if(!vis)return null;
+  if(vis.isContentEditable){MXCE.el=vis;MXCE.r=null;return{k:'ce',el:vis}}
+  MXQ.f=vis;return{k:'in',el:vis}}
+function mxCeInsert(el,txt,repNode,a,b){
+  el.focus();
+  const sel=window.getSelection();let r=null;
+  if(repNode&&repNode.parentNode){r=document.createRange();r.setStart(repNode,a);r.setEnd(repNode,b);r.deleteContents()}
+  else if(MXCE.r&&el.contains(MXCE.r.commonAncestorContainer)){r=MXCE.r.cloneRange();r.deleteContents()}
+  else{r=document.createRange();r.selectNodeContents(el);r.collapse(false)}
+  const tn=document.createTextNode(txt);
+  r.insertNode(tn);r.setStartAfter(tn);r.collapse(true);
+  sel.removeAllRanges();sel.addRange(r);
+  MXCE.el=el;MXCE.r=r.cloneRange();
+  if(mxHasAr(txt)){
+    mxArFont();
+    let blk=tn.parentNode;
+    while(blk&&blk!==el&&!/^(P|DIV|LI|BLOCKQUOTE|H[1-6]|TD|TH)$/.test(blk.tagName))blk=blk.parentNode;
+    const t=(blk&&blk!==el)?blk:el;t.setAttribute('dir','auto');t.classList.add('mxar')}
+  el.dispatchEvent(new Event('input',{bubbles:true}))}
+function mxRich(html){
+  const d=document.createElement('div');d.innerHTML=String(html||'');
+  const w=document.createTreeWalker(d,NodeFilter.SHOW_TEXT,null),nodes=[];let n;
+  while((n=w.nextNode())){
+    const p=n.parentElement;
+    if(p&&p.closest('code,pre,script,style,.katex'))continue;
+    if(n.nodeValue&&(n.nodeValue.indexOf('$')>=0||n.nodeValue.indexOf('\\(')>=0||n.nodeValue.indexOf('\\[')>=0))nodes.push(n)}
+  nodes.forEach(tn=>{
+    const toks=mxTok(mxN(tn.nodeValue));
+    if(!toks.some(x=>x.k==='m'))return;
+    const sp=document.createElement('span');
+    sp.innerHTML=toks.map(x=>x.k==='m'?mxRender(x.v,x.d):esc(x.v)).join('');
+    tn.parentNode.replaceChild(sp,tn)});
+  d.querySelectorAll('p,div,li,blockquote,h1,h2,h3,h4,td,th').forEach(el=>{
+    if(!el.hasAttribute('dir')&&mxHasAr(el.textContent)){mxArFont();el.setAttribute('dir','auto');el.classList.add('mxar')}});
+  return d.innerHTML}
+
 function mxArIns(i){
   const b=MXAKF[i];if(!b)return;
-  let f=MXQ.f;if(!f||!document.body.contains(f))f=document.querySelector('.mx-f');
-  if(!f){if(typeof toast==='function')toast('Klik dulu kolom soal atau pilihan yang ingin diisi.',1);return}
-  const v=f.value,hasSel=MXQ.f===f&&MXQ.s!=null,s=hasSel?MXQ.s:v.length,e=hasSel?MXQ.e:v.length;
+  const tg=mxActiveTarget();
+  if(!tg){if(typeof toast==='function')toast('Klik dulu kolom soal atau pilihan yang ingin diisi.',1);return}
+  if(tg.k==='ce')return mxCeInsert(tg.el,b[0]);
+  const f=tg.el,v=f.value,hasSel=MXQ.f===f&&MXQ.s!=null,s=hasSel?MXQ.s:v.length,e=hasSel?MXQ.e:v.length;
   f.focus();f.setRangeText(b[0],s,e,'end');const c=s+b[0].length;f.setSelectionRange(c,c);
   MXQ.f=f;MXQ.s=MXQ.e=c;f.dispatchEvent(new Event('input',{bubbles:true}))}
 
@@ -1484,11 +1532,17 @@ function mxToolbar(){
     <tr><td>Tanda dolar biasa (harga)</td><td><code>\\$5.000</code></td></tr></table></div>
    <p>Rumus besar di tengah baris: apit dengan dua tanda dolar. Pangkat atau indeks lebih dari satu karakter harus diberi kurung kurawal: <code>x^{10}</code>, bukan <code>x^10</code>.</p></details>`}
 
-// sisipkan potongan ke kolom yang terakhir aktif (kelas mx-f)
+// sisipkan potongan ke kolom yang terakhir aktif (kelas mx-f atau editor visual)
 function mxIns(i){
   const b=MXF[i];if(!b)return;
-  let f=MXQ.f;if(!f||!document.body.contains(f))f=document.querySelector('.mx-f');if(!f)return;
-  const v=f.value,hasSel=MXQ.f===f&&MXQ.s!=null,s=hasSel?MXQ.s:v.length,e=hasSel?MXQ.e:v.length,sel=v.slice(s,e);
+  const tg=mxActiveTarget();if(!tg)return;
+  if(tg.k==='ce'){
+    const sel=MXCE.r?MXCE.r.toString():'',nd=MXCE.r&&MXCE.r.startContainer;
+    const inM=nd&&nd.nodeType===3&&mxInside(nd.nodeValue,MXCE.r.startOffset);
+    const o=(!b[3]&&!inM)?'$':'',pos=b[2].indexOf('#');
+    const out=pos>=0?o+b[2].slice(0,pos)+sel+b[2].slice(pos+1)+o:o+b[2]+o;
+    return mxCeInsert(tg.el,out)}
+  const f=tg.el,v=f.value,hasSel=MXQ.f===f&&MXQ.s!=null,s=hasSel?MXQ.s:v.length,e=hasSel?MXQ.e:v.length,sel=v.slice(s,e);
   const wrap=!b[3]&&!mxInside(v,s),o=wrap?'$':'',pos=b[2].indexOf('#');
   let out,caret;
   if(pos>=0){out=o+b[2].slice(0,pos)+sel+b[2].slice(pos+1)+o;caret=s+o.length+pos+sel.length}
@@ -1498,11 +1552,14 @@ function mxIns(i){
   f.dispatchEvent(new Event('input',{bubbles:true}))}
 
 ['focusin','keyup','mouseup','select','input','touchend'].forEach(ev=>document.addEventListener(ev,e=>{
-  const t=e.target;if(t&&t.classList&&t.classList.contains('mx-f')){MXQ.f=t;MXQ.s=t.selectionStart;MXQ.e=t.selectionEnd;mxArField(t)}},true));
+  const t=e.target;
+  if(t&&t.classList&&t.classList.contains('mx-f')){MXQ.f=t;MXQ.s=t.selectionStart;MXQ.e=t.selectionEnd;MXCE.el=null;mxArField(t);return}
+  const sel=window.getSelection&&window.getSelection();
+  if(sel&&sel.rangeCount){const r=sel.getRangeAt(0),root=mxCeRoot(r.commonAncestorContainer);if(root){MXCE.el=root;MXCE.r=r.cloneRange();MXQ.f=null}}},true));
 
 
 const MXM={p:null,ok:false,v:'0.109.2'};
-const MXD={f:null,a:0,b:0,mf:null};
+const MXD={k:'in',f:null,node:null,a:0,b:0,mf:null};
 function mxmLoad(){
   if(MXM.p)return MXM.p;
   MXM.p=new Promise(res=>{
@@ -1544,20 +1601,27 @@ function mxmDlg(canD){
   document.getElementById('mxm-ok').disabled=true;mxmSt('Memuat editor rumus...');
   ov.classList.add('on');return ov}
 async function mxOpen(){
-  let f=MXQ.f;if(!f||!document.body.contains(f))f=document.querySelector('.mx-f');
-  if(!f){toast('Klik dulu kolom yang ingin diisi rumus.',1);return}
-  const s=MXQ.f===f&&MXQ.s!=null?MXQ.s:f.value.length,r=mxmFind(f.value,s);
-  MXD.f=f;MXD.a=r.a;MXD.b=r.b;
-  mxmDlg(f.tagName==='TEXTAREA');
-  document.getElementById('mxm-d').checked=r.d;
+  const tg=mxActiveTarget();
+  if(!tg){toast('Klik dulu kolom yang ingin diisi rumus.',1);return}
+  let init='',d=false;
+  if(tg.k==='ce'){
+    const nd=MXCE.r&&MXCE.r.startContainer;
+    if(nd&&nd.nodeType===3){const r=mxmFind(nd.nodeValue,MXCE.r.startOffset);if(r.b>r.a){MXD={k:'ce',f:tg.el,node:nd,a:r.a,b:r.b,mf:null};init=r.init;d=r.d}else MXD={k:'ce',f:tg.el,node:null,a:0,b:0,mf:null}}
+    else MXD={k:'ce',f:tg.el,node:null,a:0,b:0,mf:null};
+    mxmDlg(true)}
+  else{
+    const f=tg.el,s=MXQ.f===f&&MXQ.s!=null?MXQ.s:f.value.length,r=mxmFind(f.value,s);
+    MXD={k:'in',f:f,node:null,a:r.a,b:r.b,mf:null};init=r.init;d=r.d;
+    mxmDlg(f.tagName==='TEXTAREA')}
+  document.getElementById('mxm-d').checked=d;
   const ok=await mxmLoad();
   if(!document.getElementById('mxm-ov').classList.contains('on'))return;
-  if(!ok){mxmClose(true);toast('Editor rumus visual tidak termuat. Pakai tombol rumus cepat.',1);const d=document.getElementById('mxalt');if(d)d.open=true;return}
+  if(!ok){mxmClose(true);toast('Editor rumus visual tidak termuat. Pakai tombol rumus cepat.',1);const det=document.getElementById('mxalt');if(det)det.open=true;return}
   const mf=document.createElement('math-field');MXD.mf=mf;
   mf.setAttribute('aria-label','Rumus');mf.setAttribute('placeholder','\\text{Ketik rumus di sini}');
   try{mf.mathVirtualKeyboardPolicy='auto'}catch(e){}
   document.getElementById('mxm-host').appendChild(mf);
-  try{mf.value=r.init}catch(e){}
+  try{mf.value=init}catch(e){}
   mf.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();mxmOk()}});
   document.getElementById('mxm-ok').disabled=false;mxmSt('');
   setTimeout(()=>{try{mf.focus()}catch(e){}},60)}
@@ -1566,8 +1630,9 @@ function mxmOk(){
   const v=mxmClean(mf.value);
   if(!v){mxmSt('Tuliskan rumusnya dulu.',1);return}
   if(/\\placeholder/.test(v)){mxmSt('Masih ada kotak kosong di rumus. Isi atau hapus dulu.',1);return}
-  const dEl=document.getElementById('mxm-d'),o=dEl&&dEl.checked&&f.tagName==='TEXTAREA'?'$$':'$',out=o+v+o,s=MXD.a,e=MXD.b;
+  const dEl=document.getElementById('mxm-d'),o=dEl&&dEl.checked&&(MXD.k==='ce'||f.tagName==='TEXTAREA')?'$$':'$',out=o+v+o,s=MXD.a,e=MXD.b;
   mxmClose();
+  if(MXD.k==='ce')return mxCeInsert(f,out,MXD.node,s,e);
   f.focus();f.setRangeText(out,s,e,'end');
   const c=s+out.length;f.setSelectionRange(c,c);MXQ.f=f;MXQ.s=MXQ.e=c;
   f.dispatchEvent(new Event('input',{bubbles:true}))}
@@ -1577,7 +1642,7 @@ function mxmClose(quiet){
   MXD.mf=null;const f=MXD.f;if(f&&!quiet&&document.body.contains(f))try{f.focus()}catch(e){}}
 
 
-const MXC={f:null,a:0,b:0,bad:false};
+const MXC={k:'in',f:null,node:null,a:0,b:0,bad:false};
 const MXC_Q=[['\u2192',' -> ','Panah reaksi'],['\u21cc',' <=> ','Reaksi bolak-balik'],['(s)','(s)','Padat'],['(l)','(l)','Cair'],['(g)','(g)','Gas'],['(aq)','(aq)','Larutan'],
  ['\u2193',' v','Endapan'],['\u2191',' ^','Gas menguap'],['\u207a','^+','Muatan positif'],['\u207b','^-','Muatan negatif'],['2\u207a','^2+','Muatan 2 positif'],['2\u207b','^2-','Muatan 2 negatif'],['syarat',' ->[suhu] ','Syarat di atas panah',5,9]];
 const MXC_X=[['Air','H2O'],['Ion sulfat','SO4^2-'],['Pembakaran','CH4 + 2O2 -> CO2 + 2H2O'],['Penetralan','H2SO4 + 2NaOH -> Na2SO4 + 2H2O'],['Kesetimbangan','N2 + 3H2 <=> 2NH3'],['Endapan','Ag+ + Cl- -> AgCl v'],['Hidrat','CuSO4*5H2O'],['Etanol','CH3-CH2-OH']];
@@ -1626,11 +1691,17 @@ function mxcAdd(i){
   mxcPv()}
 function mxcEx(i){const t=mxcId('mxc-t');if(!t||!MXC_X[i])return;t.value=MXC_X[i][1];t.focus();mxcPv()}
 async function mxcOpen(){
-  let f=MXQ.f;if(!f||!document.body.contains(f))f=document.querySelector('.mx-f');
-  if(!f){toast('Klik dulu kolom yang ingin diisi rumus.',1);return}
-  const s=MXQ.f===f&&MXQ.s!=null?MXQ.s:f.value.length,r=mxcFind(f.value,s);
-  MXC.f=f;MXC.a=r.a;MXC.b=r.b;
-  mxcDlg();const t=mxcId('mxc-t');t.value=r.init;mxcPv();setTimeout(()=>{try{t.focus()}catch(e){}},60);
+  const tg=mxActiveTarget();
+  if(!tg){toast('Klik dulu kolom yang ingin diisi rumus.',1);return}
+  let init='';
+  if(tg.k==='ce'){
+    const nd=MXCE.r&&MXCE.r.startContainer;
+    if(nd&&nd.nodeType===3){const r=mxcFind(nd.nodeValue,MXCE.r.startOffset);if(r.b>r.a){MXC={k:'ce',f:tg.el,node:nd,a:r.a,b:r.b,bad:false};init=r.init}else MXC={k:'ce',f:tg.el,node:null,a:0,b:0,bad:false}}
+    else MXC={k:'ce',f:tg.el,node:null,a:0,b:0,bad:false}}
+  else{
+    const f=tg.el,s=MXQ.f===f&&MXQ.s!=null?MXQ.s:f.value.length,r=mxcFind(f.value,s);
+    MXC={k:'in',f:f,node:null,a:r.a,b:r.b,bad:false};init=r.init}
+  mxcDlg();const t=mxcId('mxc-t');t.value=init;mxcPv();setTimeout(()=>{try{t.focus()}catch(e){}},60);
   await mxLoad();mxcPv()}
 function mxcOk(){
   const t=mxcId('mxc-t'),f=MXC.f;if(!t||!f)return;
@@ -1639,6 +1710,7 @@ function mxcOk(){
   if(MXC.bad){mxcSt('Penulisan belum benar. Periksa tanda kurung dan simbolnya.',1);return}
   const out='$\\ce{'+v+'}$',s=MXC.a,e=MXC.b;
   mxcClose();
+  if(MXC.k==='ce')return mxCeInsert(f,out,MXC.node,s,e);
   f.focus();f.setRangeText(out,s,e,'end');
   const c=s+out.length;f.setSelectionRange(c,c);MXQ.f=f;MXQ.s=MXQ.e=c;
   f.dispatchEvent(new Event('input',{bubbles:true}))}
