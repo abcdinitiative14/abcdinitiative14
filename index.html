@@ -331,8 +331,8 @@ function logout(){const tk=S.token;clearSess();go('#/');
 
  
 const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['masuk','Surat masuk'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
- Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
- 'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['w-binaan','Kelas Binaan'],['g-mapel','Mata Pelajaran'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
+ Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['artikel','Artikel'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
+ 'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['w-binaan','Kelas Binaan'],['g-mapel','Mata Pelajaran'],['artikel','Artikel'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  Murid:[['m-ringkasan','Ringkasan'],['m-kelas','Kelas'],['m-lab','Booking Lab'],['m-pid','Pemakaian PID']]};
 const VIEWS={ringkasan:vRingkasan,pengguna:vPengguna,artikel:vArtikel,backup:vBackup,migrasi:vMigrasi,soon:vSoon};
 function openDash(m){
@@ -1063,7 +1063,7 @@ const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const lnk=u=>okUrl(u)?`<a href="${esc(okUrl(u))}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">Buka tautan</a>`:'';
 const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
-const gEditor=id=>{if(typeof rtMount!=='function')return;try{const w=rtMount(id,0);if(w)w.classList.add('mini')}catch(e){console.warn(e)}};
+const gEditor=id=>{if(typeof rtMount!=='function')return;try{rtMount(id,1);if(typeof rtGrid==='function')rtGrid()}catch(e){console.warn(e)}};
 const NOAMPU='<div class="empty">Anda belum ditetapkan sebagai pengampu mapel. Minta admin mengisinya di menu Pengampu Mapel.</div>';
 
 // seperti swr, tetapi menampilkan pesan galat di layar (mis. kelas murid belum diatur)
@@ -1267,7 +1267,7 @@ function gDrawKumpul(){const r=GS.cur,t=r.tugas,tg=kcTenggat(t.Tenggat),belum=r.
   <h3 style="margin:24px 0 8px">Jawaban murid</h3>
   <div class="tw"><table><tr><th>Siswa</th><th>Jawaban</th><th>Waktu kirim</th><th>Nilai (0-100)</th><th>Umpan balik</th><th></th></tr>`+
   (r.daftar.length?r.daftar.map((x,i)=>x.Pengumpulan_ID?
-    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:380px;white-space:pre-wrap">${esc(x.Jawaban)}${x.File_Nama?`${x.Jawaban?'<br>':''}${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
+    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:380px">${paras(x.Jawaban)}${x.File_Nama?`${x.Jawaban?'<br>':''}${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
     `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>');if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));tgAuto()}
 async function gNilai(i){const x=GS.cur.daftar[i],b=$('#sb_'+i);b.disabled=true;b.textContent='...';
   try{const r=await api('tugas.nilai',{id:x.Pengumpulan_ID,Nilai:$('#n_'+i).value,Umpan_Balik:$('#u_'+i).value});
