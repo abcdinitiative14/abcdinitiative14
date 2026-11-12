@@ -2973,6 +2973,11 @@ function btUnduh(){
 .mkbadge{display:inline-block;min-width:18px;padding:0 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:12px;line-height:18px;text-align:center;margin-left:6px}
 .mkbadge.ok{background:var(--teal)}
 .tabs a.on .mkbadge{background:#fff;color:var(--ink)}
+.kp .mxvis{position:static;padding:6px 8px;gap:6px}
+.kp .mxk{flex:1 1 130px;padding:6px 10px 6px 6px}
+.kp .mxk-ic{min-width:32px;height:32px;font-size:14px}
+.kp .mxk-tx b{font-size:13.5px}
+.kp .mxk-hint{display:none}
 </style>
 <script>
 
@@ -3062,14 +3067,23 @@ function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);
   </div>
   <div class="kp"><h3>JAWABAN ANDA</h3>
   ${late&&!lock?'<p style="color:var(--bad)">Tenggat sudah lewat. Jawaban tetap bisa dikirim, tetapi ditandai terlambat.</p>':''}
-  ${lock?`<div class="stat"><b>${esc(t.Nilai)}</b>Nilai dari guru${t.Umpan_Balik?`<br><br>${esc(t.Umpan_Balik)}`:''}</div>`:''}
-  <label for="mkj">Jawaban teks</label><textarea id="mkj" oninput="mkDraft()[MK.t]=this.value" style="min-height:180px" ${lock?'disabled':''}>${esc(isi)}</textarea>${!lock&&dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}
+  ${lock?`<div class="stat"><b>${esc(t.Nilai)}</b>Nilai dari guru${t.Umpan_Balik?`<br><br>${typeof mxInline==='function'?mxInline(t.Umpan_Balik):esc(t.Umpan_Balik)}`:''}</div>`:''}
+${lock
+  ?`<label>Jawaban teks</label><div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--mist);margin-bottom:8px">${paras(isi)||'<small style="color:#5b7083">Tidak ada jawaban teks.</small>'}</div>`
+  :`<label for="mkj">Jawaban teks</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mkj" class="mx-f" oninput="mkDraft()[MK.t]=this.value" style="min-height:180px">${esc(isi)}</textarea>${dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}`}
   ${lock?(t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}`:''):`<label for="mkf">Berkas jawaban (opsional)</label>
   ${t.File_Nama?`<div style="margin:0 0 6px">${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}<label style="display:inline;font-weight:400"><input type="checkbox" id="mkhf" style="width:auto;margin-right:5px">hapus berkas ini</label></div>`:''}
   <input id="mkf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${t.File_Nama?'Memilih berkas baru akan menggantikan berkas lama.':'Boleh dikirim bersama jawaban teks atau sendiri.'}</small>`}
   ${t.Waktu_Teks?`<p style="margin:10px 0 0"><small>Terakhir dikirim: ${esc(t.Waktu_Teks)}${t.Terlambat?' (terlambat)':''}</small></p>`:''}
   ${lock?'':`<p><button class="btn" id="mkk" onclick="mkKirim('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kirim jawaban':'Perbarui jawaban'}</button></p>`}</div></div>`;
-  if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));mkGulir();tgAuto()}
+  if(!lock){
+  if(typeof gEditor==='function')gEditor('mkj');
+  else if(typeof rtMount==='function')rtMount('mkj',0);
+  const rte=$('#mkb .rte');
+  if(rte)rte.addEventListener('input',()=>{if(MK.t===id)mkDraft()[id]=$('#mkj').value});
+}
+if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));mkGulir();tgAuto()}
+
 function mkTutup(){MK.t='';MK.m='';const tb=$('#mkt');if(tb)tb.style.display='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
 async function mkKirim(id){const b=$('#mkk'),jw=$('#mkj').value,key=mkKey(),t0=b.textContent;b.disabled=true;b.textContent='Memeriksa...';
   try{const fl=await tgBaca($('#mkf'));b.textContent=fl?'Mengunggah... (jangan tutup halaman)':'Mengirim...';
