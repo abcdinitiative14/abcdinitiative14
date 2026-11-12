@@ -1333,6 +1333,8 @@ Object.assign(VIEWS,{'g-kelas':vGKelas,'g-tugas':vGTugas});
 .mxk-mat{background:linear-gradient(135deg,var(--teal),#0f7f86)}
 .mxk-kim{background:linear-gradient(135deg,#7a4ff0,#5530c4);box-shadow:0 2px 6px rgba(85,48,196,.35)}
 .mxk-kim:hover{box-shadow:0 5px 14px rgba(85,48,196,.45)}
+.mxk-prev{background:linear-gradient(135deg,#64748b,#475569);box-shadow:0 2px 6px rgba(71,85,105,.3)}
+.mxk-prev:hover{box-shadow:0 5px 12px rgba(71,85,105,.4)}
 .mxk-ic{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:42px;padding:0 6px;border-radius:10px;background:rgba(255,255,255,.22);font-size:17px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
 .mxk-ic sub{font-size:.68em;line-height:0;vertical-align:baseline;position:relative;top:.28em}
 .mxk-tx{display:flex;flex-direction:column;line-height:1.25}
@@ -1517,7 +1519,7 @@ function mxToolbar(){
   let k=0;
   const g=MXB.map(([nm,l])=>`<div class="mxg"><small>${nm}</small>`+l.map(b=>{const i=k++;return `<button type="button" class="mxb${b[3]?' hot':''}" title="${esc(b[1])}" aria-label="${esc(b[1])}" onmousedown="event.preventDefault()" onclick="mxIns(${i})">${esc(b[0])}</button>`}).join('')+'</div>').join('');
   setTimeout(mxmLoad,400);setTimeout(mxLoad,300);
-  return `<div class="mxvis"><button type="button" class="mxk mxk-mat" onmousedown="event.preventDefault()" onclick="mxOpen()"><span class="mxk-ic" aria-hidden="true">&sum;</span><span class="mxk-tx"><b>Tulis rumus</b><small>Matematika, fisika</small></span></button><button type="button" class="mxk mxk-kim" onmousedown="event.preventDefault()" onclick="mxcOpen()"><span class="mxk-ic" aria-hidden="true">H<sub>2</sub>O</span><span class="mxk-tx"><b>Rumus kimia</b><small>H&#8322;SO&#8324;, reaksi, ion</small></span></button><span class="mxk-hint">Klik kolom yang mau diisi, lalu pilih jenis rumusnya. Ditulis seperti di Word.</span></div>
+  return `<div class="mxvis"><button type="button" class="mxk mxk-mat" onmousedown="event.preventDefault()" onclick="mxOpen()"><span class="mxk-ic" aria-hidden="true">&sum;</span><span class="mxk-tx"><b>Tulis rumus</b><small>Matematika, fisika</small></span></button><button type="button" class="mxk mxk-kim" onmousedown="event.preventDefault()" onclick="mxcOpen()"><span class="mxk-ic" aria-hidden="true">H<sub>2</sub>O</span><span class="mxk-tx"><b>Rumus kimia</b><small>H&#8322;SO&#8324;, reaksi, ion</small></span></button><button type="button" class="mxk mxk-prev" onmousedown="event.preventDefault()" onclick="mxPreview()"><span class="mxk-ic" aria-hidden="true">&#128065;</span><span class="mxk-tx"><b>Lihat pratinjau</b><small>Cek hasil akhir</small></span></button><span class="mxk-hint">Klik area yang mau diisi lalu pilih alatnya.</span></div>
   <details class="mxalt" id="mxalt"><summary>Tombol rumus cepat (cara lama)</summary><div class="mxtb" role="toolbar" aria-label="Alat penulisan rumus matematika">${g}</div></details>
   ${mxArPanel()}<details class="mxhelp"><summary>Cara menulis rumus</summary>
    <p>Cara termudah: klik kolom yang ingin diisi (pertanyaan atau salah satu pilihan), klik <b>Tulis rumus</b>, ketik rumusnya di kotak yang muncul, lalu klik <b>Sisipkan</b>. Untuk mengubah rumus yang sudah ada, letakkan kursor di dalam rumus itu, lalu klik <b>Tulis rumus</b> lagi.</p>
@@ -1532,7 +1534,7 @@ function mxToolbar(){
     <tr><td>Tanda dolar biasa (harga)</td><td><code>\\$5.000</code></td></tr></table></div>
    <p>Rumus besar di tengah baris: apit dengan dua tanda dolar. Pangkat atau indeks lebih dari satu karakter harus diberi kurung kurawal: <code>x^{10}</code>, bukan <code>x^10</code>.</p></details>`}
 
-// sisipkan potongan ke kolom yang terakhir aktif (kelas mx-f atau editor visual)
+
 function mxIns(i){
   const b=MXF[i];if(!b)return;
   const tg=mxActiveTarget();if(!tg)return;
@@ -1559,7 +1561,7 @@ function mxIns(i){
 
 
 const MXM={p:null,ok:false,v:'0.109.2'};
-const MXD={k:'in',f:null,node:null,a:0,b:0,mf:null};
+let MXD={k:'in',f:null,node:null,a:0,b:0,mf:null};
 function mxmLoad(){
   if(MXM.p)return MXM.p;
   MXM.p=new Promise(res=>{
@@ -1642,7 +1644,7 @@ function mxmClose(quiet){
   MXD.mf=null;const f=MXD.f;if(f&&!quiet&&document.body.contains(f))try{f.focus()}catch(e){}}
 
 
-const MXC={k:'in',f:null,node:null,a:0,b:0,bad:false};
+let MXC={k:'in',f:null,node:null,a:0,b:0,bad:false};
 const MXC_Q=[['\u2192',' -> ','Panah reaksi'],['\u21cc',' <=> ','Reaksi bolak-balik'],['(s)','(s)','Padat'],['(l)','(l)','Cair'],['(g)','(g)','Gas'],['(aq)','(aq)','Larutan'],
  ['\u2193',' v','Endapan'],['\u2191',' ^','Gas menguap'],['\u207a','^+','Muatan positif'],['\u207b','^-','Muatan negatif'],['2\u207a','^2+','Muatan 2 positif'],['2\u207b','^2-','Muatan 2 negatif'],['syarat',' ->[suhu] ','Syarat di atas panah',5,9]];
 const MXC_X=[['Air','H2O'],['Ion sulfat','SO4^2-'],['Pembakaran','CH4 + 2O2 -> CO2 + 2H2O'],['Penetralan','H2SO4 + 2NaOH -> Na2SO4 + 2H2O'],['Kesetimbangan','N2 + 3H2 <=> 2NH3'],['Endapan','Ag+ + Cl- -> AgCl v'],['Hidrat','CuSO4*5H2O'],['Etanol','CH3-CH2-OH']];
@@ -1717,6 +1719,40 @@ function mxcOk(){
 function mxcClose(){
   const ov=mxcId('mxc-ov');if(ov)ov.classList.remove('on');
   const f=MXC.f;if(f&&document.body.contains(f))try{f.focus()}catch(e){}}
+
+ 
+async function mxPreview(){
+  let tg=mxActiveTarget();
+  if(!tg){ 
+    const rte=document.querySelector('.rte[contenteditable="true"]');
+    const txa=document.querySelector('textarea.mx-f');
+    if(rte&&rte.offsetParent!==null)tg={k:'ce',el:rte};
+    else if(txa&&txa.offsetParent!==null)tg={k:'in',el:txa};
+  }
+  if(!tg){if(typeof toast==='function')toast('Klik dulu area teks yang ingin dipratinjau.',1);return}
+  const isi=tg.k==='ce'?tg.el.innerHTML:tg.el.value;
+  if(!isi||!isi.replace(/<[^>]*>/g,'').trim()){if(typeof toast==='function')toast('Teks masih kosong.',1);return}
+  
+  let ov=document.getElementById('mxp-ov');
+  if(!ov){
+    ov=document.createElement('div');ov.id='mxp-ov';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(10,30,50,.7);z-index:999;display:none;align-items:center;justify-content:center;padding:20px;overflow:auto';
+    ov.innerHTML=`<div class="mxm-box" style="max-width:760px;width:100%;max-height:85vh;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:10px">
+        <h3 style="margin:0;color:var(--teal)">Pratinjau Hasil Akhir</h3>
+        <button type="button" class="btn ghost sm" onclick="document.getElementById('mxp-ov').style.display='none'">Tutup</button>
+      </div>
+      <div id="mxp-res" class="rich" style="overflow-y:auto;padding-right:8px;font-size:15px;line-height:1.7;flex:1"></div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('mousedown',e=>{if(e.target===ov)ov.style.display='none'});
+  }
+  ov.style.display='flex';
+  const res=document.getElementById('mxp-res');
+  res.innerHTML='<div class="skel"></div><br><div class="skel" style="width:60%"></div>';
+  await mxLoad(); // Pastikan KaTeX dimuat sebelum render
+  res.innerHTML=typeof paras==='function'?paras(isi):typeof mxParas==='function'?mxParas(isi):isi;
+}
 </script>
 <script>
 
