@@ -425,7 +425,7 @@ function vProfil(){const p=Object.assign({},BOOT.profil||{});if(!p.school_name)p
  M(`<h2>Profil Singkat</h2><div style="max-width:640px">`+PF.map(([k,l,t])=>`<label>${l}</label>`+(t?`<textarea id="p_${k}">${esc(p[k])}</textarea>`:`<input id="p_${k}" value="${esc(p[k])}">`)).join('')+`<p><button class="btn" id="psv" onclick="saveProfil()">Simpan</button></p></div>`)}
 async function saveProfil(){$('#psv').disabled=true;const d={};PF.forEach(([k])=>d[k]=$('#p_'+k).value);
  try{const r=await api('profil.save',d);BOOT.profil=r;BOOT.school=r.school_name;renderProfil();toast('Profil tersimpan')}catch(x){fail(x)}$('#psv').disabled=false}
-function renderProfil(){const p=BOOT.profil||{};$('#footName').textContent=BOOT.school;document.title=BOOT.school;
+function renderProfil(){const p=BOOT.profil||{};{const fn=$('#footName');if(fn)fn.textContent=BOOT.school}document.title=BOOT.school;
  const para=t=>String(t||'').split(/\n+/).filter(Boolean).map(x=>`<p>${esc(x)}</p>`).join('');
  $('#profilBox').innerHTML=(p.profil_sekolah?para(p.profil_sekolah):'<p>Profil Singkat belum diisi.</p>')+(p.visi?`<h3>Visi</h3>${para(p.visi)}`:'')+(p.misi?`<h3>Misi</h3>${para(p.misi)}`:'')+((p.alamat||p.kontak)?`<h3>Kontak</h3>${para(p.alamat)}${para(p.kontak)}`:'')}
 
