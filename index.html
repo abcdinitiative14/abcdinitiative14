@@ -366,8 +366,37 @@ function vArtikel(){M('<div class="row" style="justify-content:space-between"><h
 async function formArt(id){let a={Kategori:'Berita',Status:'Draft'};if(id){try{a=await api('artikel.get',{id})}catch(e){return fail(e)}}
   M(`<h2>${id?'Edit':'Tulis'} artikel</h2><div style="max-width:640px"><label>Judul</label><input id="aj" value="${esc(a.Judul)}">
   <label>Kategori</label><select id="ak">${CATS.map(c=>`<option ${c===a.Kategori?'selected':''}>${c}</option>`).join('')}</select>
-  <label>Gambar (opsional)</label><input id="ag" type="file" accept="image
+  <label>Gambar (opsional)</label><input id="ag" type="file"    accept="image/png,image/jpeg,image/webp">${a.Gambar_URL?`<small>Gambar saat ini dipakai jika tidak diganti.</small>`:''}
+  <label>Isi (Enter = paragraf baru)</label><textarea id="ai" style="min-height:240px">${esc(a.Isi)}</textarea>
+  <label>Status</label><select id="as"><option ${a.Status==='Draft'?'selected':''}>Draft</option><option ${a.Status==='Publikasi'?'selected':''}>Publikasi</option></select>
+  <p class="row"><button class="btn" id="asv" onclick="saveArt('${id||''}','${esc(a.Gambar_URL)}')">Simpan</button><button class="btn ghost" onclick="vArtikel()">Batal</button></p></div>`)}
+function readImg(f){return new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,1200/i.width),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.8).split(',')[1])};i.src=URL.createObjectURL(f)})}
+async function saveArt(id,gurl){$('#asv').disabled=true;$('#asv').textContent='Menyimpan...';
+  try{const f=$('#ag').files[0],p={id,Judul:$('#aj').value,Kategori:$('#ak').value,Isi:$('#ai').value,Status:$('#as').value,Gambar_URL:gurl};
+    if(f)p.img={data:await readImg(f)};await api('artikel.save',p);toast('Artikel tersimpan');delete MEM.stats;api('public.list').then(l=>{BOOT.articles=l}).catch(()=>{});vArtikel()}catch(e){fail(e);$('#asv').disabled=false;$('#asv').textContent='Simpan'}}
+async function delArt(id){if(!await ask('Hapus artikel ini?'))return;try{await api('artikel.delete',{id});MEM.art=(MEM.art||[]).filter(a=>a.Artikel_ID!==id);api('public.list').then(l=>{BOOT.articles=l}).catch(()=>{});vArtikel()}catch(e){fail(e)}}
 
+function vBackup(){M(`<h2>Backup</h2><p>Backup menyalin seluruh database ke folder Google Drive <b>SekolahLMS_Data/Backup</b>. Disimpan 14 backup terbaru.</p>
+  <p class="row"><button class="btn" id="bb" onclick="runBackup(false)">Backup sekarang</button><button class="btn ghost" onclick="runBackup(true)">Backup + file Excel</button><button class="btn ghost" onclick="sched()">Aktifkan jadwal harian</button></p><div class="tw" id="bl"><div class="skel"></div></div>`);listB()}
+function listB(){swr('bk','backup.list',{},l=>{if(!$('#bl'))return;$('#bl').innerHTML=l.length?`<table><tr><th>Nama</th><th>Tanggal</th><th></th></tr>`+l.map(b=>`<tr><td><a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.name)}</a></td><td>${fmt(b.tanggal)}</td><td><button class="btn bad sm" onclick="restore('${esc(b.id)}')">Pulihkan</button></td></tr>`).join('')+'</table>':'<div class="empty">Belum ada backup.</div>'})}
+async function runBackup(x){toast('Membuat backup...');try{await api('backup.run',{xlsx:x});toast('Backup selesai');delete MEM.bk;listB()}catch(e){fail(e)}}
+async function sched(){try{toast(await api('backup.schedule'))}catch(e){fail(e)}}
+async function restore(id){if(!await ask('PULIHKAN data dari backup ini? Data sekarang akan DITIMPA (backup pengaman dibuat otomatis).'))return;if(await ask('Ketik PULIHKAN (huruf besar) untuk melanjutkan.',{title:'Konfirmasi pemulihan',input:{placeholder:'PULIHKAN'},ok:'Pulihkan',bad:true})!=='PULIHKAN')return;
+  toast('Memulihkan...');try{const r=await api('backup.restore',{fileId:id});toast('Selesai: '+r.sheetDipulihkan+' sheet dipulihkan');for(const k in MEM)if(k!=='bk')delete MEM[k]}catch(e){fail(e)}}
+
+function vMigrasi(){M(`<h2>Migrasi & Impor</h2><div id="ms" class="empty">Memuat...</div>
+  <p><button class="btn" onclick="runMig()">Jalankan migrasi skema</button></p>
+  <h3 style="margin-top:28px">Impor data dari CSV</h3><p>Buat tabel di Excel dengan baris pertama berisi nama kolom persis seperti di sheet tujuan, simpan sebagai CSV, lalu tempel isinya di sini. Baris dengan ID yang sudah ada dilewati. Untuk Siswa, Guru, Kelas, Mata Pelajaran, Wali Kelas, dan Pengampu, tiap baris diperiksa dengan aturan yang sama seperti formulir (wajib isi, NIS/kode unik, kelas, guru, dan mapel harus ada, tahun ajaran berformat 2025/2026). Baris yang tidak lolos ditolak dan alasannya ditampilkan.</p>
+  <div style="max-width:640px"><label>Sheet tujuan</label><select id="is"></select><label>Isi CSV</label><textarea id="ic" placeholder="Siswa_ID,NIS,Nama_Siswa,Kelas_ID,Tahun_Ajaran"></textarea>
+  <p><button class="btn" onclick="runImp()">Impor</button></p></div>`);
+  api('migrate.status').then(d=>{$('#ms').innerHTML=`Versi skema saat ini: <b>${d.saatIni}</b> (terbaru: ${d.terbaru})`;$('#is').innerHTML=d.sheet.filter(x=>x!=='USERS').map(x=>`<option>${x}</option>`).join('')}).catch(fail)}
+async function runMig(){if(!await ask('Jalankan migrasi? Backup pengaman dibuat otomatis.'))return;try{const r=await api('migrate.run');toast('Selesai. Dijalankan: '+(r.dijalankan.length||'tidak ada yang baru'));vMigrasi()}catch(e){fail(e)}}
+async function runImp(){try{const r=await api('import.csv',{sheet:$('#is').value,csv:$('#ic').value});toast(`Ditambah ${r.ditambah}, dilewati ${r.dilewatiKarenaIDSama}`+(r.ditolak?`, ditolak ${r.ditolak}`:''));
+  let g=$('#ig');if(!g){g=document.createElement('div');g.id='ig';$('#ic').parentNode.appendChild(g)}
+  g.innerHTML=r.galat&&r.galat.length?`<p style="color:var(--bad)"><b>${r.ditolak} baris ditolak:</b></p><ul>${r.galat.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${r.ditolak>r.galat.length?`<p><small>dan ${r.ditolak-r.galat.length} lainnya.</small></p>`:''}`:'';
+  delete MEM.stats}catch(e){fail(e)}}
+
+/* ---------- Fase 2: data master & profil ---------- */
 const TA=()=>{const d=new Date(),a=d.getMonth()>=6?d.getFullYear():d.getFullYear()-1;return a+'/'+(a+1)};
 const ST=['Status','Status','bool'];
 const ENT={
@@ -5233,7 +5262,7 @@ function mskForm(id){
    <label style="margin-top:12px"><input id="msk_fwd" type="checkbox" style="width:auto" ${v.diteruskan?'checked':''}> Sudah diteruskan</label>
    <label for="msk_ket">Keterangan (mis. diteruskan kepada siapa, tindak lanjut, catatan)</label><textarea id="msk_ket" maxlength="1000" style="min-height:96px">${esc(v.keterangan||'')}</textarea>
    <label for="msk_file">Salinan surat (JPG, PNG, atau PDF; maks 4 MB)</label>
-   <div id="msk_fi"></div><input id="msk_file" type="file" accept="image/*,application/pdf" onchange="mskFile(this)">
+   <div id="msk_fi"></div><input id="msk_file" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onchange="mskFile(this)">
    <p class="row" style="margin-top:16px"><button class="btn" id="msk_sv" onclick="mskSimpan()">Simpan</button><button class="btn ghost" onclick="vMasuk()">Batal</button></p></div>`);
   MSK.lokAwal=v.lokasi||'';mskLokasi();mskJenis();mskFileInfo();mskAgenda()}
 // pilihan lokasi = kode lokasi di template kop sekolah tujuan (atau semua sekolah bila Umum); nilai tersimpan yang tidak ada di daftar tetap ditampilkan
@@ -5556,7 +5585,7 @@ function jbxForm(id,seed){const l=MEM.jumbo||[],r=id?l.find(x=>x.Jumbo_ID===id):
   <label for="jb_l">Label kecil (opsional)</label><input id="jb_l" maxlength="40" placeholder="Contoh: Beasiswa, Pengumuman" oninput="jbxPrev()">
   <label for="jb_h">Judul</label><input id="jb_h" maxlength="120" placeholder="Judul besar di jumbotron" oninput="jbxPrev()">
   <label for="jb_p">Teks pendukung (opsional)</label><textarea id="jb_p" maxlength="300" style="min-height:90px" oninput="jbxPrev()"></textarea>
-  <label for="jb_g">Gambar latar (opsional)</label><input id="jb_g" type="file" accept="image/*" onchange="jbxPic(this)">
+  <label for="jb_g">Gambar latar (opsional)</label><input id="jb_g" type="file" accept="image/png,image/jpeg,image/webp" onchange="jbxPic(this)">
   <small>Disarankan foto mendatar, lebar minimal 1200 px. Otomatis diperkecil.</small>
   ${r&&r.Gambar_URL?`<label style="font-weight:400"><input type="checkbox" id="jb_x" style="width:auto" onchange="jbxPrev()"> Hapus gambar saat ini</label>`:''}
   <label for="jb_bt">Teks tombol (opsional)</label><input id="jb_bt" maxlength="40" placeholder="Contoh: Lihat beasiswa" oninput="jbxPrev()">
@@ -7019,7 +7048,7 @@ function ftResize(file){return new Promise((ok,no)=>{
 function vFoto(){if(!ftGuru()){M('<div class="empty">Fitur ini untuk Guru dan Wali Kelas.</div>');return}
   FT.pend='';
   M(`<h2>Foto profil</h2><div style="max-width:420px"><p><small>Foto Anda tampil di kartu mata pelajaran yang dilihat murid. Gambar otomatis dipotong persegi dan diperkecil.</small></p>
-  <div id="fpv" class="fpv">...</div><p style="margin-top:14px"><input id="ff" type="file" accept="image/*" onchange="ftPilih(this.files[0])"></p>
+  <div id="fpv" class="fpv">...</div><p style="margin-top:14px"><input id="ff" type="file" accept="image/png,image/jpeg,image/webp" onchange="ftPilih(this.files[0])"></p>
   <p class="row"><button class="btn" id="fsv" disabled onclick="ftSimpan()">Simpan foto</button><button class="btn ghost" id="fdl" onclick="ftHapus()">Hapus foto</button></p></div>`);
   ftPv(FT.own||'');if(FT.own===null)ftLoadOwn().then(()=>ftPv(FT.own||''))}
 function ftPv(f){const e=$('#fpv');if(!e)return;e.innerHTML=f?`<img class="fpvi" src="${esc(f)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`:esc(ftIni(S.user.name));const d=$('#fdl');if(d)d.style.display=FT.own?'':'none'}
