@@ -363,8 +363,7 @@ async function formArt(id){let a={Kategori:'Berita',Status:'Draft'};if(id){try{a
   M(`<h2>${id?'Edit':'Tulis'} artikel</h2><div style="max-width:640px"><label>Judul</label><input id="aj" value="${esc(a.Judul)}">
   <label>Kategori</label><select id="ak">${CATS.map(c=>`<option ${c===a.Kategori?'selected':''}>${c}</option>`).join('')}</select>
   <label>Gambar (opsional)</label><input id="ag" type="file" accept="image/*">${a.Gambar_URL?`<small>Gambar saat ini dipakai jika tidak diganti.</small>`:''}
-  <label>Isi (Enter = paragraf baru)</label><textarea id="ai" style="min-height:240px">${typeof paras==='function'   ? paras(a.Isi)   : (String(a.Isi||'').indexOf('<')>=0       ? `<div class="rich">${typeof mxRich==='function'?mxRich(typeof rtBersih_==='function'?rtBersih_(a.Isi):a.Isi):(typeof rtBersih_==='function'?rtBersih_(a.Isi):a.Isi)}</div>`       : String(a.Isi||'').split(/
-+/).filter(Boolean).map(x=>`<p>${esc(x)}</p>`).join(''))}</textarea>
+  <label>Isi (Enter = paragraf baru)</label><textarea id="ai" style="min-height:240px">${esc(a.Isi)}</textarea>
   <label>Status</label><select id="as"><option ${a.Status==='Draft'?'selected':''}>Draft</option><option ${a.Status==='Publikasi'?'selected':''}>Publikasi</option></select>
   <p class="row"><button class="btn" id="asv" onclick="saveArt('${id||''}','${esc(a.Gambar_URL)}')">Simpan</button><button class="btn ghost" onclick="vArtikel()">Batal</button></p></div>`)}
 function readImg(f){return new Promise(r=>{const i=new Image();i.onload=()=>{const k=Math.min(1,1200/i.width),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.8).split(',')[1])};i.src=URL.createObjectURL(f)})}
