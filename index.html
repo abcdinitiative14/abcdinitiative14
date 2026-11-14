@@ -330,7 +330,7 @@ function logout(){const tk=S.token;clearSess();go('#/');
   try{fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logout',token:tk,payload:{}}),keepalive:true}).catch(()=>{})}catch(e){}}
 
  
-const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['masuk','Surat masuk'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor']],
+const MENU={Admin:[['ringkasan','Ringkasan'],['pengguna','Pengguna'],['siswa','Siswa'],['guru','Guru'],['kelas','Kelas'],['mapel','Mata Pelajaran'],['wali','Wali Kelas'],['pengampu','Pengampu Mapel'],['artikel','Artikel'],['kampus','Kampus Tujuan'],['lab','Labkom'],['sert','Sertifikat'],['surat','Surat'],['masuk','Surat masuk'],['profil','Profil Sekolah'],['backup','Backup'],['migrasi','Migrasi & Impor'],['urutan-prompt','Urutan Generator Prompt']],
  Guru:[['g-ringkasan','Ringkasan'],['g-mapel','Mata Pelajaran'],['artikel','Artikel'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  'Wali Kelas':[['w-ringkasan','Ringkasan Kelas'],['w-binaan','Kelas Binaan'],['g-mapel','Mata Pelajaran'],['artikel','Artikel'],['g-prompt','Generator Prompt'],['g-lab','Booking Labkom'],['g-sert','Sertifikat']],
  Murid:[['m-ringkasan','Ringkasan'],['m-kelas','Kelas'],['m-lab','Booking Lab'],['m-pid','Pemakaian PID']]};
@@ -2389,7 +2389,7 @@ function vGUjian(){UJ.req=0;UJ.pair='';
 function uLoad(){if(UJ.req)return;UJ.req=1;if(MEM.ug)uDraw();
   api('u.data').then(l=>{MEM.ug=l;uDraw()}).catch(e=>{if(e.message==='SESI_HABIS')return fail(e);if($('#ub')&&!MEM.ug)$('#ub').innerHTML=`<div class="empty">${esc(e.message)}</div>`;else toast(e.message,1)})}
 function uDraw(){const l=MEM.ug&&MEM.ug.filter(u=>!UJ.pair||u.Kelas_ID+'|'+u.Mapel_ID===UJ.pair);if(!MEM.ug||!$('#ub'))return;
-  $('#ub').innerHTML=l.length?`<table><tr><th>Ujian</th><th>Kelas &amp; mapel</th><th>Jadwal</th><th>Soal</th><th>Selesai</th><th></th></tr>`+l.map(u=>`<tr><td><b>${esc(u.Judul)}</b><br>${uTag(u.Status)}${u.Tinjau?' <span class="tag" style="color:var(--teal)">Tinjauan terbuka</span>':''} ${ujSbTag(u)} <small>${esc(u.Jenis)} &middot; ${u.Durasi} menit</small></td><td>${esc(u.Kelas)}<br><small>${esc(u.Mapel)}</small></td><td><small>${esc(u.Mulai_Teks)}<br>s.d. ${esc(u.Selesai_Teks)}</small></td><td>${u.Soal}</td><td>${u.Selesai_N}/${u.Siswa}<br><small>${u.Mulai_N} sudah mulai</small></td><td class="row"><button class="btn sm" onclick="uSoal('${esc(u.Ujian_ID)}')">Soal</button><button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Hasil</button><button class="btn ghost sm" onclick="uTinjau('${esc(u.Ujian_ID)}')">${u.Tinjau?'Tutup tinjauan':'Buka tinjauan'}</button><button class="btn ghost sm" onclick="uForm('${esc(u.Ujian_ID)}')">Edit</button><button class="btn bad sm" onclick="uDel('${esc(u.Ujian_ID)}')">Hapus</button></td></tr>`).join('')+'</table>':'<div class="empty">Belum ada ujian. Klik "Buat ujian".</div>'}
+  $('#ub').innerHTML=l.length?`<table><tr><th>Ujian</th><th>Kelas &amp; mapel</th><th>Jadwal</th><th>Soal</th><th>Selesai</th><th></th></tr>`+l.map(u=>`<tr><td><b>${esc(u.Judul)}</b><br>${uTag(u.Status)}${u.Tinjau?' <span class="tag" style="color:var(--teal)">Tinjauan terbuka</span>':''}${u.Seb?' <span class="tag" style="color:var(--teal)">Wajib SEB</span>':''} ${ujSbTag(u)} <small>${esc(u.Jenis)} &middot; ${u.Durasi} menit</small></td><td>${esc(u.Kelas)}<br><small>${esc(u.Mapel)}</small></td><td><small>${esc(u.Mulai_Teks)}<br>s.d. ${esc(u.Selesai_Teks)}</small></td><td>${u.Soal}</td><td>${u.Selesai_N}/${u.Siswa}<br><small>${u.Mulai_N} sudah mulai</small></td><td class="row"><button class="btn sm" onclick="uSoal('${esc(u.Ujian_ID)}')">Soal</button><button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Hasil</button><button class="btn ghost sm" onclick="uTinjau('${esc(u.Ujian_ID)}')">${u.Tinjau?'Tutup tinjauan':'Buka tinjauan'}</button><button class="btn ghost sm" onclick="uSeb('${esc(u.Ujian_ID)}')">${u.Seb?'Lepas wajib SEB':'Wajib SEB'}</button><button class="btn ghost sm" onclick="uForm('${esc(u.Ujian_ID)}')">Edit</button><button class="btn bad sm" onclick="uDel('${esc(u.Ujian_ID)}')">Hapus</button></td></tr>`).join('')+'</table>':'<div class="empty">Belum ada ujian. Klik "Buat ujian".</div>'}
 
 function uForm(id){const d=MEM.gd,r=id?(MEM.ug||[]).find(x=>x.Ujian_ID===id)||{}:{},lock=r.Mulai_N>0,cur=r.Kelas_ID?r.Kelas_ID+'|'+r.Mapel_ID:GS.pair;UJ.acakSentuh=0;const ac=id?(r.Acak||{soal:false,opsi:false}):{soal:true,opsi:true};
   MT(`<h2>${id?'Edit':'Buat'} ujian</h2><div style="max-width:560px">${lock?'<p><small>Sudah ada murid yang mulai: kelas, mapel, jenis, dan durasi tidak bisa diubah.</small></p>':''}
@@ -2417,13 +2417,14 @@ function ujJenisUbah(){const a=$('#uf_as');if(a&&!a.disabled&&!UJ.acakSentuh)a.c
 async function uDel(id){if(!await ask('Hapus ujian ini beserta semua soalnya?',{title:'Hapus ujian',ok:'Hapus',bad:true}))return;
   try{await api('u.delete',{id});MEM.ug=(MEM.ug||[]).filter(x=>x.Ujian_ID!==id);toast('Ujian dihapus');uDraw()}catch(e){fail(e)}}
 
- 
+/* ---------- GURU / WALI KELAS: bank soal ---------- */
 async function uSoal(id){MT(uSkel);
   try{UJ.cur=await api('u.soal',{id});uSoalDraw()}catch(e){fail(e);uHome()}}
 function uSyncCount(){const c=UJ.cur,x=(MEM.ug||[]).find(q=>q.Ujian_ID===c.ujian.Ujian_ID);if(x)x.Soal=c.soal.length}
 const UJX_JENIS={PG:'Pilihan ganda',PGK:'Pilihan ganda kompleks',BS:'Benar/Salah'};
-
-
+/* ---------- BAHASA ARAB: huruf pilihan dan label Benar/Salah mengikuti bahasa soal ----------
+   Hanya tampilan. Kunci dan jawaban tetap A-E (PG, PGK) dan B/S (Benar/Salah), jadi server, nilai, dan impor tidak berubah.
+   Bila setidaknya separuh pilihan berhuruf Arab: huruf pilihan = \u0623 \u0628 \u062c \u062f \u0647\u0640 dan label = \u0635\u062d / \u062e\u0637\u0623 (atau \u0645\u0637\u0627\u0628\u0642 / \u063a\u064a\u0631 \u0645\u0637\u0627\u0628\u0642). */
 const UJ_AR=/[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff\ufb50-\ufdff\ufe70-\ufeff]/;
 const ujArab=l=>{l=(l||[]).filter(x=>String(x==null?'':x).trim());return l.length>0&&l.filter(x=>UJ_AR.test(x)).length*2>=l.length};
 const UJ_HAR=['\u0623','\u0628','\u062c','\u062f','\u0647\u0640'];
@@ -2435,7 +2436,7 @@ function uSoalDraw(){const c=UJ.cur,u=c.ujian,l=c.soal,lock=c.terkunci,ac=u.Acak
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small><br><small>Acak urutan soal: ${ac.soal?'ya':'tidak'} &middot; Acak pilihan jawaban: ${ac.opsi?'ya':'tidak'}</small></p>
   <p class="row">${uTag(u.Status)}${u.Status!=='Aktif'?`<button class="btn sm" onclick="uStatus('Aktif')">Aktifkan</button>`:`<button class="btn ghost sm" onclick="uStatus('Ditutup')">Tutup ujian</button><button class="btn ghost sm" onclick="uStatus('Draft')">Kembalikan ke Draft</button>`}<button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Lihat hasil</button></p>
   ${ujSbPanel()}${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button><button class="btn ghost" onclick="ujImport()">Impor soal</button></p>`}`+
-  (l.length?`<div class="tw"><table><tr><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(q.Pertanyaan.length>140?q.Pertanyaan.slice(0,140)+'...':q.Pertanyaan):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan')+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
+  (l.length?`<p class="row"><button class="btn ghost sm" onclick="bdBuka()">Simpan soal terpilih ke Bank Soal</button><small>Centang soal di tabel. Soal Benar/Salah, sesi, dan soal bergambar atau beraudio dilewati.</small></p><div id="bd-form"></div><div class="tw"><table><tr><th><input type="checkbox" aria-label="Pilih semua" onclick="bdSemua(this.checked)"></th><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${q.Jenis==='SESI'?'':`<input type="checkbox" class="bd-cb" value="${esc(q.Soal_ID)}" aria-label="Pilih soal ${i+1}">`}</td><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(q.Pertanyaan.length>140?q.Pertanyaan.slice(0,140)+'...':q.Pertanyaan):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan')+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
 async function uStatus(st){const u=UJ.cur.ujian;
   try{const r=await api('u.save',{id:u.Ujian_ID,Kelas_ID:u.Kelas_ID,Mapel_ID:u.Mapel_ID,Judul:u.Judul,Jenis:u.Jenis,Durasi:u.Durasi,Mulai:u.Mulai_Input,Selesai:u.Selesai_Input,Status:st});
     UJ.cur.ujian=r;const l=MEM.ug||[],i=l.findIndex(x=>x.Ujian_ID===r.Ujian_ID);if(i>=0)l[i]=r;toast('Status ujian: '+st);uSoalDraw()}
@@ -2444,7 +2445,7 @@ async function sPindah(id,arah){try{UJ.cur.soal=await api('soal.pindah',{Ujian_I
 async function sDel(id){if(!await ask('Hapus soal ini?',{title:'Hapus soal',ok:'Hapus',bad:true}))return;
   try{UJ.cur.soal=await api('soal.delete',{Ujian_ID:UJ.cur.ujian.Ujian_ID,id});uSyncCount();toast('Soal dihapus');uSoalDraw()}catch(e){fail(e)}}
 
-const UJX_FORM={jenis:'PG',op:['','','','',''],kunci:'',kb:[],label:'BS'};   // keadaan formulir soal (menjaga isian saat bentuk soal diganti)
+const UJX_FORM={jenis:'PG',op:['','','','',''],kunci:'',kb:[],label:'BS'};   
 const UJX_HINT={PG:'Murid memilih satu jawaban. Pilih satu kunci.',PGK:'Murid boleh memilih lebih dari satu jawaban. Centang semua jawaban yang benar.',BS:'Murid menilai setiap pernyataan Benar atau Salah. Isi pernyataan, lalu pilih kunci tiap pernyataan.'};
 function sForm(sid){const c=UJ.cur,l=c.soal,r=sid?l.find(x=>x.Soal_ID===sid)||{}:{},n=l.findIndex(x=>x.Soal_ID===sid),media=[...new Set(l.map(x=>x.Media).filter(Boolean))];
   const op=(r.Opsi||[]).slice();while(op.length<5)op.push('');
@@ -2515,7 +2516,7 @@ const UJX_TPL=[
  ['BS','Diketahui $f(x)=x^2-4$. Tentukan setiap pernyataan berikut.','$f(2)=0\x24','Grafik $f$ terbuka ke bawah.','$f(0)=-4\x24','','','B,S,B','BS']];
 const ujCsvCell=c=>{c=String(c==null?'':c);return /[;"\r\n,\t]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c};
 const ujTplText=d=>UJX_TPL.map(r=>r.map(ujCsvCell).join(d)).join('\r\n');
-// pembaca CSV: pemisah ; , atau tab dikenali otomatis; sel ber-kutip boleh berisi baris baru
+
 function ujCsv(txt){
   txt=String(txt||'').replace(/^\ufeff/,'');
   const first=txt.split(/\r?\n/).find(l=>l.trim())||'',nT=first.split('\t').length-1,nS=first.split(';').length-1,nC=first.split(',').length-1;
@@ -2653,13 +2654,21 @@ function mDraw(d){
 /* ---------- MURID: layar ujian ---------- */
 const exTok=()=>{try{return typeof S!=='undefined'&&S?S.token:''}catch(e){return ''}};   // aman bila S tidak ada di Index.html
 const fmtT=s=>{const h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60,p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(c)};
-async function exStart(id,b){const u=exFind(id);
+async function exStart(id,b){sebPasang();const u=exFind(id);
   if(u&&u.State==='Siap'&&!await ask('Mulai ujian "'+u.Judul+'"? Waktu '+u.Durasi+' menit langsung berjalan dan tidak bisa dihentikan.',{title:'Mulai ujian',ok:'Mulai ujian',no:'Nanti dulu'}))return;
   const t=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Memuat...'}
   try{const d=await api('um.mulai',{id}),t0=performance.now();if(typeof mxWait==='function'&&/\$/.test(JSON.stringify(d.soal)))await mxWait(2500);exStop(false);   // hanya soal berisi rumus yang menunggu KaTeX (maks. 2,5 detik); soal biasa langsung tampil
     Object.assign(EX,{u:d,jw:d.jawaban||{},i:0,dirty:0,busy:0,fin:0,done:0,hold:0,aud:{},audKey:'',res:null,img:{},imgBusy:{},end:t0+d.sisa*1000,tk:exTok()});
     exRun();exDraw()}
   catch(e){fail(e);if(e.message==='SESI_HABIS')return;if(b){b.disabled=false;b.textContent=t}exBack()}}
+/* ---- Wajib Safe Exam Browser: bukti dari API SEB dikirim bersama um.mulai dan um.sesi ---- */
+function sebBukti(){try{const S=window.SafeExamBrowser;if(!S||!S.security||!S.security.configKey)return null;return{u:location.href.split('#')[0],k:String(S.security.configKey)}}catch(e){return null}}
+// dipasang saat murid menekan Mulai (bukan saat halaman dimuat), jadi tidak bergantung urutan muat berkas
+function sebPasang(){try{const S=window.SafeExamBrowser;if(S&&S.security&&typeof S.security.updateKeys==='function')S.security.updateKeys(()=>{})}catch(e){}
+  if(typeof api==='function'&&!api.sebw){const o=api,w=function(a,p){if(a==='um.mulai'||a==='um.sesi'){const b=sebBukti();if(b)p=Object.assign({},p,{seb:b})}return o.call(this,a,p)};w.sebw=1;api=w}}
+async function uSeb(id){const u=(MEM.ug||[]).find(x=>x.Ujian_ID===id);if(!u)return;const on=!u.Seb;
+  if(on&&!await ask('Ujian ini akan WAJIB dikerjakan di Safe Exam Browser. Murid yang membukanya di peramban biasa, HP, atau Chromebook tidak bisa memulai ujian ini. Pastikan murid sudah memasang SEB dan memegang berkas pengaturan (.seb). Pengaturan ini tidak bisa diubah setelah ada murid yang mulai.',{title:'Wajib Safe Exam Browser',ok:'Aktifkan',no:'Batal'}))return;
+  try{const r=await api('u.seb',{id,wajib:on});const i=MEM.ug.findIndex(x=>x.Ujian_ID===id);if(i>=0)MEM.ug[i]=r;toast(on?'Ujian ini sekarang wajib SEB':'Wajib SEB dimatikan');if($('#ub'))uDraw()}catch(e){fail(e)}}
 /* ---- catatan keluar halaman ujian (petunjuk untuk guru, bukan bukti) ---- */
 const EXK={on:0,n:0,d:0,out:0,t0:0,sent:'',iv:0};
 function exkKirim(){const u=EX.u;if(!u||!EXK.on||EX.tk!==exTok())return;const k=EXK.n+'|'+EXK.d;if(k===EXK.sent)return;EXK.sent=k;
@@ -2754,6 +2763,42 @@ function exResult(){const r=EX.res;if(!$('#ex-root')){if($('#dmain'))toast('Wakt
 Object.assign(VIEWS,{'g-ujian':vGUjian,'m-ujian':vMUjian});
 // keluar atau ganti akun: hentikan timer dan buang state ujian milik akun lama (clearSess di Index memanggil LOGOUT_HOOKS)
 (window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{try{exStop(false);EX.u=null;EX.done=0;EX.dirty=0}catch(e){}});
+</script>
+<script>
+
+
+function bdSemua(on){document.querySelectorAll('.bd-cb').forEach(x=>{x.checked=on})}
+function bdPilih(){return Array.from(document.querySelectorAll('.bd-cb')).filter(x=>x.checked).map(x=>x.value)}
+function bdTutup(){const f=$('#bd-form');if(f)f.innerHTML=''}
+function bdBuka(){
+  const ids=bdPilih();if(!ids.length){toast('Centang minimal satu soal di tabel',1);return}
+  const f=$('#bd-form');if(!f)return;
+  f.innerHTML=`<div class="card" style="margin-bottom:12px"><div class="cb"><b>Simpan ${ids.length} soal terpilih ke Bank Soal</b>
+    <label>Bab atau topik</label><input id="bd-bab" maxlength="60" placeholder="Contoh: Aljabar">
+    <label>Tingkat</label><select id="bd-tg"><option>Mudah</option><option selected>Sedang</option><option>Sulit</option></select>
+    <label>Status di bank</label><select id="bd-st"><option value="Aktif" selected>Aktif (bisa diambil ke ujian)</option><option value="Draft">Draft</option></select>
+    <label>Tag (opsional)</label><input id="bd-tag" maxlength="120">
+    <label>Bagikan</label><select id="bd-bg"><option value="Pribadi" selected>Pribadi (hanya saya)</option><option value="Bersama">Bank bersama (guru mapel yang sama bisa menyalin)</option></select>
+    <p class="row"><button class="btn" id="bd-ok" onclick="bdKirim()">Simpan ke bank</button><button class="btn ghost" onclick="bdTutup()">Batal</button></p></div></div>`;
+  const b=$('#bd-bab');if(b&&b.focus)b.focus()}
+async function bdKirim(){
+  const ids=bdPilih(),u=UJ.cur&&UJ.cur.ujian;if(!u||!ids.length){toast('Centang minimal satu soal di tabel',1);return}
+  const bab=String($('#bd-bab').value||'').trim();if(!bab){toast('Isi bab atau topik',1);return}
+  const bt=$('#bd-ok');bt.disabled=true;bt.textContent='Menyimpan...';
+  try{const r=await api('bank.dariUjian',{Ujian_ID:u.Ujian_ID,ids:ids,Bab:bab,Tingkat:$('#bd-tg').value,Status:$('#bd-st').value,Tag:$('#bd-tag').value,Bagikan:$('#bd-bg').value});
+    bdSemua(false);bdLapor(r)}
+  catch(e){bt.disabled=false;bt.textContent='Simpan ke bank';fail(e)}}
+function bdLapor(r){
+  const d=r.dilewati||{},l=[];
+  if(d.bs)l.push(d.bs+' soal Benar/Salah');if(d.sesi)l.push(d.sesi+' baris sesi');if(d.lampiran)l.push(d.lampiran+' soal bergambar atau beraudio');
+  if(d.duplikat)l.push(d.duplikat+' soal sudah ada di bank');if(d.batas)l.push(d.batas+' soal melebihi batas '+r.batasBab+' soal per bab');
+  (d.tidakValid||[]).forEach(x=>l.push('soal no '+x.no+': '+x.alasan));
+  const f=$('#bd-form');
+  if(f)f.innerHTML=`<div class="card" style="margin-bottom:12px"><div class="cb"><b>${r.ditambah} soal masuk ke Bank Soal</b>
+    <p><small>Bab ${esc(r.bab)} &middot; status ${esc(r.status)} &middot; ${r.bagikan==='Bersama'?'dibagikan ke bank bersama':'pribadi'}</small></p>
+    ${l.length?`<p><small>Tidak ikut: ${l.map(esc).join('; ')}.</small></p>`:''}
+    <p><button class="btn ghost sm" onclick="bdTutup()">Tutup</button></p></div></div>`;
+  toast(r.ditambah+' soal masuk ke Bank Soal',r.ditambah?0:1)}
 </script>
 <script>
 
@@ -6323,8 +6368,12 @@ Object.assign(VIEWS,{'g-bank':vGBank,'g-bmateri':vGBMateri});
 <script>
 
 
-const GPR={tab:'media',opsi:null,form:{media:null,game:null,rpp:null},hasil:{media:null,game:null,rpp:null},sentuh:{style:false,jumlah:false,durasi:false},busy:false};
-const GPR_LABEL={media:'Media',game:'Game',rpp:'Rencana'};   
+const GPR={tab:'',opsi:null,form:{media:null,game:null,rpp:null,ppt:null},hasil:{media:null,game:null,rpp:null,ppt:null},sentuh:{style:false,jumlah:false,durasi:false,slide:false},busy:false};
+const GPR_LABEL={media:'Media',game:'Game',rpp:'Rencana',ppt:'PowerPoint'};
+ 
+const GPR_TAB_BAWAAN=[['media','Media interaktif'],['game','Game edukasi'],['rpp','Rencana'],['ppt','PowerPoint'],['riwayat','Riwayat']];
+const gprUrutan=()=>GPR.opsi&&Array.isArray(GPR.opsi.urutanTab)&&GPR.opsi.urutanTab.length?GPR.opsi.urutanTab.map(x=>[x.id,x.label]):GPR_TAB_BAWAAN;
+const GPR_BENTUK_DESK={kerangka:'Teks per slide yang tinggal disalin ke PowerPoint, Canva, atau Google Slides. Paling pasti berhasil di semua AI.',berkas:'AI membuat berkas .pptx yang bisa diunduh. Hanya jika AI yang Anda pakai mendukung (misalnya Claude).',html:'Slide yang dibuka di browser (satu file .html), tanpa PowerPoint.'};
 const gprOk=()=>!!(S&&S.user&&(S.user.role==='Guru'||S.user.role==='Wali Kelas'));
 const gprOpts=(arr)=>arr.map(x=>`<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('');
 /* bagian unggah PDF (dipakai semua tab yang punya bahan materi) */
@@ -6336,16 +6385,19 @@ function gprBlokPdf(){return `<label for="gpr-pdf">Atau ambil teks dari berkas P
 
 function vGPrompt(){
   if(!gprOk()){M('<h2>Generator Prompt</h2><div class="empty">Menu ini hanya untuk guru dan wali kelas.</div>');return}
-  M('<h2 style="margin:0 0 4px">Generator Prompt</h2><p style="margin:0 0 14px;color:#5b7083">Susun prompt siap salin untuk membuat media interaktif, game edukasi, atau rencana pembelajaran di AI pilihan Anda (Claude, ChatGPT, Gemini, dan lainnya). Jangan memasukkan nama siswa, nilai, atau data pribadi lain: prompt akan ditempel ke AI di luar sekolah.</p><div class="tabs" id="gpr-t" role="tablist"></div><div id="gpr-b"></div>');
+  M('<h2 style="margin:0 0 4px">Generator Prompt</h2><p style="margin:0 0 14px;color:#5b7083">Susun prompt siap salin untuk membuat media interaktif, game edukasi, rencana pembelajaran, atau presentasi PowerPoint di AI pilihan Anda (Claude, ChatGPT, Gemini, dan lainnya). Jangan memasukkan nama siswa, nilai, atau data pribadi lain: prompt akan ditempel ke AI di luar sekolah.</p><div class="tabs" id="gpr-t" role="tablist"></div><div id="gpr-b"></div>');
   gprTabs();gprBody(true);
-  if(!GPR.opsi)api('prompt.opsi').then(o=>{GPR.opsi=o;gprBody()}).catch(fail);
+  if(!GPR.opsi)api('prompt.opsi').then(o=>{GPR.opsi=o;gprAwal()}).catch(e=>{gprAwal();fail(e)});
   swr('gd','g.data',{},()=>gprBody());
 }
+ 
+function gprAwal(){if(!GPR.tab)GPR.tab=gprUrutan()[0][0];gprTabs();gprBody(true)}
 function gprTabs(){const e=$('#gpr-t');if(!e)return;
-  e.innerHTML=[['media','Media interaktif'],['game','Game edukasi'],['rpp','Rencana'],['riwayat','Riwayat']].map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===GPR.tab}" class="${k===GPR.tab?'on':''}" onclick="gprTab('${k}')">${l}</a>`).join('')}
+  e.innerHTML=gprUrutan().map(([k,l])=>`<a href="javascript:void 0" role="tab" aria-selected="${k===GPR.tab}" class="${k===GPR.tab?'on':''}" onclick="gprTab('${k}')">${l}</a>`).join('')}
 function gprTab(t){gprSimpan();GPR.tab=t;gprTabs();gprBody(true)}
 function gprBody(force){
   const b=$('#gpr-b');if(!b||!gprOk())return;
+  if(!GPR.tab){if(!$('#gpr-form')&&!$('#gpr-rw'))b.innerHTML='<div class="skel"></div><br><div class="skel"></div>';return}
   if(GPR.tab==='riwayat'){if(force||!$('#gpr-rw'))gprRiwayat();return}
   if(!GPR.opsi||!MEM.gd){if(!$('#gpr-form'))b.innerHTML='<div class="skel"></div><br><div class="skel"></div>';return}
   if(!MEM.gd.ampu.length){b.innerHTML='<div class="empty">Anda belum tercatat sebagai pengampu mata pelajaran di kelas mana pun, sehingga generator belum bisa dipakai. Minta admin menambahkan Anda di menu Pengampu Mapel.</div>';return}
@@ -6356,14 +6408,14 @@ function gprBody(force){
 function gprForm(){
   const j=GPR.tab,o=GPR.opsi,d=MEM.gd,b=$('#gpr-b');if(!b)return;
   const pairs=d.ampu.map(a=>`<option value="${esc(a.Kelas_ID+'|'+a.Mapel_ID)}">${esc(a.Mapel)} - ${esc(a.Kelas)}</option>`).join('');
-  const khusus=j==='rpp'?'':j==='media'
+  const khusus=(j==='rpp'||j==='ppt')?'':j==='media'
     ?`<div class="gpr-grid"><div><label for="gpr-jm">Jenis media</label><select id="gpr-jm">${gprOpts(o.jenisMedia)}</select></div>
        <div><label for="gpr-in">Tingkat interaktivitas</label><select id="gpr-in">${gprOpts(o.interaktivitas)}</select></div></div>`
     :`<div class="gpr-grid"><div><label for="gpr-gn">Genre game</label><select id="gpr-gn">${gprOpts(o.genre)}</select></div>
        <div><label for="gpr-tm">Tema visual</label><select id="gpr-tm">${gprOpts(o.temaVisual)}</select></div>
        <div><label for="gpr-jml">Jumlah level/soal (3-20)</label><input id="gpr-jml" type="number" min="3" max="20" inputmode="numeric" oninput="GPR.sentuh.jumlah=true"></div></div>
        <label>Mekanik permainan</label><div class="gpr-cks" id="gpr-mk">${o.mekanik.map(x=>`<label class="gpr-ck"><input type="checkbox" value="${esc(x.id)}">${esc(x.label)}</label>`).join('')}</div>`;
-  b.innerHTML=j==='rpp'?gprFormRpp(o,pairs):`<div id="gpr-form">
+  b.innerHTML=j==='rpp'?gprFormRpp(o,pairs):j==='ppt'?gprFormPpt(o,pairs):`<div id="gpr-form">
    <div class="gpr-sec"><h3>1. Kelas dan materi</h3>
      <label for="gpr-pair">Mata pelajaran dan kelas</label><select id="gpr-pair" onchange="gprPair()">${pairs}</select>
      <p class="gpr-hint" id="gpr-hint"></p>
@@ -6385,6 +6437,41 @@ function gprForm(){
   </div>`;
   gprIsi(GPR.form[j]||{});gprPair();gprHitung();if(j==='rpp')gprDplBatas();
   if(GPR.hasil[j])gprHasil(GPR.hasil[j],'#gpr-hasil',{ulang:true,noscroll:true,jenis:j});
+}
+
+/* ---------- Formulir PowerPoint (id lama dipakai ulang agar gprPair, gprMatUbah, gprHitung, gprPdf tetap bekerja) ---------- */
+function gprFormPpt(o,pairs){
+  const mn=(o.batas&&o.batas.slideMin)||5,mx=(o.batas&&o.batas.slideMax)||25,bw=o.elemenBawaanPpt||[];
+  const cks=o.elemenPpt.map(x=>`<label class="gpr-ck"><input type="checkbox" value="${esc(x.id)}"${bw.indexOf(x.id)>=0?' checked':''}>${esc(x.label)}</label>`).join('');
+  return `<div id="gpr-form">
+   <div class="gpr-sec"><h3>1. Kelas dan materi</h3>
+     <label for="gpr-pair">Mata pelajaran dan kelas</label><select id="gpr-pair" onchange="gprPair()">${pairs}</select>
+     <p class="gpr-hint" id="gpr-hint"></p>
+     <label for="gpr-mat">Sumber materi</label><select id="gpr-mat" onchange="gprMatUbah()"></select>
+     <p class="gpr-hint" id="gpr-matnote"></p>
+     <div id="gpr-matbox"><label for="gpr-materi">Tempel materi di sini</label><textarea id="gpr-materi" dir="auto" maxlength="12000" oninput="gprHitung()" placeholder="Tempel teks materi (minimal sekitar 80 karakter, maksimal 12.000)."></textarea><p class="gpr-hint" id="gpr-mc"></p>
+       ${gprBlokPdf()}</div>
+     <label for="gpr-topik">Topik <span id="gpr-topikopt" style="font-weight:400;color:#5b7083"></span></label><input id="gpr-topik" maxlength="120" placeholder="Contoh: Fotosintesis">
+   </div>
+   <div class="gpr-sec"><h3>2. Isi presentasi</h3>
+     <div class="gpr-grid">
+       <div><label for="gpr-tj">Tujuan presentasi</label><select id="gpr-tj">${o.tujuanPpt.map(x=>`<option value="${esc(x.id)}"${x.id==='konsep'?' selected':''}>${esc(x.label)}</option>`).join('')}</select></div>
+       <div><label for="gpr-sl">Jumlah slide (${mn}-${mx})</label><input id="gpr-sl" type="number" min="${mn}" max="${mx}" value="10" inputmode="numeric" oninput="GPR.sentuh.slide=true"></div>
+       <div><label for="gpr-rs">Rasio layar</label><select id="gpr-rs">${gprOpts(o.rasio)}</select></div>
+     </div>
+     <label>Elemen tambahan</label><div class="gpr-cks" id="gpr-el">${cks}</div>
+   </div>
+   <div class="gpr-sec"><h3>3. Tampilan slide (style)</h3><div class="gpr-styles" id="gpr-styles" role="radiogroup" aria-label="Style tampilan">${o.style.map(x=>`<label class="gpr-st"><input type="radio" name="gpr-style" value="${esc(x.id)}" onchange="GPR.sentuh.style=true"><span><b>${esc(x.label)}</b><small>${esc(x.desk)}</small></span></label>`).join('')}</div></div>
+   <div class="gpr-sec"><h3>4. Bentuk keluaran dan pengaturan lain</h3>
+     <label>Bentuk keluaran</label>
+     <div class="gpr-styles" id="gpr-bt" role="radiogroup" aria-label="Bentuk keluaran">${o.bentukPpt.map(x=>`<label class="gpr-st"><input type="radio" name="gpr-bt" value="${esc(x.id)}"${x.id==='kerangka'?' checked':''}><span><b>${esc(x.label)}</b><small>${esc(GPR_BENTUK_DESK[x.id]||'')}</small></span></label>`).join('')}</div>
+     <div class="gpr-grid"><div><label for="gpr-bh">Bahasa</label><select id="gpr-bh">${gprOpts(o.bahasa)}</select></div>
+       <div><label for="gpr-ai">AI tujuan (opsional)</label><select id="gpr-ai"><option value="">Tidak ditentukan</option>${gprOpts(o.aiTujuan)}</select></div></div>
+     <label for="gpr-rq">Permintaan khusus (opsional)</label><textarea id="gpr-rq" maxlength="500" style="min-height:90px" oninput="gprHitung()" placeholder="Contoh: gunakan banyak contoh dari kehidupan sehari-hari."></textarea><p class="gpr-hint" id="gpr-rc"></p>
+   </div>
+   <p><button class="btn" id="gpr-btn" onclick="gprBuat()">Buat prompt</button></p>
+   <div id="gpr-hasil"></div>
+  </div>`;
 }
 /* ---------- Formulir Rencana Pembelajaran (id lama dipakai ulang agar gprPair, gprMatUbah, gprHitung, gprPdf tetap bekerja) ---------- */
 function gprFormRpp(o,pairs){
@@ -6450,6 +6537,7 @@ function gprPair(){
     if(!GPR.sentuh.style){const r=document.querySelector('input[name=gpr-style][value="'+jk.styleDefault+'"]');if(r)r.checked=true}
     if(GPR.tab==='game'&&!GPR.sentuh.jumlah&&$('#gpr-jml'))$('#gpr-jml').value=jk.jumlah;
     if(GPR.tab==='rpp'&&!GPR.sentuh.durasi&&$('#gpr-dr')&&jk.durasi)$('#gpr-dr').value=jk.durasi;
+    if(GPR.tab==='ppt'&&!GPR.sentuh.slide&&$('#gpr-sl')&&jk.slide)$('#gpr-sl').value=jk.slide;
   }
   if(!document.querySelector('input[name=gpr-style]:checked')){const r=document.querySelector('input[name=gpr-style]');if(r)r.checked=true}
   gprMatUbah();
@@ -6467,13 +6555,17 @@ function gprBaca(){const v=id=>{const e=$('#'+id);return e?e.value:''},st=docume
     mekanik:[...document.querySelectorAll('#gpr-mk input:checked')].map(x=>x.value),style:st?st.value:'',bahasa:v('gpr-bh'),aiTujuan:v('gpr-ai'),request:v('gpr-rq'),
     sekolah:v('gpr-sek'),semester:v('gpr-sem'),cp:v('gpr-cp'),pertemuan:v('gpr-pt'),durasi:v('gpr-dr'),praktik:v('gpr-pk'),detail:v('gpr-dt'),
     dpl:[...document.querySelectorAll('#gpr-dpl input:checked')].map(x=>x.value),prinsip:[...document.querySelectorAll('#gpr-pr input:checked')].map(x=>x.value),
-    opsional:[...document.querySelectorAll('#gpr-op input:checked')].map(x=>x.value),lampiran:!!($('#gpr-lp')&&$('#gpr-lp').checked)}}
+    opsional:[...document.querySelectorAll('#gpr-op input:checked')].map(x=>x.value),lampiran:!!($('#gpr-lp')&&$('#gpr-lp').checked),
+    tujuan:v('gpr-tj'),slide:v('gpr-sl'),rasio:v('gpr-rs'),elemen:[...document.querySelectorAll('#gpr-el input:checked')].map(x=>x.value),
+    bentuk:(document.querySelector('input[name=gpr-bt]:checked')||{}).value||''}}
 function gprIsi(f){const s=(id,val)=>{const e=$('#'+id);if(e&&val!==undefined&&val!==null&&val!=='')e.value=val};
   s('gpr-pair',f.pair);s('gpr-topik',f.topik);s('gpr-materi',f.materi);s('gpr-jm',f.jenisMedia);s('gpr-in',f.interaktivitas);s('gpr-gn',f.genre);s('gpr-tm',f.temaVisual);s('gpr-jml',f.jumlah);s('gpr-bh',f.bahasa);s('gpr-ai',f.aiTujuan);s('gpr-rq',f.request);
   if(f.mekanik)document.querySelectorAll('#gpr-mk input').forEach(x=>x.checked=f.mekanik.indexOf(x.value)>=0);
   s('gpr-sek',f.sekolah);s('gpr-sem',f.semester);s('gpr-cp',f.cp);s('gpr-pt',f.pertemuan);s('gpr-dr',f.durasi);s('gpr-pk',f.praktik);s('gpr-dt',f.detail);
   const cb=(sel,arr)=>{if(Array.isArray(arr))document.querySelectorAll(sel).forEach(x=>x.checked=arr.indexOf(x.value)>=0)};
-  cb('#gpr-dpl input',f.dpl);cb('#gpr-pr input',f.prinsip);cb('#gpr-op input',f.opsional);
+  cb('#gpr-dpl input',f.dpl);cb('#gpr-pr input',f.prinsip);cb('#gpr-op input',f.opsional);cb('#gpr-el input',f.elemen);
+  s('gpr-tj',f.tujuan);s('gpr-sl',f.slide);s('gpr-rs',f.rasio);
+  if(f.bentuk){const rb=document.querySelector('input[name=gpr-bt][value="'+f.bentuk+'"]');if(rb)rb.checked=true}
   if(typeof f.lampiran==='boolean'&&$('#gpr-lp'))$('#gpr-lp').checked=f.lampiran;
   if(f.style){const r=document.querySelector('input[name=gpr-style][value="'+f.style+'"]');if(r)r.checked=true}
   
@@ -6522,7 +6614,8 @@ async function gprBuat(){
   const p={jenis:j,Kelas_ID:k,Mapel_ID:m,Materi_ID:f.mat,materi:f.mat?'':f.materi,topik:f.topik,style:f.style,bahasa:f.bahasa,aiTujuan:f.aiTujuan,request:f.request};
   if(j==='media'){p.jenisMedia=f.jenisMedia;p.interaktivitas=f.interaktivitas}
   else if(j==='game'){p.genre=f.genre;p.mekanik=f.mekanik;p.temaVisual=f.temaVisual;p.jumlah=f.jumlah}
-  else{delete p.style;Object.assign(p,{sekolah:f.sekolah,semester:f.semester,cp:f.cp,pertemuan:f.pertemuan,durasi:f.durasi,dpl:f.dpl,praktik:f.praktik,prinsip:f.prinsip,opsional:f.opsional,detail:f.detail,lampiran:f.lampiran})}
+  else if(j==='rpp'){delete p.style;Object.assign(p,{sekolah:f.sekolah,semester:f.semester,cp:f.cp,pertemuan:f.pertemuan,durasi:f.durasi,dpl:f.dpl,praktik:f.praktik,prinsip:f.prinsip,opsional:f.opsional,detail:f.detail,lampiran:f.lampiran})}
+  else if(j==='ppt'){p.tujuan=f.tujuan;p.jumlah=f.slide;p.elemen=f.elemen;p.rasio=f.rasio;p.bentuk=f.bentuk}
   GPR.busy=true;const btn=$('#gpr-btn');if(btn){btn.disabled=true;btn.textContent='Menyusun prompt...'}
   try{const r=await api('prompt.buat',p);r.fav=false;GPR.hasil[j]=r;GPR.form[j]=f;if(GPR.tab===j&&$('#gpr-hasil'))gprHasil(r,'#gpr-hasil',{ulang:true,jenis:j})}
   catch(e){fail(e)}
@@ -6536,10 +6629,21 @@ function gprHasil(r,target,o){o=o||{};const t=$(target);if(!t)return;
     <label for="gpr-out">Anda boleh menyunting teks ini sebelum disalin</label><textarea id="gpr-out" spellcheck="false"></textarea>
     <p class="gpr-hint" id="gpr-info"></p>
     <div class="gpr-act"><button class="btn" onclick="gprSalin()">Salin prompt</button>${o.ulang?'<button class="btn ghost" onclick="gprBuat()">Buat ulang</button>':''}<button class="btn ghost" id="gpr-fav" onclick="gprFav('${esc(r.riwayatId)}')">${r.fav?'Favorit (hapus)':'Simpan favorit'}</button>${o.tutup?'<button class="btn ghost" onclick="gprTutup()">Tutup</button>':''}</div>
-    ${o.jenis==='rpp'?'<p class="gpr-hint">Langkah berikutnya: tempel prompt ke Claude, ChatGPT, atau Gemini. Salin hasilnya ke Word atau Google Docs dan simpan sebagai PDF (Unduh atau Cetak &gt; PDF). PDF itu bisa diunggah di tab Media atau Game untuk dijadikan bahan.</p>':'<p class="gpr-hint">Langkah berikutnya: tempel prompt ke Claude, ChatGPT, atau Gemini. Simpan kode HTML yang dihasilkan sebagai file berakhiran .html, lalu buka di browser.</p>'}</div>`;
+    ${gprPetunjuk(o.jenis,r.bentuk)}</div>`;
   const ta=$('#gpr-out');ta.value=r.prompt||'';
   $('#gpr-info').textContent=(r.jenjang?'Jenjang: '+r.jenjang+'. ':'')+ta.value.length.toLocaleString('id-ID')+' karakter.';
   if(!o.noscroll){try{$('#gpr-res').scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}}
+}
+/* petunjuk langkah berikutnya menurut jenis (dan bentuk keluaran untuk PowerPoint) */
+function gprPetunjuk(jenis,bentuk){
+  const p=t=>'<p class="gpr-hint">Langkah berikutnya: '+t+'</p>';
+  if(jenis==='rpp')return p('tempel prompt ke Claude, ChatGPT, atau Gemini. Salin hasilnya ke Word atau Google Docs dan simpan sebagai PDF (Unduh atau Cetak &gt; PDF). PDF itu bisa diunggah di tab Media atau Game untuk dijadikan bahan.');
+  if(jenis==='ppt'){
+    if(bentuk==='berkas')return p('tempel prompt ke AI yang dapat membuat berkas (misalnya Claude), lalu unduh berkas .pptx yang dihasilkan. Jika AI tidak bisa membuat berkas, ia akan memberi kerangka per slide.');
+    if(bentuk==='html')return p('tempel prompt ke AI, simpan kode HTML yang dihasilkan sebagai file berakhiran .html, lalu buka di browser.');
+    return p('tempel prompt ke Claude, ChatGPT, atau Gemini. Salin kerangka per slide ke PowerPoint, Canva, atau Google Slides, lalu rapikan tampilannya.');
+  }
+  return p('tempel prompt ke Claude, ChatGPT, atau Gemini. Simpan kode HTML yang dihasilkan sebagai file berakhiran .html, lalu buka di browser.');
 }
 async function gprSalin(){
   const ta=$('#gpr-out');if(!ta||!ta.value){toast('Belum ada prompt untuk disalin',1);return}
@@ -6556,7 +6660,7 @@ async function gprFav(id){
   catch(e){fail(e)}
 }
 
- 
+/* ---------- Riwayat ---------- */
 async function gprRiwayat(){
   const b=$('#gpr-b');if(!b)return;
   b.innerHTML='<div id="gpr-rw"><div class="skel"></div></div><div id="gpr-buka"></div>';
@@ -6568,7 +6672,7 @@ async function gprRiwayat(){
   catch(e){const x=$('#gpr-rw');if(x)x.innerHTML='';fail(e)}
 }
 async function gprBuka(id){
-  try{const r=await api('prompt.ambil',{id});if(!$('#gpr-buka'))return;gprHasil({prompt:r.Prompt,riwayatId:r.Riwayat_ID,peringatan:[],fav:r.Favorit},'#gpr-buka',{tutup:true,jenis:r.Jenis})}
+  try{const r=await api('prompt.ambil',{id});if(!$('#gpr-buka'))return;gprHasil({prompt:r.Prompt,riwayatId:r.Riwayat_ID,peringatan:[],fav:r.Favorit,bentuk:(r.Input||{}).bentuk},'#gpr-buka',{tutup:true,jenis:r.Jenis})}
   catch(e){fail(e)}
 }
 function gprTutup(){const e=$('#gpr-buka');if(e)e.innerHTML=''}
@@ -6578,9 +6682,80 @@ async function gprHapus(id){
   catch(e){fail(e)}
 }
 
- 
-(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR.tab='media';GPR.opsi=null;GPR.form={media:null,game:null,rpp:null};GPR.hasil={media:null,game:null,rpp:null};GPR.sentuh={style:false,jumlah:false,durasi:false};GPR.busy=false;GPR._mat='';GPR._pdfTeks='';GPR._arabTerbalik=false});
+/* dipanggil Index.html saat keluar/ganti akun: kosongkan semua data di memori */
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR.tab='';GPR.opsi=null;GPR.form={media:null,game:null,rpp:null,ppt:null};GPR.hasil={media:null,game:null,rpp:null,ppt:null};GPR.sentuh={style:false,jumlah:false,durasi:false,slide:false};GPR.busy=false;GPR._mat='';GPR._pdfTeks='';GPR._arabTerbalik=false});
 Object.assign(VIEWS,{'g-prompt':vGPrompt});
+</script>
+<style>
+ 
+.gpr-adm-g{display:grid;gap:12px;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media(max-width:560px){.gpr-adm-g{grid-template-columns:minmax(0,1fr)}}
+.gpr-adm-c{border:1px solid var(--line);border-radius:var(--r);background:#fff;padding:14px 16px}
+.gpr-adm-c h3{font-size:16px;margin:0 0 4px}
+.gpr-adm-rw{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.gpr-adm-rw:first-child{border-top:0}
+.gpr-adm-n{width:24px;height:24px;border-radius:50%;background:var(--mist);font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.gpr-adm-nm{flex:1;font-size:14px}
+.gpr-adm-pertama{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--mist);color:var(--ink);flex:none}
+.gpr-adm-ib{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;flex:none;font-size:16px}
+.gpr-adm-pv{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+.gpr-adm-pill{padding:6px 14px;border:1px solid var(--line);border-radius:99px;font-size:14px}
+.gpr-adm-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.gpr-adm-st{font-size:13px;color:#5b7083;margin:10px 0 0;min-height:20px}
+</style>
+<script>
+
+
+const GPR_ADM={tab:[],bawaan:[],urutan:[],tersimpan:[],pesan:'',busy:false};
+const gprAdmOk=()=>!!(S&&S.user&&S.user.role==='Admin');
+
+function vUrutanPrompt(){
+  if(!gprAdmOk()){M('<h2>Urutan Generator Prompt</h2><div class="empty">Menu ini hanya untuk admin.</div>');return}
+  M('<h2 style="margin:0 0 4px">Urutan Generator Prompt</h2><p style="margin:0 0 14px;color:#5b7083">Atur urutan tab Generator Prompt yang dilihat guru dan wali kelas. Tab paling atas terbuka lebih dulu.</p><div id="gpr-adm-b"><div class="skel"></div></div>');
+  api('prompt.urutan.baca').then(r=>{
+    GPR_ADM.tab=r.tab;GPR_ADM.bawaan=r.bawaan.slice();GPR_ADM.urutan=r.urutan.slice();GPR_ADM.tersimpan=r.urutan.slice();GPR_ADM.pesan='Belum ada perubahan.';gprAdmGambar()
+  }).catch(fail);
+}
+function gprAdmNama(id){const t=GPR_ADM.tab.find(x=>x.id===id);return t?t.label:id}
+
+function gprAdmGambar(fokus){
+  const b=$('#gpr-adm-b');if(!b)return;
+  const o=GPR_ADM.urutan,sama=o.join()===GPR_ADM.tersimpan.join();
+  b.innerHTML=`<div class="gpr-adm-g">
+   <div class="gpr-adm-c"><h3>Urutan tab</h3><p class="gpr-hint" style="margin:0 0 8px">Gunakan tombol panah untuk memindahkan tab.</p>
+    <div id="gpr-adm-lst">${o.map((id,i)=>`<div class="gpr-adm-rw" id="gpr-adm-rw-${esc(id)}"><span class="gpr-adm-n">${i+1}</span><span class="gpr-adm-nm">${esc(gprAdmNama(id))}</span>${i===0?'<span class="gpr-adm-pertama">Terbuka pertama</span>':''}<button type="button" class="btn ghost sm gpr-adm-ib" id="gpr-adm-up-${esc(id)}" aria-label="Naikkan ${esc(gprAdmNama(id))}" onclick="gprAdmGeser(${i},-1)">&#8593;</button><button type="button" class="btn ghost sm gpr-adm-ib" id="gpr-adm-dn-${esc(id)}" aria-label="Turunkan ${esc(gprAdmNama(id))}" onclick="gprAdmGeser(${i},1)">&#8595;</button></div>`).join('')}</div>
+    <div class="row" style="gap:8px;margin-top:12px"><button type="button" class="btn" id="gpr-adm-sv" onclick="gprAdmSimpan()">Simpan urutan</button><button type="button" class="btn ghost" id="gpr-adm-rs" onclick="gprAdmBawaan()">Kembalikan bawaan</button></div>
+    <p class="gpr-adm-st" id="gpr-adm-st" role="status" aria-live="polite">${esc(GPR_ADM.pesan)}</p></div>
+   <div class="gpr-adm-c"><h3>Tampilan guru</h3>
+    <div class="gpr-adm-pv" id="gpr-adm-pv">${o.map((id,i)=>`<span class="gpr-adm-pill${i===0?' on':''}">${esc(gprAdmNama(id))}</span>`).join('')}</div>
+    <p class="gpr-hint" style="margin:0">Terbuka pertama kali: <span id="gpr-adm-fr" style="font-weight:600;color:var(--ink)">${esc(gprAdmNama(o[0]))}</span></p>
+    <p class="gpr-hint" style="margin:8px 0 0" id="gpr-adm-sm">${sama?'Sama dengan yang tersimpan.':'Belum disimpan. Guru masih melihat urutan lama.'}</p></div>
+  </div>`;
+  if(fokus){const e=$('#'+fokus);if(e)e.focus()}
+}
+function gprAdmGeser(i,arah){
+  const o=GPR_ADM.urutan,j=i+arah,id=o[i];
+  if(j<0){GPR_ADM.pesan='Sudah di posisi paling atas.';gprAdmGambar('gpr-adm-up-'+id);return}
+  if(j>=o.length){GPR_ADM.pesan='Sudah di posisi paling bawah.';gprAdmGambar('gpr-adm-dn-'+id);return}
+  [o[i],o[j]]=[o[j],o[i]];GPR_ADM.pesan='Perubahan belum disimpan.';gprAdmGambar((arah<0?'gpr-adm-up-':'gpr-adm-dn-')+id);
+}
+async function gprAdmSimpan(){
+  if(GPR_ADM.busy||!gprAdmOk())return;
+  GPR_ADM.busy=true;const b=$('#gpr-adm-sv');if(b){b.disabled=true;b.textContent='Menyimpan...'}
+  try{
+    const r=await api('prompt.urutan.simpan',{urutan:GPR_ADM.urutan});
+    GPR_ADM.urutan=r.urutan.slice();GPR_ADM.tersimpan=r.urutan.slice();GPR_ADM.pesan='Tersimpan. Berlaku saat guru memuat ulang halaman.';
+    toast('Urutan tab disimpan');gprAdmGambar('gpr-adm-sv');
+  }catch(e){fail(e)}
+  finally{GPR_ADM.busy=false;const b2=$('#gpr-adm-sv');if(b2){b2.disabled=false;b2.textContent='Simpan urutan'}}
+}
+function gprAdmBawaan(){
+  GPR_ADM.urutan=GPR_ADM.bawaan.slice();GPR_ADM.pesan='Dikembalikan ke urutan bawaan. Klik Simpan urutan untuk menerapkan.';gprAdmGambar('gpr-adm-rs');
+}
+
+/* dipanggil Index.html saat keluar/ganti akun */
+(window.LOGOUT_HOOKS=window.LOGOUT_HOOKS||[]).push(()=>{GPR_ADM.tab=[];GPR_ADM.bawaan=[];GPR_ADM.urutan=[];GPR_ADM.tersimpan=[];GPR_ADM.pesan='';GPR_ADM.busy=false});
+Object.assign(VIEWS,{'urutan-prompt':vUrutanPrompt});
 </script>
 <style>
  
@@ -6719,7 +6894,7 @@ const DS_P={
  tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'};
 const DS_K={ringkasan:'grid',pengguna:'users',siswa:'user',guru:'user',kelas:'kelas',mapel:'book',wali:'users',pengampu:'clip',artikel:'edit',kampus:'globe',lab:'monitor',sert:'award',profil:'cap',bobot:'chart',backup:'db',migrasi:'upload',cek:'shield',log:'list',panduan:'help',
  'g-kelas':'cap','g-tugas':'clip','g-ujian':'edit','g-lab':'monitor','g-nilai':'chart','g-sert':'award','w-siswa':'users','w-rekap':'chart','w-rapor':'file','m-materi':'book','m-tugas':'clip','m-ujian':'edit','m-kelas':'kelas','m-ringkasan':'grid','m-lab':'monitor','m-pid':'monitor',
- 'w-ringkasan':'grid','g-ringkasan':'grid','w-nilai':'chart','w-binaan':'kelas','g-mapel':'kelas','g-prompt':'sparkle'};
+ 'w-ringkasan':'grid','g-ringkasan':'grid','w-nilai':'chart','w-binaan':'kelas','g-mapel':'kelas','g-prompt':'sparkle','urutan-prompt':'sparkle'};
 const dsI=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${DS_P[n]||DS_P.dot}</svg>`;
 const dsK=k=>dsI(DS_K[k]||'dot');
 
@@ -6736,6 +6911,7 @@ const DS_GROUPS=[
  {id:'rapor',l:'Rapor',i:'file',k:['wali','pengampu','bobot']},
  {id:'global',l:'Global',i:'globe',k:['kampus']},
  {id:'sert',l:'Sertifikat',i:'award',k:['sert']},
+ {id:'promptadm',l:'Generator Prompt',i:'sparkle',k:['urutan-prompt']},
  {id:'maint',l:'Maintenance',i:'tool',k:['backup','migrasi','cek','log']},
  {id:'bantuan',l:'Panduan',i:'help',k:['panduan']}];
 
