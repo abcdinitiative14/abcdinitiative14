@@ -1030,6 +1030,7 @@ async function ytHapus(e) {
 </script>
 <style>
 .rtw.mini .rtmode,.rtw.mini select[data-s="kol"],.rtw.mini select[data-s="blok"],.rtw.mini .rtb[data-c="gambar"],.rtw.mini .rtb[data-c="galeri"]{display:none!important}
+.rtw.mini2 .rtmode,.rtw.mini2 select[data-s="kol"],.rtw.mini2 select[data-s="blok"],.rtw.mini2 .rtb[data-c="galeri"]{display:none!important}
 .kb-grup{margin:0 0 8px}.kb-grup label{display:flex;gap:6px;align-items:center;font-weight:400;margin:0 0 4px}
  
 .kgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
@@ -1066,11 +1067,11 @@ button.kchip{border:1px solid var(--line);cursor:pointer;font:inherit;font-size:
 const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const lnk=u=>okUrl(u)?`<a href="${esc(okUrl(u))}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">Buka tautan</a>`:'';
-const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${typeof mxRich==='function'?mxRich(h):h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
-const gEditor=id=>{if(typeof rtMount!=='function')return;try{rtMount(id,1);if(typeof rtGrid==='function')rtGrid()}catch(e){console.warn(e)}};
+const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
+const gEditor=(id,gbr)=>{if(typeof rtMount!=='function')return;try{const w=rtMount(id,0);if(w)w.classList.add(gbr?'mini2':'mini')}catch(e){console.warn(e)}};   // gbr=true: tombol sisipkan gambar ikut tampil (dipakai jawaban murid)
 const NOAMPU='<div class="empty">Anda belum ditetapkan sebagai pengampu mapel. Minta admin mengisinya di menu Pengampu Mapel.</div>';
 
-// seperti swr, tetapi menampilkan pesan galat di layar (mis. kelas murid belum diatur)
+
 async function swr3(key,a,sel,render){
   const R=d=>{if($(sel))try{render(d)}catch(x){console.warn(x)}};
   if(MEM[key])R(MEM[key]);
@@ -1152,7 +1153,7 @@ async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi
     if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" class="mx-f" value="${esc(r.Judul)}">
-  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mi" class="mx-f" style="min-height:200px">${esc(r.Isi)}</textarea>
+  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
   <label>Tautan dokumen / video (opsional)</label><input id="ml" placeholder="https://..." value="${esc(r.File_URL)}">
   <small>Tempel tautan Google Drive atau YouTube. Atur akses tautan agar siswa dapat membukanya.</small>
   <label for="mst">Status</label><select id="mst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
@@ -1169,9 +1170,17 @@ async function gDelMateri(id,dariDetail){if(!await ask('Hapus materi ini?',{titl
   try{await api('materi.delete',{id});MEM.gd.materi=MEM.gd.materi.filter(x=>x.Materi_ID!==id);toast('Materi dihapus');if(dariDetail){GS.tab='materi';gHome()}else gDraw()}catch(e){fail(e)}}
 
 /* ---------- berkas tugas (unggah ke Drive sekolah; dipakai juga oleh KelasUI) ---------- */
-const TG_OK=['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','ppt','pptx','txt','csv'],TG_ACC='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv';
 const gBerkasLama=r=>{if(!r.Lampiran)return '';const row=(cls,n,nama)=>`<label><input type="checkbox" ${cls}${n?' data-n="'+n+'"':''} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return `<div class="kb-grup">${row('id="mhf"',0,r.Lampiran)}${(r.Lain||[]).map((nm,i)=>row('class="mhl"',i+1,nm)).join('')}</div>`};
-const tgB64=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=()=>no(new Error('Gagal membaca berkas'));r.readAsDataURL(f)});
+const gBerkasLama=r=>{if(!r.Lampiran)return '';const row=(cls,n,nama)=>`<label><input type="checkbox" ${cls}${n?' data-n="'+n+'"':''} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return `<div class="kb-grup">${row('id="mhf"',0,r.Lampiran)}${(r.Lain||[]).map((nm,i)=>row('class="mhl"',i+1,nm)).join('')}</div>`};
+async function tgBacaSemua(inp){const a=[];let tot=0;
+  for(const f of (inp&&inp.files?[].slice.call(inp.files):[])){
+    const ext=(f.name.split('.').pop()||'').toLowerCase();
+    if(TG_OK.indexOf(ext)<0)throw new Error('Jenis berkas tidak diizinkan ('+f.name+'). Gunakan PDF, JPG, PNG, Word, Excel, PowerPoint, TXT, atau CSV.');
+    if(f.size>8*1024*1024)throw new Error(f.name+' terlalu besar. Maksimal 8 MB per berkas (berkas ini '+(f.size/1048576).toFixed(1)+' MB)');
+    if(!f.size)throw new Error(f.name+' kosong');
+    tot+=f.size;if(tot>20*1024*1024)throw new Error('Total ukuran berkas sekali simpan maksimal 20 MB. Simpan sebagian dulu, lalu edit materi untuk menambah berkas lain.');
+    a.push({data:await tgB64(f),name:f.name})}
+  return a}
 async function tgBacaSemua(inp){const a=[];let tot=0;
   for(const f of (inp&&inp.files?[].slice.call(inp.files):[])){
     const ext=(f.name.split('.').pop()||'').toLowerCase();
@@ -1247,7 +1256,7 @@ function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}
   <input id="tg" type="file" accept="image/jpeg,image/png"><small style="display:block;opacity:.75">JPG atau PNG. Diperkecil otomatis. Tampil di halaman tugas murid. ${r.Gambar?'Memilih gambar baru akan menggantikan yang lama.':''}</small>
   <label>Lampiran tugas (opsional)</label>${r.Lampiran?`<p style="margin:0 0 6px">Lampiran sekarang: <b>${esc(r.Lampiran)}</b> &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="thl" style="width:auto;margin-right:5px">hapus lampiran</label></p>`:''}
   <input id="tf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${r.Lampiran?'Memilih berkas baru akan menggantikan lampiran lama.':''}</small>
-  <p class="row"><button class="btn" id="tsv" data-id="${esc(id||'')}" onclick="gSaveTugas(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Batal</button></p></div>`);gEditor('td');
+  <p class="row"><button class="btn" id="tsv" data-id="${esc(id||'')}" onclick="gSaveTugas(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Batal</button></p></div>`);gEditor('td');gEditor('td');
   if(r.Gambar)tgGambar(id,$('#tgp'))}
 async function gSaveTugas(id){const [k,m]=GS.pair.split('|'),b=$('#tsv');b.disabled=true;b.textContent='Menyimpan...';
   try{const fl=await tgBaca($('#tf')),gm=await tgBacaGambar($('#tg'));if(fl||gm)b.textContent='Mengunggah...';
@@ -1271,7 +1280,7 @@ function gDrawKumpul(){const r=GS.cur,t=r.tugas,tg=kcTenggat(t.Tenggat),belum=r.
   <h3 style="margin:24px 0 8px">Jawaban murid</h3>
   <div class="tw"><table><tr><th>Siswa</th><th>Jawaban</th><th>Waktu kirim</th><th>Nilai (0-100)</th><th>Umpan balik</th><th></th></tr>`+
   (r.daftar.length?r.daftar.map((x,i)=>x.Pengumpulan_ID?
-    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:380px">${paras(x.Jawaban)}${x.File_Nama?`${x.Jawaban?'<br>':''}${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
+    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:420px">${paras(x.Jawaban)}${x.File_Nama?`${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}${(x.File_Lain||[]).map((n,i)=>tgBtn('jawaban',x.Pengumpulan_ID+'#'+(i+1),n)).join('')}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
     `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>');if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));tgAuto()}
 async function gNilai(i){const x=GS.cur.daftar[i],b=$('#sb_'+i);b.disabled=true;b.textContent='...';
   try{const r=await api('tugas.nilai',{id:x.Pengumpulan_ID,Nilai:$('#n_'+i).value,Umpan_Balik:$('#u_'+i).value});
@@ -3171,7 +3180,7 @@ async function mkSwr(key,a,p,sel,render){
   catch(e){if(e.message==='SESI_HABIS')return fail(e);if($(sel)&&!MEM[key])$(sel).innerHTML=`<div class="empty">${esc(e.message)}</div>`;else toast(e.message,1)}
 }
 
-function vMKelas(){exStop(true);MK.t='';if(SUBR)mkDetail(SUBR);else mkList()}
+function vMKelas(){exStop(true);MK.t='';window.RT_UP='';if(SUBR)mkDetail(SUBR);else mkList()}
 
 /* ---------- Halaman 1: kartu per mapel ---------- */
 function mkList(force){MK.id='';MK.tab='materi';MK.t='';
@@ -3205,7 +3214,7 @@ function mkRender(d){
 function mkBody(d){const el=$('#mkb');if(!el)return;
   if(MK.tab==='materi')
     el.innerHTML=d.materi.length?'<div class="kgrid">'+d.materi.map(x=>{const sn=kcPotong(x.Isi,170),tl=okUrl(x.File_URL);
-      return `<div class="kc" role="button" tabindex="0" data-id="${esc(x.Materi_ID)}" onclick="mkMateri(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">${esc(x.Guru)} &middot; ${esc(x.Tanggal_Teks)}</div>${sn?`<div class="kcs">${esc(sn)}</div>`:''}<div class="kcf">${x.Lampiran?kcChip('&#128206; '+esc(x.Lampiran)):''}${tl?kcChip('&#128279; Tautan'):''}${!sn&&!x.Lampiran&&!tl?kcChip('Tanpa isi'):''}</div><div class="kcgo">Buka materi &rarr;</div></div>`}).join('')+'</div>':'<div class="empty">Belum ada materi untuk mata pelajaran ini.</div>';
+      return `<div class="kc" role="button" tabindex="0" data-id="${esc(x.Materi_ID)}" onclick="mkMateri(this.dataset.id)" onkeydown="kcKey(event,this)"><h3>${esc(x.Judul)}</h3><div class="kcm">${esc(x.Guru)} &middot; ${esc(x.Tanggal_Teks)}</div>${sn?`<div class="kcs">${esc(sn)}</div>`:''}<div class="kcf">${x.Lampiran?kcChip('&#128206; '+esc(x.Lampiran)+((x.Lain||[]).length?' +'+x.Lain.length:'')):''}${tl?kcChip('&#128279; Tautan'):''}${!sn&&!x.Lampiran&&!tl?kcChip('Tanpa isi'):''}</div><div class="kcgo">Buka materi &rarr;</div></div>`}).join('')+'</div>':'<div class="empty">Belum ada materi untuk mata pelajaran ini.</div>';
   else if(MK.tab==='tugas')
     el.innerHTML=d.tugas.length?'<div class="kgrid">'+d.tugas.map(t=>{const tg=kcTenggat(t.Tenggat),sel=t.Status==='Dinilai'?'var(--teal)':t.Status==='Terkumpul'?'#c79100':'var(--bad)';
       return `<div class="kc" role="button" tabindex="0" style="--kc:${sel}" data-id="${esc(t.Tugas_ID)}" onclick="mkTugas(this.dataset.id)" onkeydown="kcKey(event,this)">${stBadge(t)}<h3>${esc(t.Judul)}</h3><div class="kcm">${esc(t.Guru||'')} &middot; Tenggat: ${esc(t.Tenggat_Teks||'-')}</div><div class="kcs">${esc(kcPotong(t.Deskripsi,200))}</div>
@@ -3225,7 +3234,7 @@ function mkMateri(id){const d=MEM[mkKey()],x=d&&d.materi.find(m=>m.Materi_ID===i
   $('#mkb').innerHTML=`<p><button class="btn ghost sm" onclick="mkTutup()">&larr; Semua materi</button></p>
   <div class="kd-head"><span class="kcm">${esc(x.Guru)} &middot; ${esc(x.Tanggal_Teks)}</span><h2>${esc(x.Judul)}</h2></div>
   <div class="kd ${ada?'dua':''}"><div class="kp"><h3>PEMBAHASAN</h3>${paras(x.Isi)||'<small style="color:#5b7083">Tidak ada teks pembahasan. Isi materi ada di berkas atau tautan.</small>'}</div>
-  ${ada?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${x.Lampiran?tgBerkas('materi',x.Materi_ID,x.Lampiran)+'<div id="mkx"></div>':''}${tl?`<div style="margin-top:8px">${typeof lnkPv==='function'?lnkPv(x.File_URL):lnk(x.File_URL)}</div>`:''}</div>`:''}</div>`;
+  ${ada?`<div class="kp"><h3>BERKAS &amp; TAUTAN</h3>${x.Lampiran?tgBerkas('materi',x.Materi_ID,x.Lampiran)+(x.Lain||[]).map((n,i)=>tgBerkas('materi',x.Materi_ID+'#'+(i+1),n)).join(''):''}${tl?`<div style="margin-top:8px">${typeof lnkPv==='function'?lnkPv(x.File_URL):lnk(x.File_URL)}</div>`:''}</div>`:''}</div>`;
   mkGulir();tgAuto();
   if(x.Lampiran)api('materi.berkas',{id}).then(l=>{const e=$('#mkx');if(!e||MK.m!==id||!l.length)return;e.innerHTML=l.map(b=>tgBerkas('materi',id+'#'+b.n,b.nama)).join('');tgAuto()}).catch(()=>{})}   // berkas tambahan dari guru dimuat terpisah
 
@@ -3233,7 +3242,7 @@ function mkMateri(id){const d=MEM[mkKey()],x=d&&d.materi.find(m=>m.Materi_ID===i
 function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);if(!t||!$('#mkb'))return;MK.t=id;MK.m='';
   const tb=$('#mkt');if(tb)tb.style.display='none';
   const lock=t.Status==='Dinilai',late=t.Tenggat&&new Date(t.Tenggat)<new Date(),dr=mkDraft()[id],isi=!lock&&dr!==undefined?dr:t.Jawaban,tg=kcTenggat(t.Tenggat);
-  $('#mkb').innerHTML=`<p><button class="btn ghost sm" onclick="mkTutup()">&larr; Semua tugas</button></p>
+  $('#mkb').innerHTML=`<p><button class="btn ghost sm" onclick="mkTutup(1)">&larr; Semua tugas</button></p>
   <div class="kd-head"><span class="kcm">${esc(t.Guru)}</span><h2>${esc(t.Judul)}</h2><div class="kcf">${stBadge(t)}${kcChip('Tenggat: '+esc(t.Tenggat_Teks||'tanpa tenggat'))}${t.Status==='Belum'&&t.Tenggat?kcChip(tg.t,tg.c):''}</div></div>
   <div class="kd dua"><div>
    <div class="kp"><h3>PETUNJUK TUGAS</h3>${paras(t.Deskripsi)}${t.Gambar?'<div id="tgp" style="margin:10px 0 0"></div>':''}</div>
@@ -3244,7 +3253,10 @@ function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);
   ${lock?`<div class="stat"><b>${esc(t.Nilai)}</b>Nilai dari guru${t.Umpan_Balik?`<br><br>${typeof mxInline==='function'?mxInline(t.Umpan_Balik):esc(t.Umpan_Balik)}`:''}</div>`:''}
 ${lock
   ?`<label>Jawaban teks</label><div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--mist);margin-bottom:8px">${paras(isi)||'<small style="color:#5b7083">Tidak ada jawaban teks.</small>'}</div>`
-  :`<label for="mkj">Jawaban teks</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mkj" class="mx-f" oninput="mkDraft()[MK.t]=this.value" style="min-height:180px">${esc(isi)}</textarea>${dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}`}
+  :`<label for="mkj">Jawaban teks</label>${lock?`<div class="kp" style="margin:0 0 10px">${paras(isi)||'<small>(tidak ada jawaban teks)</small>'}</div>`:`<textarea id="mkj" style="min-height:180px">${esc(isi)}</textarea>`}${!lock&&dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}
+  ${lock?(t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}${(t.File_Lain||[]).map((n,i)=>tgBerkas('jawaban',t.Pengumpulan_ID+'#'+(i+1),n)).join('')}`:''):`<label for="mkf">Berkas jawaban (opsional)</label>
+  ${(()=>{const row=(attr,nama)=>`<label style="display:flex;gap:6px;align-items:center;font-weight:400;margin:0 0 4px"><input type="checkbox" ${attr} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return t.File_Nama?`<div style="margin:0 0 8px">${row('id="mkhf"',t.File_Nama)}${(t.File_Lain||[]).map((n,i)=>row('class="mkhl" data-n="'+(i+1)+'"',n)).join('')}</div>`:''})()}
+  <input id="mkf" type="file" multiple accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB per berkas, sampai 5 berkas, total 20 MB sekali kirim (tahan Ctrl atau Shift untuk memilih beberapa). Berkas baru ditambahkan ke yang sudah terkirim.</small>`}`}
   ${lock?(t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}`:''):`<label for="mkf">Berkas jawaban (opsional)</label>
   ${t.File_Nama?`<div style="margin:0 0 6px">${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}<label style="display:inline;font-weight:400"><input type="checkbox" id="mkhf" style="width:auto;margin-right:5px">hapus berkas ini</label></div>`:''}
   <input id="mkf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${t.File_Nama?'Memilih berkas baru akan menggantikan berkas lama.':'Boleh dikirim bersama jawaban teks atau sendiri.'}</small>`}
@@ -3256,12 +3268,13 @@ ${lock
   const rte=$('#mkb .rte');
   if(rte)rte.addEventListener('input',()=>{if(MK.t===id)mkDraft()[id]=$('#mkj').value});
 }
-if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));mkGulir();tgAuto()}
-
-function mkTutup(){MK.t='';MK.m='';const tb=$('#mkt');if(tb)tb.style.display='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
+if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));
+  if(!lock){window.RT_UP='tugas.gambar';if(typeof gEditor==='function'){gEditor('mkj',true);const ed=document.querySelector('#mkb .rte');if(ed)ed.addEventListener('input',()=>{const ta=$('#mkj');if(ta)mkDraft()[MK.t]=ta.value})}}   // editor teks dengan gambar; draf ikut tersimpan
+  mkGulir();tgAuto()}
+function mkTutup(simpan){const ta=$('#mkj');if(simpan&&MK.t&&ta&&!ta.disabled)mkDraft()[MK.t]=ta.value;window.RT_UP='';MK.t='';MK.m='';const tb=$('#mkt');if(tb)tb.style.display='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
 async function mkKirim(id){const b=$('#mkk'),jw=$('#mkj').value,key=mkKey(),t0=b.textContent;b.disabled=true;b.textContent='Memeriksa...';
-  try{const fl=await tgBaca($('#mkf'));b.textContent=fl?'Mengunggah... (jangan tutup halaman)':'Mengirim...';
-    const r=await api('m.kumpul',{id,Jawaban:jw,file:fl,hapusFile:!!($('#mkhf')&&$('#mkhf').checked)}),d=MEM[key];
+  try{const fl=await tgBacaSemua($('#mkf'));b.textContent=fl.length?'Mengunggah... (jangan tutup halaman)':'Mengirim...';
+    const r=await api('m.kumpul',{id,Jawaban:jw,files:fl,hapusFile:!!($('#mkhf')&&$('#mkhf').checked),hapusLain:[].slice.call(document.querySelectorAll('.mkhl:checked')).map(e=>+e.dataset.n)}),d=MEM[key];
     if(d){const i=d.tugas.findIndex(x=>x.Tugas_ID===r.Tugas_ID);if(i>=0)d.tugas[i]=r}
     delete MEM.mkl;delete MEM.mr;if(typeof mrBadgeDraw==='function')mrBadgeDraw(true);   // daftar kartu, Ringkasan, dan lencana menu ikut disegarkan
     delete mkDraft()[id];toast('Jawaban terkirim');if($('#mkb')&&mkKey()===key)mkTutup()}
@@ -7550,7 +7563,7 @@ async function rtUnggah(file){
   const g=c.getContext('2d');let d='';
   if(file.type==='image/png'){g.drawImage(im,0,0,c.width,c.height);d=c.toDataURL('image/png');if(d.length>2800000)d=''}
   if(!d){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);d=c.toDataURL('image/jpeg',.85)}
-  const r=await api('artikel.gambar',{data:d.split(',')[1]});return r.url}
+  const r=await api(window.RT_UP||'artikel.gambar',{data:d.split(',')[1]});return r.url}   // RT_UP: rute unggah lain untuk non-admin (murid: tugas.gambar)
 /* jendela pilih gambar: unggah dari komputer dan/atau tempel alamat. Hasil: daftar alamat https */
 function rtDialogGambar(multi){return new Promise(res=>{
   const bg=document.createElement('div');bg.className='rtdlg-bg';
