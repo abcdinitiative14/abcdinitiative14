@@ -1171,7 +1171,6 @@ async function gDelMateri(id,dariDetail){if(!await ask('Hapus materi ini?',{titl
 
 /* ---------- berkas tugas (unggah ke Drive sekolah; dipakai juga oleh KelasUI) ---------- */
 const gBerkasLama=r=>{if(!r.Lampiran)return '';const row=(cls,n,nama)=>`<label><input type="checkbox" ${cls}${n?' data-n="'+n+'"':''} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return `<div class="kb-grup">${row('id="mhf"',0,r.Lampiran)}${(r.Lain||[]).map((nm,i)=>row('class="mhl"',i+1,nm)).join('')}</div>`};
-const gBerkasLama=r=>{if(!r.Lampiran)return '';const row=(cls,n,nama)=>`<label><input type="checkbox" ${cls}${n?' data-n="'+n+'"':''} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return `<div class="kb-grup">${row('id="mhf"',0,r.Lampiran)}${(r.Lain||[]).map((nm,i)=>row('class="mhl"',i+1,nm)).join('')}</div>`};
 async function tgBacaSemua(inp){const a=[];let tot=0;
   for(const f of (inp&&inp.files?[].slice.call(inp.files):[])){
     const ext=(f.name.split('.').pop()||'').toLowerCase();
@@ -1256,7 +1255,7 @@ function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}
   <input id="tg" type="file" accept="image/jpeg,image/png"><small style="display:block;opacity:.75">JPG atau PNG. Diperkecil otomatis. Tampil di halaman tugas murid. ${r.Gambar?'Memilih gambar baru akan menggantikan yang lama.':''}</small>
   <label>Lampiran tugas (opsional)</label>${r.Lampiran?`<p style="margin:0 0 6px">Lampiran sekarang: <b>${esc(r.Lampiran)}</b> &nbsp; <label style="display:inline;font-weight:400"><input type="checkbox" id="thl" style="width:auto;margin-right:5px">hapus lampiran</label></p>`:''}
   <input id="tf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${r.Lampiran?'Memilih berkas baru akan menggantikan lampiran lama.':''}</small>
-  <p class="row"><button class="btn" id="tsv" data-id="${esc(id||'')}" onclick="gSaveTugas(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Batal</button></p></div>`);gEditor('td');gEditor('td');
+  <p class="row"><button class="btn" id="tsv" data-id="${esc(id||'')}" onclick="gSaveTugas(this.dataset.id)">Simpan</button><button class="btn ghost" onclick="GS.tab='tugas';gHome()">Batal</button></p></div>`);gEditor('td');
   if(r.Gambar)tgGambar(id,$('#tgp'))}
 async function gSaveTugas(id){const [k,m]=GS.pair.split('|'),b=$('#tsv');b.disabled=true;b.textContent='Menyimpan...';
   try{const fl=await tgBaca($('#tf')),gm=await tgBacaGambar($('#tg'));if(fl||gm)b.textContent='Mengunggah...';
@@ -1277,11 +1276,31 @@ function gDrawKumpul(){const r=GS.cur,t=r.tugas,tg=kcTenggat(t.Tenggat),belum=r.
    <div class="row"><button class="btn${t.Status==='Draft'?'':' ghost'} sm" onclick="gStatus('tugas','${esc(t.Tugas_ID)}',1)">${t.Status==='Draft'?'Aktifkan sekarang':'Jadikan draft'}</button><button class="btn ghost sm" data-id="${esc(t.Tugas_ID)}" onclick="gFormTugas(this.dataset.id)">Edit</button><button class="btn bad sm" data-id="${esc(t.Tugas_ID)}" onclick="gDelTugas(this.dataset.id,1)">Hapus</button></div></div>
   <div class="kd ${t.Lampiran?'dua':''}"><div class="kp"><h3>PETUNJUK TUGAS</h3>${paras(t.Deskripsi)}${t.Gambar?'<div id="tgp" style="margin-top:10px"></div>':''}</div>
   ${t.Lampiran?`<div class="kp"><h3>LAMPIRAN TUGAS</h3>${tgBerkas('lampiran',t.Tugas_ID,t.Lampiran)}</div>`:''}</div>
-  <h3 style="margin:24px 0 8px">Jawaban murid</h3>
+  <h3 style="margin:24px 0 8px">Jawaban murid</h3>${r.daftar.some(x=>x.Pengumpulan_ID)?`<p><button class="btn sm" onclick="gTinjau(${r.daftar.findIndex(x=>x.Pengumpulan_ID)})">Tinjau jawaban satu per satu</button></p>`:''}
   <div class="tw"><table><tr><th>Siswa</th><th>Jawaban</th><th>Waktu kirim</th><th>Nilai (0-100)</th><th>Umpan balik</th><th></th></tr>`+
   (r.daftar.length?r.daftar.map((x,i)=>x.Pengumpulan_ID?
-    `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:420px">${paras(x.Jawaban)}${x.File_Nama?`${tgBtn('jawaban',x.Pengumpulan_ID,x.File_Nama)}${(x.File_Lain||[]).map((n,i)=>tgBtn('jawaban',x.Pengumpulan_ID+'#'+(i+1),n)).join('')}`:''}</td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
+    `<tr><td><a href="javascript:void 0" onclick="gTinjau(${i})"><b>${esc(x.Nama_Siswa)}</b></a><br><small>${esc(x.NIS)}</small></td><td style="min-width:220px;max-width:420px"><small>${esc(kcPotong(x.Jawaban,140))||'(tanpa teks)'}</small>${x.File_Nama?`<br>${kcChip('&#128206; '+(1+(x.File_Lain||[]).length)+' berkas')}`:''}<br><button class="btn ghost sm" onclick="gTinjau(${i})">Buka halaman jawaban</button></td><td>${esc(x.Waktu_Teks)}${x.Terlambat?'<br><small style="color:var(--bad)">terlambat</small>':''}</td><td><input id="n_${i}" type="number" min="0" max="100" step="any" style="width:90px" value="${esc(x.Nilai)}"></td><td><textarea id="u_${i}" style="min-height:60px;min-width:180px">${esc(x.Umpan_Balik)}</textarea></td><td><button class="btn sm" id="sb_${i}" onclick="gNilai(${i})">Simpan</button></td></tr>`:
     `<tr><td>${esc(x.Nama_Siswa)}<br><small>${esc(x.NIS)}</small></td><td colspan="5"><small style="color:#5b7083">Belum mengumpulkan</small></td></tr>`).join(''):'<tr><td colspan="6">Belum ada siswa di kelas ini.</td></tr>')+'</table></div>');if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));tgAuto()}
+/* halaman tinjau satu jawaban murid (seperti halaman tugas murid): jawaban + berkas, nilai, umpan balik, pindah antar murid */
+function gTinjau(i){const r=GS.cur,t=r.tugas,x=r.daftar[i];if(!x||!x.Pengumpulan_ID)return;
+  const ids=r.daftar.map((y,k)=>y.Pengumpulan_ID?k:-1).filter(k=>k>=0),pos=ids.indexOf(i),prev=ids[pos-1],next=ids[pos+1],
+    brk=x.File_Nama?tgBerkas('jawaban',x.Pengumpulan_ID,x.File_Nama)+(x.File_Lain||[]).map((n,j)=>tgBerkas('jawaban',x.Pengumpulan_ID+'#'+(j+1),n)).join(''):'';
+  MT(`<p><button class="btn ghost sm" onclick="gDrawKumpul()">&larr; Daftar jawaban</button></p>
+  <div class="kd-head"><span class="kcm">${esc(pairLabel())} &middot; ${esc(t.Judul)} &middot; Jawaban ${pos+1} dari ${ids.length}</span><h2>${esc(x.Nama_Siswa)}</h2>
+   <div class="kcf">${kcChip('NIS '+esc(x.NIS))}${kcChip('Dikirim: '+esc(x.Waktu_Teks))}${x.Terlambat?kcChip('Terlambat','w'):''}${x.Nilai!==''?kcChip('Nilai '+esc(x.Nilai),'ok'):kcChip('Belum dinilai','w')}</div></div>
+  <details style="margin:0 0 12px"><summary><small>Lihat petunjuk tugas</small></summary><div class="kp" style="margin-top:6px">${paras(t.Deskripsi)}</div></details>
+  <div class="kd ${brk?'dua':''}"><div class="kp"><h3>JAWABAN MURID</h3><div style="min-height:30vh;min-height:30dvh;line-height:1.6;font-size:16px;overflow-wrap:anywhere">${paras(x.Jawaban)||'<small style="color:#5b7083">(tanpa teks; lihat berkas)</small>'}</div></div>
+  ${brk?`<div class="kp"><h3>BERKAS JAWABAN</h3>${brk}</div>`:''}</div>
+  <div class="kp" style="margin-top:16px;max-width:820px"><h3>PENILAIAN</h3><label>Nilai (0-100)</label><input id="bn" type="number" min="0" max="100" step="any" style="width:110px" value="${esc(x.Nilai)}">
+  <label>Umpan balik untuk murid</label><textarea id="bu" style="min-height:140px">${esc(x.Umpan_Balik)}</textarea>
+  <p class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:0"><button class="btn ghost" ${prev===undefined?'disabled':`onclick="gTinjau(${prev})"`}>&larr; Sebelumnya</button><button class="btn" id="bsv" onclick="gTinjauSimpan(${i},${next===undefined?-1:next})">${next===undefined?'Simpan':'Simpan &amp; berikutnya'}</button><button class="btn ghost" ${next===undefined?'disabled':`onclick="gTinjau(${next})"`}>Berikutnya &rarr;</button></p></div>`);tgAuto()}
+async function gTinjauSimpan(i,next){const x=GS.cur.daftar[i],b=$('#bsv'),t0=b.innerHTML;b.disabled=true;b.textContent='Menyimpan...';
+  try{const r=await api('tugas.nilai',{id:x.Pengumpulan_ID,Nilai:$('#bn').value,Umpan_Balik:$('#bu').value});
+    x.Nilai=r.Nilai;x.Umpan_Balik=r.Umpan_Balik;toast('Nilai tersimpan');
+    const t=MEM.gd&&MEM.gd.tugas.find(q=>q.Tugas_ID===GS.cur.tugas.Tugas_ID);
+    if(t)t.Dinilai=GS.cur.daftar.filter(y=>y.Pengumpulan_ID&&y.Nilai!=='').length;
+    if(next>=0)gTinjau(next);else gTinjau(i)}
+  catch(e){fail(e);b.disabled=false;b.innerHTML=t0}}
 async function gNilai(i){const x=GS.cur.daftar[i],b=$('#sb_'+i);b.disabled=true;b.textContent='...';
   try{const r=await api('tugas.nilai',{id:x.Pengumpulan_ID,Nilai:$('#n_'+i).value,Umpan_Balik:$('#u_'+i).value});
     x.Nilai=r.Nilai;x.Umpan_Balik=r.Umpan_Balik;toast('Nilai tersimpan');
