@@ -1170,16 +1170,9 @@ async function gDelMateri(id,dariDetail){if(!await ask('Hapus materi ini?',{titl
   try{await api('materi.delete',{id});MEM.gd.materi=MEM.gd.materi.filter(x=>x.Materi_ID!==id);toast('Materi dihapus');if(dariDetail){GS.tab='materi';gHome()}else gDraw()}catch(e){fail(e)}}
 
 /* ---------- berkas tugas (unggah ke Drive sekolah; dipakai juga oleh KelasUI) ---------- */
+const TG_OK=['pdf','jpg','jpeg','png','doc','docx','xls','xlsx','ppt','pptx','txt','csv'],TG_ACC='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv';
 const gBerkasLama=r=>{if(!r.Lampiran)return '';const row=(cls,n,nama)=>`<label><input type="checkbox" ${cls}${n?' data-n="'+n+'"':''} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return `<div class="kb-grup">${row('id="mhf"',0,r.Lampiran)}${(r.Lain||[]).map((nm,i)=>row('class="mhl"',i+1,nm)).join('')}</div>`};
-async function tgBacaSemua(inp){const a=[];let tot=0;
-  for(const f of (inp&&inp.files?[].slice.call(inp.files):[])){
-    const ext=(f.name.split('.').pop()||'').toLowerCase();
-    if(TG_OK.indexOf(ext)<0)throw new Error('Jenis berkas tidak diizinkan ('+f.name+'). Gunakan PDF, JPG, PNG, Word, Excel, PowerPoint, TXT, atau CSV.');
-    if(f.size>8*1024*1024)throw new Error(f.name+' terlalu besar. Maksimal 8 MB per berkas (berkas ini '+(f.size/1048576).toFixed(1)+' MB)');
-    if(!f.size)throw new Error(f.name+' kosong');
-    tot+=f.size;if(tot>20*1024*1024)throw new Error('Total ukuran berkas sekali simpan maksimal 20 MB. Simpan sebagian dulu, lalu edit materi untuk menambah berkas lain.');
-    a.push({data:await tgB64(f),name:f.name})}
-  return a}
+const tgB64=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=()=>no(new Error('Gagal membaca berkas'));r.readAsDataURL(f)});
 async function tgBacaSemua(inp){const a=[];let tot=0;
   for(const f of (inp&&inp.files?[].slice.call(inp.files):[])){
     const ext=(f.name.split('.').pop()||'').toLowerCase();
@@ -1247,7 +1240,7 @@ const tgBtn=(tipe,id,nama)=>`<button class="btn ghost sm" data-id="${esc(id)}" o
 function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}:{};
   MT(`<h2>${id?'Edit':'Buat'} tugas</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="tj" class="mx-f" value="${esc(r.Judul)}">
-  <label>Petunjuk tugas</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="td" class="mx-f" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
+  <label>Petunjuk tugas</label><textarea id="td" class="mx-f" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
   <label for="tst">Status</label><select id="tst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
   <small>Tugas yang sudah ada pengumpulan tidak bisa dikembalikan ke draft.</small>
   <label>Tenggat (opsional, waktu setempat)</label><input id="tt" type="datetime-local" value="${esc(r.Tenggat_Input)}">
