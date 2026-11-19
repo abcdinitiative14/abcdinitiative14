@@ -1031,6 +1031,7 @@ async function ytHapus(e) {
 <style>
 .rtw.mini .rtmode,.rtw.mini select[data-s="kol"],.rtw.mini select[data-s="blok"],.rtw.mini .rtb[data-c="gambar"],.rtw.mini .rtb[data-c="galeri"]{display:none!important}
 .rtw.mini2 .rtmode,.rtw.mini2 select[data-s="kol"],.rtw.mini2 select[data-s="blok"],.rtw.mini2 .rtb[data-c="galeri"]{display:none!important}
+.rte p,.rte li,.rte h2,.rte h3,.rich p,.rich li,.rich h2,.rich h3{unicode-bidi:plaintext}
 .kb-grup{margin:0 0 8px}.kb-grup label{display:flex;gap:6px;align-items:center;font-weight:400;margin:0 0 4px}
  
 .kgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
@@ -1067,8 +1068,42 @@ button.kchip{border:1px solid var(--line);cursor:pointer;font:inherit;font-size:
 const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const lnk=u=>okUrl(u)?`<a href="${esc(okUrl(u))}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">Buka tautan</a>`:'';
-const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
-const gEditor=(id,gbr)=>{if(typeof rtMount!=='function')return;try{const w=rtMount(id,0);if(w)w.classList.add(gbr?'mini2':'mini')}catch(e){console.warn(e)}};   // gbr=true: tombol sisipkan gambar ikut tampil (dipakai jawaban murid)
+const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){let h=rtBersih_(t);if(h&&typeof mxRichHtml==='function'){try{h=mxRichHtml(h)}catch(e){}}return h?`<div class="rich">${h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
+/* ---------- jembatan editor teks <-> keyboard rumus/kimia/Arab ----------
+   MathUI bekerja pada kolom teks biasa (kelas mx-f). Editor teks kaya adalah kotak contenteditable, jadi dipasang "kolom bayangan":
+   tombol rumus/kimia/Arab bekerja di kolom bayangan, hasilnya lalu disisipkan di posisi kursor editor sebagai $...$ (teks).
+   Saat ditampilkan, $...$ di dalam HTML digambar KaTeX oleh mxRichHtml. Teks yang diblok di editor ikut menjadi isi rumus. */
+const MXR={w:null,br:null,ok:false};
+function mxRichHtml(h){const d=document.createElement('div');d.innerHTML=h;
+  if(typeof mxTok!=='function'||h.indexOf('$')<0&&!/[؀-ۿ]/.test(h)){if(typeof mxHasAr==='function'&&mxHasAr(h))mxArFont();return d.innerHTML}
+  const tw=document.createTreeWalker(d,NodeFilter.SHOW_TEXT),L=[];let n;while(n=tw.nextNode())if(n.nodeValue.indexOf('$')>=0&&!n.parentElement.closest('.mxp,code,pre'))L.push(n);
+  L.forEach(t=>{const parts=mxTok(mxN(t.nodeValue));if(!parts.some(x=>x.k==='m'))return;
+    const html=parts.map(x=>x.k==='m'?(x.d?'<span class="mx-d" style="display:block">'+mxRender(x.v,true)+'</span>':mxRender(x.v,false)):esc(x.v)).join('');
+    const tp=document.createElement('template');tp.innerHTML=html;t.replaceWith(tp.content)});
+  if(mxHasAr(d.textContent))mxArFont();return d.innerHTML}
+function mxPrep(w){
+  if(!MXR.br){const b=document.createElement('textarea');b.id='mxbridge';b.className='mx-f';b.tabIndex=-1;b.setAttribute('aria-hidden','true');
+    b.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';document.body.appendChild(b);MXR.br=b;
+    b.addEventListener('input',()=>{const x=MXR.w;let txt=b.value;if(!x||!txt)return;
+      let caret=b.selectionStart==null?txt.length:b.selectionStart;
+      const g=MXR.rg,c=g&&g.startContainer.nodeType===3?g.startContainer.nodeValue:'';   
+      txt=txt.replace(/([^\\$]\$)(\$\\ce\{)/g,(m,x,y)=>{if(caret>=m.length)caret++;return x+' '+y});
+      if(c&&txt[0]==='$'&&c[g.startOffset-1]==='$'){txt=' '+txt;caret++}
+      if(c&&txt[txt.length-1]==='$'&&g.endContainer===g.startContainer&&c[g.endOffset]==='$')txt+=' ';
+      if(MXR.rg)x._r=MXR.rg;rtPulih(x);document.execCommand('insertText',false,txt);
+      const sel=getSelection();for(let i=0;i<txt.length-caret;i++){try{sel.modify('move','backward','character')}catch(e){break}}
+      rtPilih(x);rtSync(x);b.value=''})}
+  rtPilih(w);const b=MXR.br,r=w._r;let sel=r?r.toString():'',a0=0,e0=sel.length;
+  if(r&&r.collapsed&&r.startContainer.nodeType===3){   
+    const nv=r.startContainer.nodeValue,off=r.startOffset,t=mxTok(nv).find(x=>x.k==='m'&&off>=x.a-(x.d?2:1)&&off<=x.b+(x.d?2:1));
+    if(t){const o=t.d?2:1,a=t.a-o,z=t.b+o,nr=document.createRange();nr.setStart(r.startContainer,a);nr.setEnd(r.startContainer,z);w._r=nr;sel=nv.slice(a,z);a0=e0=Math.min(Math.max(off-a,o),sel.length-o)}}
+  MXR.rg=w._r?w._r.cloneRange():null;b.value=sel;b.setSelectionRange(a0,e0);MXQ.f=b;MXQ.s=a0;MXQ.e=e0}
+function mxRichInstall(){if(MXR.ok||typeof mxIns!=='function'||typeof rtMount!=='function')return;MXR.ok=true;
+  ['mxIns','mxArIns','mxOpen','mxcOpen'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;
+    window[n]=function(){if(MXR.w&&document.body.contains(MXR.w))mxPrep(MXR.w);return o.apply(this,arguments)}});
+  document.addEventListener('focusin',e=>{const t=e.target;if(!t||!t.closest)return;const w=t.closest('.rtw');
+    if(w)MXR.w=w;else if(t.classList&&t.classList.contains('mx-f')&&t.id!=='mxbridge')MXR.w=null},true)}
+const gEditor=(id,gbr)=>{if(typeof rtMount!=='function')return;try{mxRichInstall();const w=rtMount(id,0);if(w)w.classList.add(gbr?'mini2':'mini')}catch(e){console.warn(e)}};   
 const NOAMPU='<div class="empty">Anda belum ditetapkan sebagai pengampu mapel. Minta admin mengisinya di menu Pengampu Mapel.</div>';
 
 
@@ -1153,7 +1188,7 @@ async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi
     if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" class="mx-f" value="${esc(r.Judul)}">
-  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
+  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
   <label>Tautan dokumen / video (opsional)</label><input id="ml" placeholder="https://..." value="${esc(r.File_URL)}">
   <small>Tempel tautan Google Drive atau YouTube. Atur akses tautan agar siswa dapat membukanya.</small>
   <label for="mst">Status</label><select id="mst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
@@ -1240,7 +1275,7 @@ const tgBtn=(tipe,id,nama)=>`<button class="btn ghost sm" data-id="${esc(id)}" o
 function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}:{};
   MT(`<h2>${id?'Edit':'Buat'} tugas</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="tj" class="mx-f" value="${esc(r.Judul)}">
-  <label>Petunjuk tugas</label><textarea id="td" class="mx-f" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
+  <label>Petunjuk tugas</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="td" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
   <label for="tst">Status</label><select id="tst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
   <small>Tugas yang sudah ada pengumpulan tidak bisa dikembalikan ke draft.</small>
   <label>Tenggat (opsional, waktu setempat)</label><input id="tt" type="datetime-local" value="${esc(r.Tenggat_Input)}">
@@ -3173,6 +3208,8 @@ function btUnduh(){
 .kp .mxk-ic{min-width:32px;height:32px;font-size:14px}
 .kp .mxk-tx b{font-size:13.5px}
 .kp .mxk-hint{display:none}
+@media(min-width:900px){.kd.sama{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}    
+#mkb .kp .rte{min-height:50vh;min-height:50dvh;max-height:85vh}    
 </style>
 <script>
 
@@ -3256,32 +3293,29 @@ function mkTugas(id){const d=MEM[mkKey()],t=d&&d.tugas.find(x=>x.Tugas_ID===id);
   const lock=t.Status==='Dinilai',late=t.Tenggat&&new Date(t.Tenggat)<new Date(),dr=mkDraft()[id],isi=!lock&&dr!==undefined?dr:t.Jawaban,tg=kcTenggat(t.Tenggat);
   $('#mkb').innerHTML=`<p><button class="btn ghost sm" onclick="mkTutup(1)">&larr; Semua tugas</button></p>
   <div class="kd-head"><span class="kcm">${esc(t.Guru)}</span><h2>${esc(t.Judul)}</h2><div class="kcf">${stBadge(t)}${kcChip('Tenggat: '+esc(t.Tenggat_Teks||'tanpa tenggat'))}${t.Status==='Belum'&&t.Tenggat?kcChip(tg.t,tg.c):''}</div></div>
-  <div class="kd dua"><div>
+  <div class="kd sama"><div>
    <div class="kp"><h3>PETUNJUK TUGAS</h3>${paras(t.Deskripsi)}${t.Gambar?'<div id="tgp" style="margin:10px 0 0"></div>':''}</div>
    ${t.Lampiran?`<div class="kp" style="margin-top:16px"><h3>LAMPIRAN DARI GURU</h3>${tgBerkas('lampiran',t.Tugas_ID,t.Lampiran)}</div>`:''}
   </div>
   <div class="kp"><h3>JAWABAN ANDA</h3>
   ${late&&!lock?'<p style="color:var(--bad)">Tenggat sudah lewat. Jawaban tetap bisa dikirim, tetapi ditandai terlambat.</p>':''}
   ${lock?`<div class="stat"><b>${esc(t.Nilai)}</b>Nilai dari guru${t.Umpan_Balik?`<br><br>${typeof mxInline==='function'?mxInline(t.Umpan_Balik):esc(t.Umpan_Balik)}`:''}</div>`:''}
-${lock
-  ?`<label>Jawaban teks</label><div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--mist);margin-bottom:8px">${paras(isi)||'<small style="color:#5b7083">Tidak ada jawaban teks.</small>'}</div>`
-  :`<label for="mkj">Jawaban teks</label>${lock?`<div class="kp" style="margin:0 0 10px">${paras(isi)||'<small>(tidak ada jawaban teks)</small>'}</div>`:`<textarea id="mkj" style="min-height:180px">${esc(isi)}</textarea>`}${!lock&&dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}
-  ${lock?(t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}${(t.File_Lain||[]).map((n,i)=>tgBerkas('jawaban',t.Pengumpulan_ID+'#'+(i+1),n)).join('')}`:''):`<label for="mkf">Berkas jawaban (opsional)</label>
+  ${lock
+   ?`<label>Jawaban teks</label><div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--mist);margin-bottom:8px">${paras(isi)||'<small style="color:#5b7083">Tidak ada jawaban teks.</small>'}</div>${t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}${(t.File_Lain||[]).map((n,i)=>tgBerkas('jawaban',t.Pengumpulan_ID+'#'+(i+1),n)).join('')}`:''}`
+   :`<label for="mkj">Jawaban teks</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mkj" style="min-height:180px">${esc(isi)}</textarea>${dr!==undefined&&dr!==t.Jawaban?'<small style="color:var(--bad)">Draf Anda dipulihkan. Belum dikirim.</small><br>':''}
+  <label for="mkf">Berkas jawaban (opsional)</label>
   ${(()=>{const row=(attr,nama)=>`<label style="display:flex;gap:6px;align-items:center;font-weight:400;margin:0 0 4px"><input type="checkbox" ${attr} style="width:auto"> <span>${esc(nama)}</span> <small>(centang untuk hapus)</small></label>`;return t.File_Nama?`<div style="margin:0 0 8px">${row('id="mkhf"',t.File_Nama)}${(t.File_Lain||[]).map((n,i)=>row('class="mkhl" data-n="'+(i+1)+'"',n)).join('')}</div>`:''})()}
-  <input id="mkf" type="file" multiple accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB per berkas, sampai 5 berkas, total 20 MB sekali kirim (tahan Ctrl atau Shift untuk memilih beberapa). Berkas baru ditambahkan ke yang sudah terkirim.</small>`}`}
-  ${lock?(t.File_Nama?`<p style="margin:12px 0 4px">Berkas Anda:</p>${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}`:''):`<label for="mkf">Berkas jawaban (opsional)</label>
-  ${t.File_Nama?`<div style="margin:0 0 6px">${tgBerkas('jawaban',t.Pengumpulan_ID,t.File_Nama)}<label style="display:inline;font-weight:400"><input type="checkbox" id="mkhf" style="width:auto;margin-right:5px">hapus berkas ini</label></div>`:''}
-  <input id="mkf" type="file" accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB. ${t.File_Nama?'Memilih berkas baru akan menggantikan berkas lama.':'Boleh dikirim bersama jawaban teks atau sendiri.'}</small>`}
+  <input id="mkf" type="file" multiple accept="${TG_ACC}"><small style="display:block;opacity:.75">PDF, foto/gambar, Word, Excel, PowerPoint. Maksimal 8 MB per berkas, sampai 5 berkas, total 20 MB sekali kirim (tahan Ctrl atau Shift untuk memilih beberapa). Berkas baru ditambahkan ke yang sudah terkirim. Boleh dikirim bersama jawaban teks atau sendiri.</small>`}
   ${t.Waktu_Teks?`<p style="margin:10px 0 0"><small>Terakhir dikirim: ${esc(t.Waktu_Teks)}${t.Terlambat?' (terlambat)':''}</small></p>`:''}
   ${lock?'':`<p><button class="btn" id="mkk" onclick="mkKirim('${esc(t.Tugas_ID)}')">${t.Status==='Belum'?'Kirim jawaban':'Perbarui jawaban'}</button></p>`}</div></div>`;
   if(!lock){
-  if(typeof gEditor==='function')gEditor('mkj');
-  else if(typeof rtMount==='function')rtMount('mkj',0);
-  const rte=$('#mkb .rte');
-  if(rte)rte.addEventListener('input',()=>{if(MK.t===id)mkDraft()[id]=$('#mkj').value});
-}
-if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));
-  if(!lock){window.RT_UP='tugas.gambar';if(typeof gEditor==='function'){gEditor('mkj',true);const ed=document.querySelector('#mkb .rte');if(ed)ed.addEventListener('input',()=>{const ta=$('#mkj');if(ta)mkDraft()[MK.t]=ta.value})}}   // editor teks dengan gambar; draf ikut tersimpan
+    window.RT_UP='tugas.gambar';   // editor teks dengan tombol gambar; draf ikut tersimpan
+    if(typeof gEditor==='function')gEditor('mkj',true);
+    else if(typeof rtMount==='function')rtMount('mkj',0);
+    const rte=$('#mkb .rte');
+    if(rte)rte.addEventListener('input',()=>{const ta=$('#mkj');if(ta&&MK.t===id)mkDraft()[id]=ta.value});
+  }
+  if(t.Gambar)tgGambar(t.Tugas_ID,$('#tgp'));
   mkGulir();tgAuto()}
 function mkTutup(simpan){const ta=$('#mkj');if(simpan&&MK.t&&ta&&!ta.disabled)mkDraft()[MK.t]=ta.value;window.RT_UP='';MK.t='';MK.m='';const tb=$('#mkt');if(tb)tb.style.display='';const d=MEM[mkKey()];if(d&&$('#mkb'))mkRender(d)}
 async function mkKirim(id){const b=$('#mkk'),jw=$('#mkj').value,key=mkKey(),t0=b.textContent;b.disabled=true;b.textContent='Memeriksa...';
