@@ -1031,7 +1031,6 @@ async function ytHapus(e) {
 <style>
 .rtw.mini .rtmode,.rtw.mini select[data-s="kol"],.rtw.mini select[data-s="blok"],.rtw.mini .rtb[data-c="gambar"],.rtw.mini .rtb[data-c="galeri"]{display:none!important}
 .rtw.mini2 .rtmode,.rtw.mini2 select[data-s="kol"],.rtw.mini2 select[data-s="blok"],.rtw.mini2 .rtb[data-c="galeri"]{display:none!important}
-.rte p,.rte li,.rte h2,.rte h3,.rich p,.rich li,.rich h2,.rich h3{unicode-bidi:plaintext}
 .kb-grup{margin:0 0 8px}.kb-grup label{display:flex;gap:6px;align-items:center;font-weight:400;margin:0 0 4px}
  
 .kgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
@@ -1068,42 +1067,9 @@ button.kchip{border:1px solid var(--line);cursor:pointer;font:inherit;font-size:
 const GS={pair:'',tab:'materi',cur:null};
 const okUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const lnk=u=>okUrl(u)?`<a href="${esc(okUrl(u))}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:600">Buka tautan</a>`:'';
-const paras=t=>{t=String(t||'');if(t.indexOf('<')>=0&&typeof rtBersih_==='function'){let h=rtBersih_(t);if(h&&typeof mxRichHtml==='function'){try{h=mxRichHtml(h)}catch(e){}}return h?`<div class="rich">${h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
-/* ---------- jembatan editor teks <-> keyboard rumus/kimia/Arab ----------
-   MathUI bekerja pada kolom teks biasa (kelas mx-f). Editor teks kaya adalah kotak contenteditable, jadi dipasang "kolom bayangan":
-   tombol rumus/kimia/Arab bekerja di kolom bayangan, hasilnya lalu disisipkan di posisi kursor editor sebagai $...$ (teks).
-   Saat ditampilkan, $...$ di dalam HTML digambar KaTeX oleh mxRichHtml. Teks yang diblok di editor ikut menjadi isi rumus. */
-const MXR={w:null,br:null,ok:false};
-function mxRichHtml(h){const d=document.createElement('div');d.innerHTML=h;
-  if(typeof mxTok!=='function'||h.indexOf('$')<0&&!/[؀-ۿ]/.test(h)){if(typeof mxHasAr==='function'&&mxHasAr(h))mxArFont();return d.innerHTML}
-  const tw=document.createTreeWalker(d,NodeFilter.SHOW_TEXT),L=[];let n;while(n=tw.nextNode())if(n.nodeValue.indexOf('$')>=0&&!n.parentElement.closest('.mxp,code,pre'))L.push(n);
-  L.forEach(t=>{const parts=mxTok(mxN(t.nodeValue));if(!parts.some(x=>x.k==='m'))return;
-    const html=parts.map(x=>x.k==='m'?(x.d?'<span class="mx-d" style="display:block">'+mxRender(x.v,true)+'</span>':mxRender(x.v,false)):esc(x.v)).join('');
-    const tp=document.createElement('template');tp.innerHTML=html;t.replaceWith(tp.content)});
-  if(mxHasAr(d.textContent))mxArFont();return d.innerHTML}
-function mxPrep(w){
-  if(!MXR.br){const b=document.createElement('textarea');b.id='mxbridge';b.className='mx-f';b.tabIndex=-1;b.setAttribute('aria-hidden','true');
-    b.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';document.body.appendChild(b);MXR.br=b;
-    b.addEventListener('input',()=>{const x=MXR.w;let txt=b.value;if(!x||!txt)return;
-      let caret=b.selectionStart==null?txt.length:b.selectionStart;
-      const g=MXR.rg,c=g&&g.startContainer.nodeType===3?g.startContainer.nodeValue:'';   
-      txt=txt.replace(/([^\\$]\$)(\$\\ce\{)/g,(m,x,y)=>{if(caret>=m.length)caret++;return x+' '+y});
-      if(c&&txt[0]==='$'&&c[g.startOffset-1]==='$'){txt=' '+txt;caret++}
-      if(c&&txt[txt.length-1]==='$'&&g.endContainer===g.startContainer&&c[g.endOffset]==='$')txt+=' ';
-      if(MXR.rg)x._r=MXR.rg;rtPulih(x);document.execCommand('insertText',false,txt);
-      const sel=getSelection();for(let i=0;i<txt.length-caret;i++){try{sel.modify('move','backward','character')}catch(e){break}}
-      rtPilih(x);rtSync(x);b.value=''})}
-  rtPilih(w);const b=MXR.br,r=w._r;let sel=r?r.toString():'',a0=0,e0=sel.length;
-  if(r&&r.collapsed&&r.startContainer.nodeType===3){   
-    const nv=r.startContainer.nodeValue,off=r.startOffset,t=mxTok(nv).find(x=>x.k==='m'&&off>=x.a-(x.d?2:1)&&off<=x.b+(x.d?2:1));
-    if(t){const o=t.d?2:1,a=t.a-o,z=t.b+o,nr=document.createRange();nr.setStart(r.startContainer,a);nr.setEnd(r.startContainer,z);w._r=nr;sel=nv.slice(a,z);a0=e0=Math.min(Math.max(off-a,o),sel.length-o)}}
-  MXR.rg=w._r?w._r.cloneRange():null;b.value=sel;b.setSelectionRange(a0,e0);MXQ.f=b;MXQ.s=a0;MXQ.e=e0}
-function mxRichInstall(){if(MXR.ok||typeof mxIns!=='function'||typeof rtMount!=='function')return;MXR.ok=true;
-  ['mxIns','mxArIns','mxOpen','mxcOpen'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;
-    window[n]=function(){if(MXR.w&&document.body.contains(MXR.w))mxPrep(MXR.w);return o.apply(this,arguments)}});
-  document.addEventListener('focusin',e=>{const t=e.target;if(!t||!t.closest)return;const w=t.closest('.rtw');
-    if(w)MXR.w=w;else if(t.classList&&t.classList.contains('mx-f')&&t.id!=='mxbridge')MXR.w=null},true)}
-const gEditor=(id,gbr)=>{if(typeof rtMount!=='function')return;try{mxRichInstall();const w=rtMount(id,0);if(w)w.classList.add(gbr?'mini2':'mini')}catch(e){console.warn(e)}};   
+const gRich=t=>/<\/?(p|div|br|strong|b|em|i|u|s|ul|ol|li|h[1-6]|blockquote|table|thead|tbody|tr|td|th|span|a|sub|sup|hr|pre|code|figure|img)(\s|\/|>)/i.test(String(t||''));   
+const paras=t=>{t=String(t||'');if(gRich(t)&&typeof rtBersih_==='function'){const h=rtBersih_(t);return h?`<div class="rich">${typeof mxRich==='function'?mxRich(h):h}</div>`:''}return typeof mxParas==='function'?mxParas(t):t.split(/\n+/).filter(Boolean).map(x=>`<p style="margin:0 0 .6em">${esc(x)}</p>`).join('')};
+const gEditor=(id,gbr,fn)=>{if(typeof rtMount!=='function')return;try{const w=rtMount(id,0);if(w){w.classList.add(gbr?'mini2':'mini');if(typeof fn==='function'){const ed=w.querySelector('.rte');if(ed)ed.addEventListener('input',()=>fn())}}}catch(e){console.warn(e)}};   
 const NOAMPU='<div class="empty">Anda belum ditetapkan sebagai pengampu mapel. Minta admin mengisinya di menu Pengampu Mapel.</div>';
 
 
@@ -1188,7 +1154,7 @@ async function gFormMateri(id){const d=MEM.gd;let r=id?d.materi.find(x=>x.Materi
     if(!$('#gfm-wait'))return}   // pengguna sudah pindah halaman
   MT(`<h2>${id?'Edit':'Tambah'} materi</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="mj" class="mx-f" value="${esc(r.Judul)}">
-  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
+  <label>Pembahasan / isi materi (boleh kosong jika memakai berkas atau tautan)</label><textarea id="mi" style="min-height:200px">${esc(r.Isi)}</textarea>
   <label>Tautan dokumen / video (opsional)</label><input id="ml" placeholder="https://..." value="${esc(r.File_URL)}">
   <small>Tempel tautan Google Drive atau YouTube. Atur akses tautan agar siswa dapat membukanya.</small>
   <label for="mst">Status</label><select id="mst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
@@ -1275,7 +1241,7 @@ const tgBtn=(tipe,id,nama)=>`<button class="btn ghost sm" data-id="${esc(id)}" o
 function gFormTugas(id){const d=MEM.gd,r=id?d.tugas.find(x=>x.Tugas_ID===id)||{}:{};
   MT(`<h2>${id?'Edit':'Buat'} tugas</h2><div style="max-width:640px"><p><small>${esc(pairLabel())}</small></p>
   <label>Judul</label><input id="tj" class="mx-f" value="${esc(r.Judul)}">
-  <label>Petunjuk tugas</label>${typeof mxToolbar==='function'?mxToolbar():''}<textarea id="td" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
+  <label>Petunjuk tugas</label><textarea id="td" class="mx-f" style="min-height:180px">${esc(r.Deskripsi)}</textarea>
   <label for="tst">Status</label><select id="tst" style="max-width:420px"><option value="Aktif" ${r.Status!=='Draft'?'selected':''}>Aktif: tampil ke murid</option><option value="Draft" ${r.Status==='Draft'?'selected':''}>Draft: disimpan dulu, murid belum melihat</option></select>
   <small>Tugas yang sudah ada pengumpulan tidak bisa dikembalikan ke draft.</small>
   <label>Tenggat (opsional, waktu setempat)</label><input id="tt" type="datetime-local" value="${esc(r.Tenggat_Input)}">
@@ -1813,6 +1779,20 @@ async function mxPreview(){
   await mxLoad(); // Pastikan KaTeX dimuat sebelum render
   res.innerHTML=typeof paras==='function'?paras(isi):typeof mxParas==='function'?mxParas(isi):isi;
 }
+
+
+
+function mxRichInstall(w){
+  if(!w||w.dataset.mxri||typeof mxToolbar!=='function')return;
+  w.dataset.mxri='1';
+  const host=w.parentNode;if(!host)return;
+  if(host.querySelector('.mxvis'))return;
+  const box=document.createElement('div');box.className='mxri';box.innerHTML=mxToolbar();
+  w.parentNode.insertBefore(box,w)}
+function mxRichScan(){document.querySelectorAll('.rtw:not([data-mxri])').forEach(mxRichInstall)}
+(function(){
+  const go=()=>{mxRichScan();try{new MutationObserver(mxRichScan).observe(document.body,{childList:true,subtree:true})}catch(e){}};
+  if(document.body)go();else document.addEventListener('DOMContentLoaded',go)})();
 </script>
 <script>
 
@@ -2424,7 +2404,10 @@ const USEM=['Ganjil','Genap'];
 const uSkel='<div class="skel"></div><br><div class="skel"></div>';
 const uWarn=t=>`<p style="color:var(--bad)">${t}</p>`;
 const ujIn=t=>typeof mxInline==='function'?mxInline(t):esc(t);          // teks satu baris dengan rumus
-const ujPa=t=>typeof mxParas==='function'?mxParas(t):paras(t);          
+const ujRich=t=>typeof gRich==='function'?gRich(t):/<\/?(p|div|br|strong|b|em|i|u|ul|ol|li|table|tr|td|span|h[1-6])(\s|\/|>)/i.test(String(t||''));   
+const ujTeks=t=>{t=String(t==null?'':t);if(!ujRich(t))return t;return (typeof rtTeks_==='function'?rtTeks_(t):t.replace(/<\/(p|div|li|tr|h[1-6])>/gi,' ').replace(/<br\s*\/?>/gi,' ').replace(/<[^>]*>/g,'').replace(/<[^>]*$/,'')).replace(/\s+/g,' ').trim()};   
+const ujRingkas=(t,n)=>{t=ujTeks(t);return t.length>n?t.slice(0,n)+'...':t};
+const ujPa=t=>{if(ujRich(t)){if(typeof rtBersih_==='function'){const h=rtBersih_(String(t));return h?`<div class="rich">${typeof mxRich==='function'?mxRich(h):h}</div>`:''}t=ujTeks(t)}return typeof mxParas==='function'?mxParas(t):paras(t)};          // teks beberapa paragraf dengan rumus; mendukung teks berformat (editor teks)
 const ujTb=()=>typeof mxToolbar==='function'?mxToolbar():'';            
 const uTag=s=>`<span class="tag" style="color:${({Draft:'#5b7083',Aktif:'var(--teal)',Ditutup:'var(--bad)'})[s]||'inherit'}">${esc(s)}</span>`;
 const blobUrl=r=>{const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:r.mime}))};
@@ -2496,7 +2479,7 @@ function uSoalDraw(){const c=UJ.cur,u=c.ujian,l=c.soal,lock=c.terkunci,ac=u.Acak
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small><br><small>Acak urutan soal: ${ac.soal?'ya':'tidak'} &middot; Acak pilihan jawaban: ${ac.opsi?'ya':'tidak'}</small></p>
   <p class="row">${uTag(u.Status)}${u.Status!=='Aktif'?`<button class="btn sm" onclick="uStatus('Aktif')">Aktifkan</button>`:`<button class="btn ghost sm" onclick="uStatus('Ditutup')">Tutup ujian</button><button class="btn ghost sm" onclick="uStatus('Draft')">Kembalikan ke Draft</button>`}<button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Lihat hasil</button></p>
   ${ujSbPanel()}${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button><button class="btn ghost" onclick="ujImport()">Impor soal</button></p>`}`+
-  (l.length?`<p class="row"><button class="btn ghost sm" onclick="bdBuka()">Simpan soal terpilih ke Bank Soal</button><small>Centang soal di tabel. Soal Benar/Salah, sesi, dan soal bergambar atau beraudio dilewati.</small></p><div id="bd-form"></div><div class="tw"><table><tr><th><input type="checkbox" aria-label="Pilih semua" onclick="bdSemua(this.checked)"></th><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${q.Jenis==='SESI'?'':`<input type="checkbox" class="bd-cb" value="${esc(q.Soal_ID)}" aria-label="Pilih soal ${i+1}">`}</td><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(q.Pertanyaan.length>140?q.Pertanyaan.slice(0,140)+'...':q.Pertanyaan):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan')+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
+  (l.length?`<p class="row"><button class="btn ghost sm" onclick="bdBuka()">Simpan soal terpilih ke Bank Soal</button><small>Centang soal di tabel. Soal Benar/Salah, sesi, dan soal bergambar atau beraudio dilewati.</small></p><div id="bd-form"></div><div class="tw"><table><tr><th><input type="checkbox" aria-label="Pilih semua" onclick="bdSemua(this.checked)"></th><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr><td>${q.Jenis==='SESI'?'':`<input type="checkbox" class="bd-cb" value="${esc(q.Soal_ID)}" aria-label="Pilih soal ${i+1}">`}</td><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(ujRingkas(q.Pertanyaan,140)):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan')+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
 async function uStatus(st){const u=UJ.cur.ujian;
   try{const r=await api('u.save',{id:u.Ujian_ID,Kelas_ID:u.Kelas_ID,Mapel_ID:u.Mapel_ID,Judul:u.Judul,Jenis:u.Jenis,Durasi:u.Durasi,Mulai:u.Mulai_Input,Selesai:u.Selesai_Input,Status:st});
     UJ.cur.ujian=r;const l=MEM.ug||[],i=l.findIndex(x=>x.Ujian_ID===r.Ujian_ID);if(i>=0)l[i]=r;toast('Status ujian: '+st);uSoalDraw()}
@@ -2513,19 +2496,21 @@ function sForm(sid){const c=UJ.cur,l=c.soal,r=sid?l.find(x=>x.Soal_ID===sid)||{}
   MT(`<h2>${sid?'Edit soal '+(n+1):'Tambah soal'}</h2><div style="max-width:720px"><p><small>${esc(c.ujian.Judul)}</small></p>
   <label>Bentuk soal</label><select id="sj" onchange="ujJenis(this.value)">${Object.keys(UJX_JENIS).map(k=>`<option value="${k}" ${k===UJX_FORM.jenis?'selected':''}>${UJX_JENIS[k]}</option>`).join('')}</select><small id="sjh"></small>
   ${ujTb()}
-  <label>Pertanyaan (untuk Reading, taruh teks bacaan di atas pertanyaan; Enter = paragraf baru; boleh kosong jika soal berupa gambar)</label><textarea id="sq" class="mx-f" dir="auto" style="min-height:150px" oninput="ujPrevDraw()">${esc(r.Pertanyaan)}</textarea>
+  <label>Pertanyaan (untuk Reading, taruh teks bacaan di atas pertanyaan; boleh kosong jika soal berupa gambar)</label><textarea id="sq" class="mx-f" dir="auto" style="min-height:150px" oninput="ujPrevDraw()">${esc(r.Pertanyaan)}</textarea>
   <label>Gambar soal (opsional: soal berupa gambar, diagram, tabel, atau foto; otomatis diperkecil)</label>
   ${r.Gambar?`<p class="row"><small>Soal ini sudah punya gambar.</small><button class="btn ghost sm" type="button" onclick="uShowImg('${esc(c.ujian.Ujian_ID)}','${esc(r.Soal_ID)}',this)">Lihat</button><label style="margin:0;font-weight:400"><input type="checkbox" id="shg" style="width:auto"> Hapus gambar</label></p><div id="sgcur"></div>`:''}
   <input id="sg" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="sPrev(this)"><div id="sgp"></div>
   <div id="so-box"></div><small>Bahasa Arab: pilihan yang berhuruf Arab otomatis tampil ke murid dengan huruf \u0623 \u0628 \u062c \u062f \u0647\u0640, dan soal Benar/Salah dengan \u0635\u062d / \u062e\u0637\u0623. Kunci di sini tetap A-E (atau Benar/Salah).</small>
-  <label>Pembahasan (opsional; murid melihatnya bila guru membuka tinjauan)</label><textarea id="sph" dir="auto" maxlength="3000" style="min-height:70px">${esc(r.Pembahasan||'')}</textarea>
+  <label>Pembahasan (opsional; murid melihatnya bila guru membuka tinjauan)</label><textarea id="sph" dir="auto" style="min-height:70px">${esc(r.Pembahasan||'')}</textarea>
   <label>Pratinjau (tampilan untuk murid)</label><div class="mxprev" id="spv"></div>
   <label>Audio (untuk Listening, opsional, maksimal 8 MB)</label>
   ${r.Media?`<p class="row"><small>Soal ini sudah punya audio.</small><button class="btn ghost sm" type="button" onclick="uPlay('${esc(c.ujian.Ujian_ID)}','${esc(r.Soal_ID)}',this)">Putar</button><label style="margin:0;font-weight:400"><input type="checkbox" id="sha" style="width:auto"> Hapus audio</label></p>`:''}
   <input id="sf" type="file" accept="audio/&#42;">
   ${media.length?`<label>Atau pakai audio yang sama dengan soal lain</label><select id="sm"><option value="">- tidak -</option>${media.map(m=>`<option value="${esc(m)}">Audio soal no. ${l.findIndex(x=>x.Media===m)+1}</option>`).join('')}</select>`:''}
   <p class="row"><button class="btn" id="ssv" onclick="sSave('${sid||''}')">Simpan</button><button class="btn ghost" onclick="uSoalDraw()">Batal</button></p></div>`);
-  ujOpsiDraw();ujPrevDraw();if(typeof mxLoad==='function')mxLoad()}
+  ujOpsiDraw();ujPrevDraw();
+  if(typeof gEditor==='function'){gEditor('sq',false,ujPrevDraw);gEditor('sph',false,ujPrevDraw)}   // editor teks untuk Pertanyaan dan Pembahasan; bilah rumus tetap bekerja di dalamnya
+  if(typeof mxLoad==='function')mxLoad()}
 function ujJenis(v){UJX_FORM.jenis=v;UJX_FORM.kunci='';UJX_FORM.kb=[];ujOpsiDraw();ujPrevDraw()}
 function ujKunciTog(h,on){let s=UJX_FORM.kunci.split('').filter(x=>x&&x!==h);if(on)s.push(h);UJX_FORM.kunci=s.sort().join('');ujPrevDraw()}
 function ujOpsiDraw(){const el=$('#so-box');if(!el)return;const j=UJX_FORM.jenis,bs=j==='BS',lb=ujLabel(UJX_FORM.label);
@@ -3193,7 +3178,7 @@ function btUnduh(){
   const d=typeof BT==='object'&&BT.d;if(!d||typeof bkxZip!=='function'){toast('Data statistik belum dimuat',1);return}
   const a=[['Statistik soal: '+d.Judul],['Murid selesai: '+d.n+' | skor rata-rata '+d.skorRata+(d.pembeda?'':' | daya pembeda tampil mulai 10 murid')],[],['No','Pertanyaan','Jenis','Kunci','Benar (%)','Tidak dijawab','Sebaran jawaban','Daya pembeda','Saran tingkat','Catatan']];
   d.soal.forEach(x=>{const seb=x.Jenis==='BS'?x.dist.map((v,i)=>'P'+(i+1)+': '+v+'%').join(' | '):x.dist.map((v,i)=>'ABCDE'[i]+': '+v).join(' | ');
-    a.push([x.No,x.Pertanyaan||'(tanpa teks)',x.Jenis,String(x.Kunci||''),x.pct,x.kosong,seb,x.pembeda===null?'':x.pembeda,x.saran||'',(x.tanda||[]).join('; ')])});
+    a.push([x.No,(typeof ujTeks==='function'?ujTeks(x.Pertanyaan):x.Pertanyaan)||'(tanpa teks)',x.Jenis,String(x.Kunci||''),x.pct,x.kosong,seb,x.pembeda===null?'':x.pembeda,x.saran||'',(x.tanda||[]).join('; ')])});
   bkxSimpanBerkas(unXlsx('Statistik',a,3,[5,60,8,10,11,13,34,13,14,50],{4:1,7:2}),'statistik-soal-'+unNama(d.Judul)+'.xlsx');toast('File diunduh')}
 </script>
 <style>
