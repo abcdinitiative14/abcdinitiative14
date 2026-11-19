@@ -5948,7 +5948,7 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <div class="bk-f" style="margin-top:0"><div><label for="bkf-j">Jenis soal</label><select id="bkf-j">${Object.keys(BK_JN).map(k=>`<option value="${k}" ${k===r.Jenis_Soal?'selected':''}>${BK_JN[k]}</option>`).join('')}</select></div>
   <div><label for="bkf-t">Tingkat</label><select id="bkf-t">${['Mudah','Sedang','Sulit'].map(k=>`<option ${k===r.Tingkat?'selected':''}>${k}</option>`).join('')}</select></div>
   <div><label for="bkf-w">Batas waktu (detik)</label><select id="bkf-w">${BK_WK.map(k=>`<option value="${k}" ${k===String(r.Waktu||'')?'selected':''}>${k||'Ikut ujian'}</option>`).join('')}</select></div></div>
-  <label for="bkf-q">Pertanyaan</label><textarea id="bkf-q" style="min-height:120px">${esc(r.Pertanyaan)}</textarea>
+  ${typeof ujTb==='function'?ujTb():''}<label for="bkf-q">Pertanyaan</label><textarea id="bkf-q" class="mx-f" dir="auto" style="min-height:120px">${esc(r.Pertanyaan)}</textarea>
   <label>Pilihan jawaban dan kunci</label><div id="bkf-o"></div><p id="bkf-ad"></p>
   <label for="bkf-g">Tag (opsional)</label><input id="bkf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: UTS, 2026">
   <label for="bkf-s">Status</label><select id="bkf-s">${['Draft','Aktif','Arsip'].map(k=>`<option ${k===r.Status?'selected':''}>${k}</option>`).join('')}</select>
@@ -5957,13 +5957,13 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <small>Guru lain hanya bisa menyalin, tidak bisa mengubah atau menghapus soal Anda. Soal baru tampil di Bank Bersama setelah berstatus Aktif.</small>
   <p class="row"><button class="btn" id="bkf-sv">Simpan</button><button class="btn ghost" id="bkf-bt">Batal</button></p></div>`);
   $('#bkf-j').onchange=e=>{bkOpsiBaca();BK.f.jn=e.target.value;BK.f.kn=[];if(BK.f.jn!=='BS'&&BK.f.op.length<2)BK.f.op=['','','',''];bkOpsi()};
-  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi()}
+  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi();if(typeof mxLoad==='function')mxLoad()}
 function bkOpsiBaca(){const f=BK.f;if(f.jn==='BS')return;const o=[...document.querySelectorAll('#bkf-o input[type=text]')];if(o.length)f.op=o.map(i=>i.value)}
 function bkOpsi(){const f=BK.f,el=$('#bkf-o');if(!el)return;
   if(f.jn==='BS'){el.innerHTML=['Benar','Salah'].map((t,i)=>`<label class="bk-o" style="font-weight:400"><input type="radio" name="bkk" value="${'AB'[i]}" ${f.kn[0]==='AB'[i]?'checked':''}><span>${t}</span></label>`).join('');$('#bkf-ad').innerHTML='';
     el.onchange=e=>{f.kn=[e.target.value]};return}
   const mul=f.jn==='PGK';
-  el.innerHTML=f.op.map((t,i)=>{const h='ABCDE'[i];return `<div class="bk-o"><input type="${mul?'checkbox':'radio'}" name="bkk" value="${h}" ${f.kn.indexOf(h)>=0?'checked':''} aria-label="Kunci ${h}"><b>${h}</b><input type="text" maxlength="300" value="${esc(t)}" aria-label="Pilihan ${h}">${f.op.length>2?`<button class="btn ghost sm" type="button" data-d="${i}" aria-label="Hapus pilihan ${h}">x</button>`:''}</div>`}).join('');
+  el.innerHTML=f.op.map((t,i)=>{const h='ABCDE'[i];return `<div class="bk-o"><input type="${mul?'checkbox':'radio'}" name="bkk" value="${h}" ${f.kn.indexOf(h)>=0?'checked':''} aria-label="Kunci ${h}"><b>${h}</b><input type="text" class="mx-f" dir="auto" maxlength="300" value="${esc(t)}" aria-label="Pilihan ${h}">${f.op.length>2?`<button class="btn ghost sm" type="button" data-d="${i}" aria-label="Hapus pilihan ${h}">x</button>`:''}</div>`}).join('');
   $('#bkf-ad').innerHTML=(f.op.length<5?'<button class="btn ghost sm" type="button" id="bkf-pl">+ Pilihan</button> ':'')+'<small>'+(mul?'Centang semua jawaban yang benar (minimal dua).':'Pilih satu jawaban yang benar.')+'</small>';
   el.onchange=e=>{if(e.target.type==='text')return;f.kn=[...el.querySelectorAll('input[name=bkk]:checked')].map(i=>i.value)};
   el.onclick=e=>{const d=e.target.dataset&&e.target.dataset.d;if(d===undefined)return;bkOpsiBaca();const i=Number(d);f.op.splice(i,1);f.kn=f.kn.map(k=>'ABCDE'.indexOf(k)).filter(k=>k!==i).map(k=>k>i?k-1:k).map(k=>'ABCDE'[k]);bkOpsi()};
