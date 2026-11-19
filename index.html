@@ -5938,6 +5938,7 @@ async function bkStatus(ids,st){try{const r=await api('bank.status',{ids,Status:
 async function bkBagi(ids,v){try{const r=await api('bank.bagi',{ids,Bagikan:v});toast(v==='Bersama'?r.jumlah+' soal dibagikan (yang tampil ke guru lain hanya soal Aktif)':r.jumlah+' soal kembali pribadi');bkSegar()}catch(e){fail(e)}}
 async function bkHapus(ids){if(!await ask('Hapus '+ids.length+' soal terpilih? Soal yang sudah disalin ke ujian tetap aman di ujian itu. Pilihan lain: arsipkan.',{title:'Hapus soal',ok:'Hapus',bad:true}))return;
   try{const r=await api('bank.delete',{ids});toast(r.jumlah+' soal dihapus');bkSegar()}catch(e){fail(e)}}
+const bkTeks=t=>esc(typeof ujTeks==='function'?ujTeks(t):t);   // teks soal boleh HTML dari editor teks: tampilkan tanpa format
 /* ---------- form soal ---------- */
 async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft',Opsi:['','','',''],Kunci:'',Bab:BK.bab,Pertanyaan:'',Waktu:'',Tag:'',Bagikan:'Pribadi'};
   if(id){MT('<div class="skel"></div>');try{r=await api('bank.get',{id})}catch(e){fail(e);vGBank();return}}
@@ -5948,7 +5949,7 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <div class="bk-f" style="margin-top:0"><div><label for="bkf-j">Jenis soal</label><select id="bkf-j">${Object.keys(BK_JN).map(k=>`<option value="${k}" ${k===r.Jenis_Soal?'selected':''}>${BK_JN[k]}</option>`).join('')}</select></div>
   <div><label for="bkf-t">Tingkat</label><select id="bkf-t">${['Mudah','Sedang','Sulit'].map(k=>`<option ${k===r.Tingkat?'selected':''}>${k}</option>`).join('')}</select></div>
   <div><label for="bkf-w">Batas waktu (detik)</label><select id="bkf-w">${BK_WK.map(k=>`<option value="${k}" ${k===String(r.Waktu||'')?'selected':''}>${k||'Ikut ujian'}</option>`).join('')}</select></div></div>
-  ${typeof ujTb==='function'?ujTb():''}<label for="bkf-q">Pertanyaan</label><textarea id="bkf-q" class="mx-f" dir="auto" style="min-height:120px">${esc(r.Pertanyaan)}</textarea>
+  ${typeof ujTb==='function'?ujTb():''}<label for="bkf-q">Pertanyaan</label><textarea id="bkf-q" style="min-height:120px">${esc(r.Pertanyaan)}</textarea>
   <label>Pilihan jawaban dan kunci</label><div id="bkf-o"></div><p id="bkf-ad"></p>
   <label for="bkf-g">Tag (opsional)</label><input id="bkf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: UTS, 2026">
   <label for="bkf-s">Status</label><select id="bkf-s">${['Draft','Aktif','Arsip'].map(k=>`<option ${k===r.Status?'selected':''}>${k}</option>`).join('')}</select>
@@ -5957,7 +5958,7 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <small>Guru lain hanya bisa menyalin, tidak bisa mengubah atau menghapus soal Anda. Soal baru tampil di Bank Bersama setelah berstatus Aktif.</small>
   <p class="row"><button class="btn" id="bkf-sv">Simpan</button><button class="btn ghost" id="bkf-bt">Batal</button></p></div>`);
   $('#bkf-j').onchange=e=>{bkOpsiBaca();BK.f.jn=e.target.value;BK.f.kn=[];if(BK.f.jn!=='BS'&&BK.f.op.length<2)BK.f.op=['','','',''];bkOpsi()};
-  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi();if(typeof mxLoad==='function')mxLoad()}
+  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi();if(typeof gEditor==='function')gEditor('bkf-q');if(typeof mxLoad==='function')mxLoad()}
 function bkOpsiBaca(){const f=BK.f;if(f.jn==='BS')return;const o=[...document.querySelectorAll('#bkf-o input[type=text]')];if(o.length)f.op=o.map(i=>i.value)}
 function bkOpsi(){const f=BK.f,el=$('#bkf-o');if(!el)return;
   if(f.jn==='BS'){el.innerHTML=['Benar','Salah'].map((t,i)=>`<label class="bk-o" style="font-weight:400"><input type="radio" name="bkk" value="${'AB'[i]}" ${f.kn[0]==='AB'[i]?'checked':''}><span>${t}</span></label>`).join('');$('#bkf-ad').innerHTML='';
@@ -6059,7 +6060,7 @@ const bkxNama=(...p)=>p.filter(Boolean).join('_').replace(/[^\w\-]+/g,'_').repla
 function bkxCetak(items,mapel,judul,kunci){const old=document.querySelector('.bk-pr');if(old)old.remove();
   const L='ABCDE',tg=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
   const body=items.map((it,i)=>{const ks=String(it.Kunci||'').split(',').filter(Boolean).map(Number),o=it.Opsi||[];
-    return `<div class="bk-pq"><div class="bk-pn">${i+1}.</div><div class="bk-pb"><div style="white-space:pre-wrap">${esc(it.Pertanyaan)}</div>${o.map((t,j)=>`<div class="bk-po${kunci&&ks.indexOf(j+1)>=0?' k':''}">${L[j]}. ${esc(t)}${kunci&&ks.indexOf(j+1)>=0?' &#10003;':''}</div>`).join('')}</div></div>`}).join('');
+    return `<div class="bk-pq"><div class="bk-pn">${i+1}.</div><div class="bk-pb"><div style="white-space:pre-wrap">${bkTeks(it.Pertanyaan)}</div>${o.map((t,j)=>`<div class="bk-po${kunci&&ks.indexOf(j+1)>=0?' k':''}">${L[j]}. ${esc(t)}${kunci&&ks.indexOf(j+1)>=0?' &#10003;':''}</div>`).join('')}</div></div>`}).join('');
   const d=document.createElement('div');d.className='bk-pr';
   d.innerHTML=`<div class="bk-no bk-pt"><button class="btn" id="bkp-c">Cetak / Simpan PDF</button><button class="btn ghost" id="bkp-x">Tutup</button><small> Pada jendela cetak, pilih tujuan "Simpan sebagai PDF".</small></div><h2 style="margin:0 0 4px">${esc(judul)}</h2><p style="margin:0 0 14px"><small>${esc(mapel)} &middot; ${items.length} soal &middot; ${tg}${kunci?' &middot; dengan kunci jawaban':''}</small></p>${body}`;
   document.body.appendChild(d);$('#bkp-x').onclick=()=>d.remove();$('#bkp-c').onclick=()=>{try{window.print()}catch(e){toast('Cetak diblokir peramban. Tekan Ctrl+P.',1)}};d.scrollTop=0}
@@ -6335,7 +6336,7 @@ function btDraw(){const d=BT.d;
   ${d.n&&!d.pembeda?'<p><small>Daya pembeda tampil mulai 10 murid selesai.</small></p>':''}
   <div class="tw"><table><tr><th></th><th>No</th><th>Pertanyaan</th><th>Benar</th><th>Sebaran jawaban (* = kunci)</th><th>Pembeda</th><th>Saran</th></tr>`+d.soal.map(x=>`<tr>
     <td>${x.Bank_ID&&x.saran&&x.saran!==x.TingkatBank?`<input type="checkbox" data-i="${esc(x.Bank_ID)}" data-t="${esc(x.saran)}" ${BT.sel[x.Bank_ID]?'checked':''} aria-label="Pilih untuk diterapkan">`:''}</td>
-    <td>${x.No}</td><td style="max-width:360px">${esc(x.Pertanyaan)||'<i>(tanpa teks)</i>'}${x.tanda.map(t=>`<br><small style="color:#d9534f">&#9888; ${esc(t)}</small>`).join('')}</td>
+    <td>${x.No}</td><td style="max-width:360px">${bkTeks(x.Pertanyaan)||'<i>(tanpa teks)</i>'}${x.tanda.map(t=>`<br><small style="color:#d9534f">&#9888; ${esc(t)}</small>`).join('')}</td>
     <td>${bar(x.pct)} <b>${x.pct}%</b><br><small>${x.kosong} kosong</small></td><td><small>${sebaran(x)}</small></td>
     <td>${x.pembeda===null?'-':x.pembeda}</td><td>${x.saran?esc(x.saran)+(x.Bank_ID?`<br><small>di bank: ${esc(x.TingkatBank)}</small>`:''):'-'}</td></tr>`).join('')+`</table></div>
   <p><small>Benar = rata-rata nilai soal (jawaban sebagian ikut aturan ujian). Saran tingkat: 80% ke atas Mudah, 40 sampai 79% Sedang, di bawah 40% Sulit. Pembeda = selisih nilai 27% murid teratas dan 27% terbawah; makin mendekati 1 makin baik, negatif berarti perlu diperiksa.</small></p><div id="bt-bar"></div>`);
@@ -6373,7 +6374,7 @@ function bsList(){const r=BS.list,el=$('#bs-l');if(!el)return;
   if(!r.items.length){el.innerHTML='<p style="padding:18px 0;opacity:.8">Belum ada soal bersama untuk mapel ini. Soal muncul di sini setelah guru lain membagikannya dan berstatus Aktif.</p>';bsBar();return}
   el.innerHTML=r.items.map(x=>{const ks=String(x.Kunci||'').split(',');return `<div class="bk-k"><input type="checkbox" data-i="${esc(x.Bank_ID)}" ${BS.sel[x.Bank_ID]?'checked':''} aria-label="Pilih soal">
     <div class="bk-q"><div><span class="bk-c">${esc(x.Bab)}</span><span class="bk-c">${BK_JN[x.Jenis_Soal]||esc(x.Jenis_Soal)}</span><span class="bk-c">${esc(x.Tingkat)}</span><span class="bk-c">Oleh ${esc(x.Pemilik)}</span>${x.Tag?`<span class="bk-c">${esc(x.Tag)}</span>`:''}</div>
-    <div class="bk-t">${esc(x.Pertanyaan)}</div>
+    <div class="bk-t">${bkTeks(x.Pertanyaan)}</div>
     <div class="bk-t" style="opacity:.85"><small>${x.Opsi.map((t,i)=>`${ks.indexOf('ABCDE'[i])>=0?'<b>':''}${'ABCDE'[i]}. ${esc(t)}${ks.indexOf('ABCDE'[i])>=0?' (benar)</b>':''}`).join(' &nbsp;|&nbsp; ')}</small></div></div></div>`}).join('')+
     `<div class="bk-p"><button class="btn ghost sm" id="bs-pv" ${r.hal<=1?'disabled':''}>Sebelumnya</button><span>Halaman ${r.hal} dari ${r.halMaks} <small>(${r.total} soal)</small></span><button class="btn ghost sm" id="bs-nx" ${r.hal>=r.halMaks?'disabled':''}>Berikutnya</button></div>`;
   el.onclick=e=>{const t=e.target;
