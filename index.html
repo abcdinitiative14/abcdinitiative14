@@ -512,7 +512,7 @@ navAuth();route();kampusLoad();
 
 
 const ROLES=['Admin','Guru','Wali Kelas','Murid'];
-const PG={tab:'',sel:new Set(),tampil:[]};   
+const PG={tab:'',sel:new Set(),tampil:[],kl:'',km:{}};   
 const PGU={id:'',role:'',ta:'',rows:[],wali:[],kotor:0,bg:0};   
 const PGR={sibuk:false};                            
 const PGI_KOLOM={nama:'nama',namalengkap:'nama',username:'username',user:'username',password:'password',katasandi:'password',sandi:'password',email:'email',role:'role',peran:'role',aktif:'aktif',status:'aktif',ta:'ta',tahunajaran:'ta',nis:'nis',kelas:'kelas',mengajar:'mengajar',wali:'wali',walikelas:'wali',niy:'niy',tempat:'tempat',tempatlahir:'tempat',tanggal:'tanggal',tanggallahir:'tanggal',tgllahir:'tanggal'};
@@ -530,25 +530,25 @@ function vPengguna2(){
   M(`<div class="row" style="justify-content:space-between"><h2>Pengguna</h2><span class="row"><button class="btn ghost" onclick="vImpor()">Impor CSV</button><button class="btn" onclick="formUser()">Tambah pengguna</button></span></div>
   <div class="dcard" id="pgreg" style="margin:10px 0;padding:10px 14px"><small>Memuat status pendaftaran...</small></div>
   <div class="tabs" id="utabs" style="margin-top:10px"></div>
-  <div class="row" style="margin:10px 0"><input id="uq" placeholder="Cari nama, username, atau email..." style="max-width:300px" oninput="drawUsers()"><span id="pgbar" class="row"></span></div>
+  <div class="row" style="margin:10px 0"><input id="uq" placeholder="Cari nama, username, atau email..." style="max-width:300px" oninput="drawUsers()"><select id="ukl" style="max-width:260px" onchange="pgKelasPilih(this.value)" aria-label="Saring menurut kelas"><option value="">Semua kelas</option></select><span id="pgbar" class="row"></span></div>
   <div id="ut"></div>`);
   if(!MEM.users)$('#ut').innerHTML='<div class="skel"></div>';
-  swrF('users','users.list',{},()=>drawUsers(),20000);pgDaftarMuat()}
+  swrF('users','users.list',{},()=>drawUsers(),20000);swrF('master','master.all',{},()=>drawUsers(),20000);pgDaftarMuat()}
 
 const uRole=u=>u.Role||'-';
 function uTab(t){PG.tab=t;drawUsers()}
-function uRow(u){const diri=S.user&&S.user.id===u.User_ID;return `<tr data-id="${esc(u.User_ID)}"><td>${diri?'':`<input type="checkbox" class="pc" style="width:auto" aria-label="Pilih" ${PG.sel.has(u.User_ID)?'checked':''} onchange="pgPilih('${esc(u.User_ID)}',this.checked)">`}</td><td>${esc(u.Nama_Lengkap)}<br><small>${esc(u.Email)}</small></td><td>${esc(u.Username)}</td>
+function uRow(u){const diri=S.user&&S.user.id===u.User_ID;return `<tr data-id="${esc(u.User_ID)}"><td>${diri?'':`<input type="checkbox" class="pc" style="width:auto" aria-label="Pilih" ${PG.sel.has(u.User_ID)?'checked':''} onchange="pgPilih('${esc(u.User_ID)}',this.checked)">`}</td><td>${esc(u.Nama_Lengkap)}<br><small>${esc(u.Email)}</small>${PG.km[u.User_ID]&&PG.km[u.User_ID].nama?'<br><small>Kelas '+esc(PG.km[u.User_ID].nama)+'</small>':''}</td><td>${esc(u.Username)}</td>
   <td><select class="r">${['',...ROLES].map(r=>`<option ${r===u.Role?'selected':''} value="${r}">${r||'(belum ada)'}</option>`).join('')}</select></td>
   <td><input type="checkbox" class="a" style="width:auto" ${u.Status===true?'checked':''}></td>
   <td class="row"><button class="btn sm" onclick="saveUser2(this)">Simpan</button><button class="btn ghost sm" onclick="pgUbah('${esc(u.User_ID)}')">Ubah</button>${S.user&&S.user.id===u.User_ID?'':`<button class="btn ghost sm" onclick="formReset('${esc(u.User_ID)}')">Reset password</button><button class="btn bad sm" onclick="delUser('${esc(u.User_ID)}')">Hapus</button>`}</td></tr>`}
 const uTable=l=>`<div class="tw"><table><tr><th></th><th>Nama</th><th>Username</th><th>Role</th><th>Aktif</th><th></th></tr>${l.map(uRow).join('')}</table></div>`;
 
-function drawUsers(){const all=MEM.users;if(!all||!$('#ut'))return;
+function drawUsers(){const all=MEM.users;if(!all||!$('#ut'))return;PG.km=pgKelasPeta();pgKelasIsi();const kf=MEM.master?PG.kl:'';
   const cnt={};all.forEach(u=>cnt[uRole(u)]=(cnt[uRole(u)]||0)+1);
   const tabs=[['','Semua',all.length],...ROLES.map(r=>[r,r,cnt[r]||0]),['-','Belum ada role',cnt['-']||0]];
   $('#utabs').innerHTML=tabs.map(([k,l,n])=>`<a href="javascript:void 0" onclick="uTab('${k}')" class="${k===PG.tab?'on':''}">${l} (${n})</a>`).join('');
   const q=(($('#uq')||{}).value||'').toLowerCase();
-  const l=all.filter(u=>!q||(String(u.Nama_Lengkap)+' '+String(u.Username)+' '+String(u.Email)).toLowerCase().includes(q))
+  const l=all.filter(u=>(!q||(String(u.Nama_Lengkap)+' '+String(u.Username)+' '+String(u.Email)).toLowerCase().includes(q))&&(!kf||(PG.km[u.User_ID]&&PG.km[u.User_ID].id===kf)))
     .sort((a,b)=>String(a.Nama_Lengkap).localeCompare(String(b.Nama_Lengkap)));
   const groups=(PG.tab===''?['-',...ROLES]:[PG.tab]).map(k=>[k,l.filter(u=>uRole(u)===k)]).filter(g=>g[1].length);
   const n=groups.reduce((t,g)=>t+g[1].length,0);let left=200;PG.tampil=[];
@@ -556,8 +556,19 @@ function drawUsers(){const all=MEM.users;if(!all||!$('#ut'))return;
     return sh.length?(PG.tab===''?`<h3 style="margin:18px 0 6px">${k==='-'?'Belum ada role (menunggu verifikasi)':esc(k)} <small>(${rows.length})</small></h3>`:'')+uTable(sh)+(sh.length<rows.length?'<p><small>Sebagian tidak ditampilkan. Gunakan pencarian.</small></p>':''):''}).join(''):'<div class="empty">Tidak ada pengguna yang cocok.</div>';pgMenunggu();pgBar()}
 
  
-function pgBar(){const el=$('#pgbar');if(!el)return;const n=PG.sel.size;
-  el.innerHTML='<button class="btn ghost sm" onclick="pgPilihSemua()">Pilih semua yang tampil</button>'+(n?`<button class="btn ghost sm" onclick="pgPilihKosong()">Batal pilih</button><button class="btn sm" onclick="pgResetMassal()">Reset password terpilih (${n})</button><button class="btn bad sm" onclick="pgHapusTerpilih()">Hapus terpilih (${n})</button>`:'')}
+function pgKelasPeta(){const d=MEM.master,m={};if(!d)return m;const kn={};d.kelas.forEach(k=>kn[k.Kelas_ID]=k);
+  d.siswa.forEach(x=>{if(x.User_ID)m[x.User_ID]={id:x.Kelas_ID||'-',nama:x.Kelas_ID&&kn[x.Kelas_ID]?kn[x.Kelas_ID].Nama_Kelas:''}});return m}
+function pgKelasIsi(){const el=$('#ukl'),d=MEM.master;if(!el)return;
+  if(!d){el.innerHTML='<option value="">Memuat kelas...</option>';el.disabled=true;return}
+  el.disabled=false;const cnt={};Object.values(PG.km).forEach(x=>cnt[x.id]=(cnt[x.id]||0)+1);
+  const ks=d.kelas.slice().sort((a,b)=>String(b.Tahun_Ajaran).localeCompare(String(a.Tahun_Ajaran))||String(a.Nama_Kelas).localeCompare(String(b.Nama_Kelas),undefined,{numeric:true}));
+  el.innerHTML='<option value="">Semua kelas</option>'+ks.map(k=>`<option value="${esc(k.Kelas_ID)}">${esc(k.Nama_Kelas)} (${esc(k.Tahun_Ajaran)}) - ${cnt[k.Kelas_ID]||0} siswa</option>`).join('')+(cnt['-']?`<option value="-">Siswa tanpa kelas - ${cnt['-']}</option>`:'');
+  el.value=PG.kl;if(el.value!==PG.kl)PG.kl=''}
+function pgKelasPilih(v){PG.kl=v;if(v)PG.tab='Murid';drawUsers()}
+
+ 
+function pgBar(){const el=$('#pgbar');if(!el)return;const n=PG.sel.size,tp=new Set(PG.tampil),hid=[...PG.sel].filter(id=>!tp.has(id)).length;
+  el.innerHTML='<button class="btn ghost sm" onclick="pgPilihSemua()">Pilih semua yang tampil</button>'+(n?`<button class="btn ghost sm" onclick="pgPilihKosong()">Batal pilih</button><button class="btn sm" onclick="pgResetMassal()">Reset password terpilih (${n})</button><button class="btn bad sm" onclick="pgHapusTerpilih()">Hapus terpilih (${n})</button>`+(hid?`<small>${hid} terpilih sedang tidak tampil</small>`:''):'')}
 function pgPilih(id,on){if(on)PG.sel.add(id);else PG.sel.delete(id);pgBar()}
 function pgPilihSemua(){PG.tampil.forEach(id=>PG.sel.add(id));drawUsers()}
 function pgPilihKosong(){PG.sel.clear();drawUsers()}
@@ -573,7 +584,7 @@ async function saveUser2(b){const tr=b.closest('tr'),a=tr.querySelector('.a').ch
     delete MEM.stats;delete MEM.master;toast('Tersimpan. Profil guru/siswa dibuat otomatis; lengkapi kelas dan mata pelajaran lewat tombol Ubah.');if(berubah)drawUsers()}
   catch(e){fail(e)}b.disabled=false}
 
-/* ---------- pendaftaran mandiri (buka/tutup) ---------- */
+ 
 function pgDaftarDraw(buka){const el=$('#pgreg');if(!el)return;
   el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center;gap:12px"><div><b>Pendaftaran mandiri</b> &middot; <b style="color:${buka?'var(--teal)':'var(--bad)'}">${buka?'Terbuka':'Ditutup'}</b>
     <br><small>${buka?'Calon pengguna bisa mendaftar dari halaman depan. Akun baru tidak bisa masuk sebelum Anda memverifikasinya.':'Formulir pendaftaran di halaman depan dinonaktifkan. Akun hanya dibuat oleh admin (tombol Tambah pengguna atau Impor CSV).'}</small>
@@ -584,7 +595,7 @@ function pgDaftarDraw(buka){const el=$('#pgreg');if(!el)return;
 function pgMenunggu(){const el=$('#pgwait');if(!el||!MEM.users)return;const n=MEM.users.filter(u=>!u.Role).length;
   el.innerHTML=n?`<b>${n}</b> akun belum diberi role (menunggu verifikasi) &middot; <a href="javascript:void 0" onclick="uTab('-')" style="color:var(--teal);font-weight:600">Lihat</a>`:'Tidak ada akun yang menunggu verifikasi.'}
 async function pgDaftarMuat(){
-  if(MEM.reg){pgDaftarDraw(MEM.reg.buka!==false);if(Date.now()-(MEM.regT||0)<20000)return}   // status terakhir tampil dulu; disegarkan di belakang
+  if(MEM.reg){pgDaftarDraw(MEM.reg.buka!==false);if(Date.now()-(MEM.regT||0)<20000)return}   
   try{const r=await api('registrasi.get');MEM.reg=r;MEM.regT=Date.now();pgDaftarDraw(r.buka!==false)}
   catch(e){if(e.message==='SESI_HABIS')return fail(e);if(MEM.reg)return;const el=$('#pgreg');
     if(el)el.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><span><b>Pendaftaran mandiri</b><br><small>Status belum bisa dimuat (${esc(e.message)}).</small></span><button class="btn ghost sm" onclick="pgDaftarMuat()">Coba lagi</button></div>`}}
@@ -593,10 +604,10 @@ async function pgDaftarSet(buka){if(PGR.sibuk)return;PGR.sibuk=true;   // penjag
     if(!await ask(buka?'Buka pendaftaran mandiri? Siapa pun bisa mengirim pendaftaran dari halaman depan. Akun baru tetap menunggu verifikasi Anda.':'Tutup pendaftaran mandiri? Formulir pendaftaran di halaman depan dinonaktifkan. Akun yang sudah mendaftar tidak terpengaruh.',{title:buka?'Buka pendaftaran':'Tutup pendaftaran',ok:buka?'Buka':'Tutup'}))return;
     const b=$('#pgregb');if(b)b.disabled=true;
     try{const r=await api('registrasi.set',{buka:buka===true});MEM.reg=r;MEM.regT=Date.now();pgDaftarDraw(r.buka!==false);toast(r.buka?'Pendaftaran mandiri dibuka':'Pendaftaran mandiri ditutup')}
-    catch(e){fail(e);pgDaftarMuat()}   // gagal: tampilkan status sebenarnya dari server dan aktifkan lagi tombolnya
+    catch(e){fail(e);pgDaftarMuat()}   
   }finally{PGR.sibuk=false}}
 
-/* ---------- tambah pengguna ---------- */
+ 
 function formUser(){
   M(`<h2>Tambah pengguna</h2><div style="max-width:520px">
   <label>Nama lengkap</label><input id="un" autocomplete="off">
@@ -613,7 +624,7 @@ async function saveNewUser(){const b=$('#usv');b.disabled=true;b.textContent='Me
     toast(u.Role==='Admin'?'Pengguna ditambahkan':'Pengguna ditambahkan. Lengkapi kelas dan mata pelajaran lewat tombol Ubah.');vPengguna2()}
   catch(e){fail(e);b.disabled=false;b.textContent='Simpan'}}
 
-/* ---------- ubah pengguna: profil, kelas, mata pelajaran ---------- */
+ 
 const pgTaList=d=>[...new Set(d.kelas.map(k=>String(k.Tahun_Ajaran)))].sort().reverse();
 const pgOptKelas=(d,ta,sel)=>'<option value="">- pilih kelas -</option>'+d.kelas.filter(k=>String(k.Tahun_Ajaran)===ta&&(k.Status!==false||k.Kelas_ID===sel))
   .sort((a,b)=>String(a.Nama_Kelas).localeCompare(String(b.Nama_Kelas))).map(k=>`<option value="${esc(k.Kelas_ID)}" ${k.Kelas_ID===sel?'selected':''}>${esc(k.Nama_Kelas)}</option>`).join('');
@@ -629,9 +640,9 @@ async function pgUbah(id){
   PGU.id=id;PGU.role=u.Role||'';PGU.kotor=0;
   M(`<div class="row" style="justify-content:space-between"><h2>Ubah pengguna</h2><button class="btn ghost" onclick="vPengguna2()">Kembali</button></div>
   <p><b>${esc(u.Nama_Lengkap)}</b> (${esc(u.Username)}) &middot; ${u.Role?esc(u.Role):'belum ada role'}</p><div id="pgu"><div class="skel"></div></div>`);
-  const pu=$('#pgu');pu.oninput=pu.onchange=()=>{PGU.kotor=1};   
+  const pu=$('#pgu');pu.oninput=pu.onchange=()=>{PGU.kotor=1};   // pengguna mulai mengisi: data segar tidak boleh menimpa isian
   const c=MEM.master;let sg='';
-  if(c){pgUbahDraw(u,c);sg=pgSig(u,c);if(Date.now()-(MEM.masterT||0)<20000)return}   
+  if(c){pgUbahDraw(u,c);sg=pgSig(u,c);if(Date.now()-(MEM.masterT||0)<20000)return}   // simpanan tampil seketika; masih segar = tanpa panggilan
   try{const d=await api('master.all');MEM.master=d;MEM.masterT=Date.now();if(PGU.id!==id||!$('#pgu'))return;
     if(!c)pgUbahDraw(u,d);else if(!PGU.kotor&&pgSig(u,d)!==sg)pgUbahDraw(u,d)}
   catch(e){if(e.message==='SESI_HABIS')return fail(e);if(c)return;if($('#pgu'))$('#pgu').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
@@ -708,7 +719,7 @@ async function pgTautkan(){const sid=$('#pgsw').value;if(!sid){toast('Pilih sisw
   if(!await ask('Tautkan akun ini ke data siswa yang dipilih?'))return;
   try{await api('user.siswa.tautkan',{id:PGU.id,siswaId:sid});delete MEM.master;delete MEM.stats;toast('Akun tertaut ke data siswa');pgUbah(PGU.id)}catch(e){fail(e)}}
 
-/* guru / wali kelas: mata pelajaran per kelas, dan kelas yang diwalikan */
+ 
 function pgGuruHtml(u,d){
   const tas=pgTaList(d);
   if(!tas.length)return pgKartu('Kelas dan mata pelajaran','<p><small>Belum ada kelas. Tambahkan kelas lebih dulu di menu Kelas.</small></p>');
@@ -741,7 +752,7 @@ async function pgSimpanGuru(){const b=$('#pgsv'),rows=PGU.rows.filter(r=>r[0]||r
   b.disabled=true;b.textContent='Menyimpan...';
   try{await api('user.tugas.save',{id:PGU.id,ta:PGU.ta,pairs:rows,wali:wali});
     delete MEM.stats;toast('Penugasan tersimpan');
-    if(pgPatchGuru(rows)){const n=++PGU.bg;   // simpanan diperbarui di tempat; data lengkap disegarkan di belakang (hanya jawaban terbaru yang dipakai)
+    if(pgPatchGuru(rows)){const n=++PGU.bg;   
       api('master.all').then(d=>{if(n===PGU.bg&&S&&S.token){MEM.master=d;MEM.masterT=Date.now()}}).catch(()=>{})}
     else{const d=await api('master.all');MEM.master=d;MEM.masterT=Date.now();if($('#pgrows')){pgGuruMuat(d);pgRowsDraw()}}}
   catch(e){fail(e)}
