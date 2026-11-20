@@ -5951,6 +5951,7 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <div><label for="bkf-w">Batas waktu (detik)</label><select id="bkf-w">${BK_WK.map(k=>`<option value="${k}" ${k===String(r.Waktu||'')?'selected':''}>${k||'Ikut ujian'}</option>`).join('')}</select></div></div>
   ${typeof ujTb==='function'?ujTb():''}<label for="bkf-q">Pertanyaan</label><textarea id="bkf-q" style="min-height:120px">${esc(r.Pertanyaan)}</textarea>
   <label>Pilihan jawaban dan kunci</label><div id="bkf-o"></div><p id="bkf-ad"></p>
+  <label>Pratinjau (tampilan untuk murid)</label><div class="mxprev" id="bkf-pv"></div>
   <label for="bkf-g">Tag (opsional)</label><input id="bkf-g" maxlength="120" value="${esc(r.Tag)}" placeholder="Contoh: UTS, 2026">
   <label for="bkf-s">Status</label><select id="bkf-s">${['Draft','Aktif','Arsip'].map(k=>`<option ${k===r.Status?'selected':''}>${k}</option>`).join('')}</select>
   <small>Draft = masih disusun. Aktif = siap dipakai ke ujian. Arsip = disimpan sebagai referensi.</small>
@@ -5958,9 +5959,20 @@ async function bkForm(id){let r={Jenis_Soal:'PG',Tingkat:'Sedang',Status:'Draft'
   <small>Guru lain hanya bisa menyalin, tidak bisa mengubah atau menghapus soal Anda. Soal baru tampil di Bank Bersama setelah berstatus Aktif.</small>
   <p class="row"><button class="btn" id="bkf-sv">Simpan</button><button class="btn ghost" id="bkf-bt">Batal</button></p></div>`);
   $('#bkf-j').onchange=e=>{bkOpsiBaca();BK.f.jn=e.target.value;BK.f.kn=[];if(BK.f.jn!=='BS'&&BK.f.op.length<2)BK.f.op=['','','',''];bkOpsi()};
-  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi();if(typeof gEditor==='function')gEditor('bkf-q');if(typeof mxLoad==='function')mxLoad()}
+  $('#bkf-sv').onclick=bkSimpan;$('#bkf-bt').onclick=()=>bkDraw();bkOpsi();if(typeof gEditor==='function')gEditor('bkf-q',false,bkPrev);if(typeof mxLoad==='function')mxLoad()}
+/* pratinjau soal persis seperti layar murid (rumus, format, huruf Arab); pilihan dan kunci dibaca langsung dari isian */
+function bkPrev(){const el=$('#bkf-pv'),f=BK.f;if(!el||!f)return;
+  const q=($('#bkf-q')||{}).value||'',j=f.jn,bs=j==='BS',mul=j==='PGK';
+  const kn=[...document.querySelectorAll('#bkf-o input[name=bkk]:checked')].map(i=>i.value);
+  let list;
+  if(bs)list=['Benar','Salah'];
+  else{list=[...document.querySelectorAll('#bkf-o input[type=text]')].map(i=>i.value).filter(x=>String(x).trim())}
+  const ar=!bs&&typeof ujArab==='function'&&ujArab(list),ih=typeof ujHuruf==='function'?ujHuruf:(k=>'ABCDE'[k]),inl=typeof ujIn==='function'?ujIn:esc;
+  const body=bs?`<div class="bst" style="margin-bottom:8px">Murid memilih salah satu:</div>`+list.map((o,k)=>`<div class="opt${kn.indexOf('AB'[k])>=0?' on':''}"><b>${'AB'[k]}</b><span>${esc(o)}</span></div>`).join('')
+    :list.map((o,k)=>{const h='ABCDE'[k];return `<div class="opt${ar?' ar':''}${mul?' chk':''}${kn.indexOf(h)>=0?' on':''}"><b>${ih(k,ar)}</b><span${ar?' dir="auto"':''}>${inl(o)}</span></div>`}).join('');
+  el.innerHTML=(String(q).replace(/<[^>]*>/g,'').trim()?`<div style="margin-bottom:10px">${typeof ujPa==='function'?ujPa(q):esc(q)}</div>`:'<small>(pertanyaan masih kosong)</small>')+(mul?'<p><small>Pilih semua jawaban yang benar.</small></p>':'')+body+'<p><small>Pilihan yang menyala adalah kunci. Murid tidak melihat warna ini.</small></p>'}
 function bkOpsiBaca(){const f=BK.f;if(f.jn==='BS')return;const o=[...document.querySelectorAll('#bkf-o input[type=text]')];if(o.length)f.op=o.map(i=>i.value)}
-function bkOpsi(){const f=BK.f,el=$('#bkf-o');if(!el)return;
+function bkOpsi(){const f=BK.f,el=$('#bkf-o');if(!el)return;if(!el._pv){el._pv=1;el.addEventListener('input',bkPrev);el.addEventListener('change',()=>setTimeout(bkPrev,0));el.addEventListener('click',()=>setTimeout(bkPrev,0))}setTimeout(bkPrev,0);
   if(f.jn==='BS'){el.innerHTML=['Benar','Salah'].map((t,i)=>`<label class="bk-o" style="font-weight:400"><input type="radio" name="bkk" value="${'AB'[i]}" ${f.kn[0]==='AB'[i]?'checked':''}><span>${t}</span></label>`).join('');$('#bkf-ad').innerHTML='';
     el.onchange=e=>{f.kn=[e.target.value]};return}
   const mul=f.jn==='PGK';
