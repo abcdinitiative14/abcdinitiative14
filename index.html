@@ -2477,29 +2477,9 @@ async function uSave(id){const [k,m]=$('#uf_p').value.split('|'),b=$('#usv');b.d
 // Listening: urutan soal biasanya penting, jadi pengacakan soal dimatikan otomatis selama belum diubah sendiri oleh guru
 function ujJenisUbah(){const a=$('#uf_as');if(a&&!a.disabled&&!UJ.acakSentuh)a.checked=$('#uf_k').value!=='Listening'}
 async function uDel(id){const u=(MEM.ug||[]).find(x=>x.Ujian_ID===id);
-  if(u&&(u.Mulai_N>0||(u.Sb&&u.Sb.Mode==='supabase'&&u.Sb.Terbit)))return uHapusTuntas(id);   // sudah dikerjakan murid: hapus permanen dengan konfirmasi bertingkat
+  if(u&&(u.Mulai_N>0||(u.Sb&&u.Sb.Mode==='supabase'&&u.Sb.Terbit))){UJ.hid=id;return uHapusPerm()}   // sudah dikerjakan murid: hapus permanen lewat halaman konfirmasi (lihat uHapusPerm)
   if(!await ask('Hapus ujian ini beserta semua soalnya?',{title:'Hapus ujian',ok:'Hapus',bad:true}))return;
   try{await api('u.delete',{id});MEM.ug=(MEM.ug||[]).filter(x=>x.Ujian_ID!==id);toast('Ujian dihapus');uDraw()}catch(e){fail(e)}}
-/* hapus permanen ujian yang sudah dikerjakan (hemat penyimpanan). Skor di komponen Nilai tetap ada; soal dan pembahasan harus sudah diamankan di Bank Soal.
-   Skor sudah tersalin: satu konfirmasi. Belum tersalin (atau berubah sejak disalin): peringatan keras + harus mengetik HAPUS. Server menegakkan aturan yang sama. */
-async function uHapusTuntas(id){let i;
-  try{i=await api('u.cekHapus',{id})}catch(e){return fail(e)}
-  if(i.Alasan){toast(i.Alasan,1);return}
-  if(i.Kosong){   // belum ada yang mengerjakan (termasuk di Supabase): hapus biasa
-    if(!await ask('Hapus ujian ini beserta semua soalnya?',{title:'Hapus ujian',ok:'Hapus',bad:true}))return;
-    try{await api('u.delete',{id});MEM.ug=(MEM.ug||[]).filter(x=>x.Ujian_ID!==id);toast('Ujian dihapus');if($('#ub'))uDraw();else uHome()}catch(e){fail(e)}return}
-  const bank='Soal, pembahasan, jawaban semua murid, hasil, dan audio/gambar soal akan dihapus selamanya dan tidak bisa dikembalikan. Pastikan soal dan pembahasan sudah disimpan ke Bank Soal (soal Benar/Salah, sesi, bergambar, dan beraudio tidak ikut tersimpan di sana) dan, bila perlu, hasilnya sudah diunduh (tombol Unduh Excel di halaman Hasil).';
-  let paksa='';
-  if(i.Disalin){
-    if(!await ask('Skor '+i.Selesai+' murid sudah disalin ke Nilai ('+i.Komponen+', semester '+i.Semester+'), dan nilai itu tidak ikut terhapus. '+bank,{title:'Hapus permanen ujian',ok:'Hapus selamanya',no:'Batal',bad:true}))return;
-  }else{
-    const peringatan='Skor ujian ini BELUM disalin ke Nilai'+(i.Pernah_Salin?' (ada murid atau skor yang berubah sejak penyalinan terakhir)':'')+'.'+(i.Belum_Nilai?' '+i.Belum_Nilai+' murid belum dinilai.':'')+' Bila dihapus, skor murid hilang dan tidak bisa disalin lagi. Sebaiknya buka Hasil dan klik Salin skor dulu. '+bank;
-    if(!await ask(peringatan,{title:'Skor belum disalin ke Nilai',ok:'Lanjut menghapus',no:'Batal, saya salin dulu',bad:true}))return;
-    const t=prompt('Konfirmasi terakhir. Ketik HAPUS (huruf besar) untuk menghapus ujian "'+i.Judul+'" beserta semua skor muridnya selamanya.');
-    if(String(t||'').trim()!=='HAPUS'){toast('Dibatalkan. Ujian tidak dihapus.');return}
-    paksa='HAPUS'}
-  try{const r=await api('u.hapusTuntas',{id,paksa});MEM.ug=(MEM.ug||[]).filter(x=>x.Ujian_ID!==id);toast('Ujian dan '+r.dihapus+' hasil murid dihapus permanen');
-    if($('#ub'))uDraw();else uHome()}catch(e){fail(e)}}
 
 /* ---------- GURU / WALI KELAS: bank soal ---------- */
 async function uSoal(id){MT(uSkel);
@@ -2518,9 +2498,63 @@ const ujKunciTeks=q=>q.Jenis==='URA'?'Bobot '+q.Bobot:q.Jenis==='BS'?q.Kunci.spl
 function uSoalDraw(){const c=UJ.cur,u=c.ujian,l=c.soal,lock=c.terkunci,ac=u.Acak||{};
   MT(`<div class="row" style="justify-content:space-between"><h2>${esc(u.Judul)}</h2><button class="btn ghost" onclick="uHome()">Kembali</button></div>
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Durasi} menit &middot; ${esc(u.Mulai_Teks)} s.d. ${esc(u.Selesai_Teks)}</small><br><small>Acak urutan soal: ${ac.soal?'ya':'tidak'} &middot; Acak pilihan jawaban: ${ac.opsi?'ya':'tidak'}</small></p>
-  <p class="row">${uTag(u.Status)}${u.Status!=='Aktif'?`<button class="btn sm" onclick="uStatus('Aktif')">Aktifkan</button>`:`<button class="btn ghost sm" onclick="uStatus('Ditutup')">Tutup ujian</button><button class="btn ghost sm" onclick="uStatus('Draft')">Kembalikan ke Draft</button>`}<button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Lihat hasil</button><button class="btn ghost sm" onclick="uSesi()">Atur sesi${(n=>n?' ('+n+')':'')(l.filter(x=>x.Jenis==='SESI').length)}</button></p>
+  <p class="row">${uTag(u.Status)}${u.Status!=='Aktif'?`<button class="btn sm" onclick="uStatus('Aktif')">Aktifkan</button>`:`<button class="btn ghost sm" onclick="uStatus('Ditutup')">Tutup ujian</button><button class="btn ghost sm" onclick="uStatus('Draft')">Kembalikan ke Draft</button>`}<button class="btn ghost sm" onclick="uHasil('${esc(u.Ujian_ID)}')">Lihat hasil</button><button class="btn ghost sm" onclick="uPrevSemua()">Pratinjau semua soal</button><button class="btn ghost sm" onclick="uSesi()">Atur sesi${(n=>n?' ('+n+')':'')(l.filter(x=>x.Jenis==='SESI').length)}</button></p>
   ${ujSbPanel()}${lock?uWarn('Sudah ada murid yang mulai mengerjakan. Soal tidak bisa diubah lagi.'):`<p class="row"><button class="btn" onclick="sForm()">Tambah soal</button>${u.Jenis==='Uraian'?'':'<button class="btn ghost" onclick="ujImport()">Impor soal</button>'}</p>`}`+
   (l.length?`<p class="row"><button class="btn ghost sm" onclick="bdBuka()">Simpan soal terpilih ke Bank Soal</button><small>Centang soal di tabel. Soal Benar/Salah, sesi, dan soal bergambar atau beraudio dilewati.</small></p><div id="bd-form"></div>${lock?'':'<p class="row"><button class="btn bad sm" id="sd-go" onclick="sDelBanyak()" disabled>Hapus soal terpilih (0)</button><label style="margin:0;font-weight:400"><input type="checkbox" style="width:auto" onclick="sdSemua(this.checked)"> Pilih semua untuk dihapus</label></p>'}<div class="tw"><table><tr>${lock?'':'<th></th>'}<th><input type="checkbox" aria-label="Pilih semua" onclick="bdSemua(this.checked)"></th><th>No</th><th>Pertanyaan</th><th>Kunci</th><th>Lampiran</th><th></th></tr>`+l.map((q,i)=>`<tr>${lock?'':'<td><input type="checkbox" class="sd-cb" value="'+esc(q.Soal_ID)+'" aria-label="Hapus soal '+(i+1)+'" onchange="sdHitung()"></td>'}<td>${q.Jenis==='SESI'||q.Jenis==='URA'?'':`<input type="checkbox" class="bd-cb" value="${esc(q.Soal_ID)}" aria-label="Pilih soal ${i+1}">`}</td><td>${i+1}</td><td style="max-width:440px"><span class="tag">${esc(UJX_JENIS[q.Jenis]||q.Jenis)}</span><br>${q.Pertanyaan?ujIn(ujRingkas(q.Pertanyaan,140)):'<i>(soal berupa gambar)</i>'}<br><small>${q.Jenis==='SESI'?'Sesi: '+esc(q.Judul)+' ('+q.Durasi+' menit)':(q.Jenis==='URA'?'Jawaban uraian':q.Opsi.length+' '+(q.Jenis==='BS'?'pernyataan':'pilihan'))+(q.Pembahasan?' &middot; ada pembahasan':'')}</small></td><td><b>${esc(ujKunciTeks(q))}</b></td><td>${[q.Media?'Audio':'',q.Gambar?'Gambar':''].filter(Boolean).join(', ')||'-'}</td><td class="row">${lock?'':`<button class="btn ghost sm" ${i?'':'disabled'} aria-label="Naikkan" onclick="sPindah('${esc(q.Soal_ID)}',-1)">&#8593;</button><button class="btn ghost sm" ${i<l.length-1?'':'disabled'} aria-label="Turunkan" onclick="sPindah('${esc(q.Soal_ID)}',1)">&#8595;</button><button class="btn ghost sm" onclick="${q.Jenis==='SESI'?'uSesi()':'sForm(\''+esc(q.Soal_ID)+'\')'}">Edit</button><button class="btn bad sm" onclick="sDel('${esc(q.Soal_ID)}')">Hapus</button>`}</td></tr>`).join('')+'</table></div>':'<div class="empty">Belum ada soal.</div>'))}
+/* ---------- GURU: pratinjau SEMUA soal seperti tampilan murid (hanya membaca; tidak ada jawaban yang disimpan) ----------
+   Tiap soal digambar seperti di layar ujian murid. Kunci dan pembahasan hanya tampil bila guru mencentangnya. Gambar dimuat saat kartu mendekati layar; audio dimuat saat tombolnya ditekan. */
+const PV={kunci:false,pemb:false,img:{},aud:{},io:null};
+const PV_JENIS={PG:'Pilihan ganda',PGK:'Pilihan ganda kompleks',BS:'Benar/Salah',URA:'Uraian'};
+function uPrevSemua(){const c=UJ.cur;if(!c||!c.soal.some(x=>x.Jenis!=='SESI')){toast('Belum ada soal untuk dipratinjau.',1);return}
+  PV.kunci=false;PV.pemb=false;uPrevDraw()}
+function pvImgTag(src){return `<img src="${src}" alt="Gambar soal" style="max-width:100%;border:1px solid var(--line);border-radius:8px">`}
+// satu soal, digambar seperti di layar murid tetapi tanpa interaksi
+function pvKartu(q,no,n){
+  const J=q.Jenis||'PG',ar=ujArab(q.Opsi),kun=String(q.Kunci==null?'':q.Kunci),kk=PV.kunci,tdk='style="cursor:default"';let body='';
+  if(J==='BS'){const lb=ujLabel(q.Label,ar);
+    body=`<p><small>Tentukan <bdi>${esc(lb[0].toLowerCase())}</bdi> atau <bdi>${esc(lb[1].toLowerCase())}</bdi> untuk setiap pernyataan.</small></p>`+q.Opsi.map((o,k)=>{const v=kun[k]||'';
+      return `<div class="bsrow${ar?' ar':''}"><div class="bst">${ujIn(o)}</div><div class="bsb"><span class="opt bs${ar?' arl':''}${kk&&v==='B'?' on':''}" ${tdk}>${esc(lb[0])}</span><span class="opt bs${ar?' arl':''}${kk&&v==='S'?' on':''}" ${tdk}>${esc(lb[1])}</span></div></div>`}).join('')}
+  else if(J==='URA')
+    body=`<p><small>Bobot soal: ${esc(q.Bobot)}. Murid mengetik jawabannya di kolom ini (maksimal 3000 karakter).</small></p><textarea disabled dir="auto" style="width:100%;min-height:110px" placeholder="(kolom jawaban murid)"></textarea>`;
+  else
+    body=(J==='PGK'?'<p><small>Pilih semua jawaban yang benar (boleh lebih dari satu).</small></p>':'')+q.Opsi.map((o,k)=>{const h='ABCDE'[k],on=kk&&kun.indexOf(h)>=0;
+      return `<div class="opt${ar?' ar':''}${J==='PGK'?' chk':''}${on?' on':''}" ${tdk}><b>${on&&J==='PGK'?'&#10003;':ujHuruf(k,ar)}</b><span${ar?' dir="auto"':''}>${ujIn(o)}</span>${on?'<small style="margin-left:auto;color:var(--teal)">Kunci</small>':''}</div>`}).join('');
+  const lamp=(q.Media?`<div class="exau" style="margin-bottom:12px" data-aud="${esc(q.Soal_ID)}">${PV.aud[q.Soal_ID]?`<audio controls controlsList="nodownload" style="width:100%" src="${PV.aud[q.Soal_ID]}"></audio>`:`<button type="button" class="btn sm" onclick="pvLoadAud('${esc(q.Soal_ID)}',this)">Muat audio</button> <small>Audio dimuat dulu, lalu bisa diputar.</small>`}</div>`:'')+
+    (q.Gambar?`<div class="pv-img" data-sid="${esc(q.Soal_ID)}" style="margin-bottom:14px">${PV.img[q.Soal_ID]?pvImgTag(PV.img[q.Soal_ID]):'<small>Memuat gambar...</small>'}</div>`:'');
+  const lock=UJ.cur.terkunci;
+  return `<div class="card" id="pv-${no}" style="margin-bottom:14px"><div class="cb"><p class="row" style="justify-content:space-between;margin:0 0 6px"><small>Soal ${no} dari ${n} &middot; ${esc(PV_JENIS[J]||J)}</small>${lock?'':`<button class="btn ghost sm" onclick="sForm('${esc(q.Soal_ID)}')">Edit soal</button>`}</p>`+
+    (q.Pertanyaan?`<div style="margin:8px 0 14px">${ujPa(q.Pertanyaan)}</div>`:'')+lamp+body+
+    (PV.pemb&&q.Pembahasan?`<div style="margin-top:10px;padding:10px 12px;background:var(--mist);border-radius:8px"><b>Pembahasan</b><div>${ujPa(q.Pembahasan)}</div></div>`:'')+
+    (PV.pemb&&!q.Pembahasan&&J!=='URA'?'<p style="margin-top:8px"><small style="color:#b7791f">Belum ada pembahasan untuk soal ini.</small></p>':'')+'</div></div>'}
+function pvSesiKartu(judul,durasi,petunjuk){return `<div class="card" style="margin-bottom:14px;border-left:4px solid var(--teal)"><div class="cb"><b>${esc(judul)}</b> <small>&middot; ${esc(durasi)} menit</small>${petunjuk?`<div style="margin-top:6px">${ujPa(petunjuk)}</div>`:''}</div></div>`}
+function uPrevDraw(){const c=UJ.cur,u=c.ujian,l=c.soal,soal=l.filter(x=>x.Jenis!=='SESI'),n=soal.length,adaSesi=l.some(x=>x.Jenis==='SESI');
+  const hit={};soal.forEach(q=>{const j=q.Jenis||'PG';hit[j]=(hit[j]||0)+1});
+  const ring=Object.keys(PV_JENIS).filter(j=>hit[j]).map(j=>PV_JENIS[j]+' '+hit[j]).join(' &middot; ');
+  let no=0,kartu='';if(adaSesi&&l[0].Jenis!=='SESI')kartu+=pvSesiKartu('Sesi 1',sxDur0(),'');
+  l.forEach(q=>{if(q.Jenis==='SESI'){kartu+=pvSesiKartu(q.Judul,q.Durasi,q.Pertanyaan);return}no++;kartu+=pvKartu(q,no,n)});
+  const ac=u.Acak||{};
+  MT(`<div class="exwrap"><div class="row" style="justify-content:space-between"><h2>Pratinjau: ${esc(u.Judul)}</h2><button class="btn ghost" onclick="pvTutup()">Kembali</button></div>
+   <p><small>${n} soal &middot; ${ring} &middot; ${esc(u.Durasi)} menit${adaSesi?' &middot; bersesi':''}</small></p>
+   <p><small>Beginilah tampilan soal di layar murid. Murid mengerjakan satu soal per layar dengan palet nomor. ${ac.soal||ac.opsi?'<b>Catatan:</b> ujian ini memakai acak '+[ac.soal?'urutan soal':'',ac.opsi?'pilihan jawaban':''].filter(Boolean).join(' dan ')+', jadi urutan di layar tiap murid berbeda dari yang tampil di sini.':''}</small></p>
+   <p class="row"><label style="margin:0;font-weight:400"><input type="checkbox" style="width:auto" ${PV.kunci?'checked':''} onchange="PV.kunci=this.checked;uPrevDraw()"> Tampilkan kunci jawaban</label><label style="margin:0;font-weight:400"><input type="checkbox" style="width:auto" ${PV.pemb?'checked':''} onchange="PV.pemb=this.checked;uPrevDraw()"> Tampilkan pembahasan</label></p>
+   <div class="expal">${Array.from({length:n},(_,i)=>`<button type="button" aria-label="Ke soal ${i+1}" onclick="pvKe(${i+1})">${i+1}</button>`).join('')}</div>${kartu}
+   <p class="row"><button class="btn ghost" onclick="pvKe(1)">Ke soal pertama</button><button class="btn ghost" onclick="pvTutup()">Kembali</button></p></div>`);
+  if(typeof mxLoad==='function')mxLoad();pvAmati()}
+function pvKe(i){const e=document.getElementById('pv-'+i);if(e)e.scrollIntoView({behavior:'smooth',block:'start'})}
+function pvTutup(){if(PV.io){PV.io.disconnect();PV.io=null}uSoalDraw()}
+// gambar dimuat saat kartu mendekati layar (satu per satu), bukan sekaligus
+function pvAmati(){if(PV.io){PV.io.disconnect();PV.io=null}
+  const els=[].slice.call(document.querySelectorAll('.pv-img[data-sid]')).filter(e=>!PV.img[e.dataset.sid]);if(!els.length)return;
+  if(typeof IntersectionObserver==='undefined'){els.forEach(e=>pvLoadImg(e.dataset.sid));return}
+  PV.io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){PV.io.unobserve(e.target);pvLoadImg(e.target.dataset.sid)}}),{rootMargin:'400px'});
+  els.forEach(e=>PV.io.observe(e))}
+async function pvLoadImg(sid){const cari=()=>[].slice.call(document.querySelectorAll('.pv-img')).find(e=>e.dataset.sid===sid);
+  try{if(!PV.img[sid]){const r=await api('gambar.get',{Ujian_ID:UJ.cur.ujian.Ujian_ID,Soal_ID:sid});PV.img[sid]=blobUrl(r)}const e=cari();if(e)e.innerHTML=pvImgTag(PV.img[sid])}
+  catch(x){const e=cari();if(e)e.innerHTML='<small style="color:var(--bad)">Gambar gagal dimuat.</small>'}}
+async function pvLoadAud(sid,b){if(b){b.disabled=true;b.textContent='Memuat...'}
+  try{const r=await api('audio.get',{Ujian_ID:UJ.cur.ujian.Ujian_ID,Soal_ID:sid});PV.aud[sid]=blobUrl(r);const e=[].slice.call(document.querySelectorAll('[data-aud]')).find(x=>x.dataset.aud===sid);if(e)e.innerHTML=`<audio controls controlsList="nodownload" style="width:100%" src="${PV.aud[sid]}"></audio>`}
+  catch(x){fail(x);if(b){b.disabled=false;b.textContent='Muat audio'}}}
+
 /* ---- ATUR SESI: susunan sesi diedit di peramban, lalu disimpan sekaligus lewat sesi.atur ----
    Sesi = pembatas di daftar soal; soal sesudah pembatas (sampai pembatas berikutnya) masuk sesi itu. Waktu dihitung per sesi oleh server. */
 const SX={m:[]};
@@ -2768,7 +2802,7 @@ async function uPlay(uid,sid,b){const t=b.textContent;b.disabled=true;b.textCont
 async function uHasil(id){UJ.hid=id;MT(uSkel);
   try{await ujSbSinkron(id);UJ.res=await api('u.hasil',{id,Semester:UJ.sem});uHasilDraw()}catch(e){fail(e);uHome()}}
 function uHasilDraw(){const r=UJ.res,u=r.ujian;
-  MT(`<div class="row" style="justify-content:space-between"><h2>Hasil: ${esc(u.Judul)}</h2><span class="row"><button class="btn ghost" onclick="uHasilUnduh()">Unduh Excel</button><button class="btn ghost" onclick="uHasil(UJ.hid)">Muat ulang</button><button class="btn ghost" onclick="uHome()">Kembali</button></span></div>
+  MT(`<div class="row" style="justify-content:space-between"><h2>Hasil: ${esc(u.Judul)}</h2><span class="row"><button class="btn ghost" onclick="uHasilUnduh()">Unduh Excel</button><button class="btn ghost" onclick="uHasil(UJ.hid)">Muat ulang</button><button class="btn ghost" onclick="uHapusPerm()">Hapus permanen</button><button class="btn ghost" onclick="uHome()">Kembali</button></span></div>
   <p><small>${esc(u.Kelas)} &middot; ${esc(u.Mapel)} &middot; ${esc(u.Jenis)} &middot; ${u.Selesai_N} dari ${u.Siswa} siswa selesai</small></p>${ujSbInfo(u.Ujian_ID)}
   <div class="row" style="margin:10px 0"><span>Salin skor ke Nilai:</span><select id="hs" style="max-width:130px" onchange="UJ.sem=this.value;uHasil(UJ.hid)">${USEM.map(x=>`<option ${x===UJ.sem?'selected':''}>${x}</option>`).join('')}</select><select id="hk" style="max-width:190px">${r.komponen.map(k=>`<option>${esc(k)}</option>`).join('')}</select><button class="btn sm" onclick="uKeNilai()">Salin skor</button></div>
   <p><small>Hanya murid yang sudah selesai yang disalin. Nilai lama pada komponen itu diganti dan perlu diverifikasi ulang wali kelas. Tidak bisa jika rapor sudah final.</small></p>`+
@@ -2779,6 +2813,25 @@ async function uReset(i){const x=UJ.res.siswa[i];
 async function uKeNilai(){const k=$('#hk').value;if(!k){toast('Belum ada komponen nilai',1);return}
   if(!await ask('Salin skor ujian ini ke komponen "'+k+'" semester '+UJ.sem+'? Nilai lama pada komponen itu akan diganti.',{title:'Salin ke nilai',ok:'Salin'}))return;
   try{await ujSbSinkron(UJ.hid,true);const r=await api('u.keNilai',{id:UJ.hid,Semester:UJ.sem,Jenis:k});toast(r&&r.diubah?r.diubah+' nilai disalin':'Sudah sama, tidak ada perubahan')}catch(e){fail(e)}}
+
+/* ---------- hapus permanen ujian yang sudah dikerjakan (menghemat penyimpanan; nilai di tabel Nilai tetap aman) ---------- */
+async function uHapusPerm(){const id=UJ.hid;MT(uSkel);
+  try{await ujSbSinkron(id,true);UJ.hp=await api('u.hapusCek',{id});UJ.hp.id=id;uHapusPermDraw()}catch(e){fail(e);uHasil(id)}}
+function uHapusPermDraw(){const c=UJ.hp,id=c.id;
+  const kiri=`<p><b>Yang dihapus selamanya:</b> jawaban dan skor semua murid di ujian ini, semua soal beserta pembahasannya, gambar dan audio soal, serta data ujian (termasuk salinan di Supabase).</p><p><b>Yang tetap ada:</b> nilai yang sudah disalin ke menu Nilai dan catatan aktivitas. Tindakan ini <b>tidak bisa dibatalkan</b>.</p>`;
+  const head=`<div class="row" style="justify-content:space-between"><h2>Hapus permanen: ${esc(c.Judul)}</h2><button class="btn ghost" onclick="uHasil(UJ.hid)">Kembali</button></div><p><small>${c.selesai} dari ${c.murid} murid selesai${c.nilai?` &middot; skor sudah disalin ke ${esc(c.nilai.Komponen)} semester ${esc(c.nilai.Semester)}`:''}</small></p>`+kiri;
+  if(c.blok.length){MT(head+`<div class="card" style="border-left:4px solid var(--bad)"><div class="cb"><b>Belum bisa dihapus</b><ul style="margin:8px 0 0 18px">${c.blok.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div><p><button class="btn" onclick="uHapusPerm()">Periksa lagi</button></p>`);return}
+  MT(head+(c.peringatan.length?`<div class="card" style="border-left:4px solid #b7791f"><div class="cb"><b>Peringatan</b><ul style="margin:8px 0 0 18px">${c.peringatan.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="hp0" style="width:auto" onchange="uHpCek()"> Saya sudah memeriksa dan tetap ingin melanjutkan</label></div></div>`:'')+
+   `<div style="max-width:560px"><label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" id="hp1" style="width:auto" onchange="uHpCek()"> Soal dan pembahasan sudah saya simpan ke Bank Soal (atau memang tidak diperlukan lagi)</label>
+    <p style="margin:8px 0"><button class="btn ghost sm" onclick="uSoal(UJ.hid)">Buka daftar soal</button> <small>untuk menyimpan soal ke Bank Soal terlebih dulu</small></p>
+    <label for="hpj">Ketik judul ujian persis seperti ini untuk mengonfirmasi:</label><p style="margin:2px 0 6px"><b>${esc(c.Judul)}</b></p><input id="hpj" autocomplete="off" oninput="uHpCek()">
+    <p class="row"><button class="btn" id="hpb" style="background:var(--bad)" disabled onclick="uHapusPermGo()">Hapus permanen</button><button class="btn ghost" onclick="uHasil(UJ.hid)">Batal</button></p></div>`)}
+function uHpCek(){const c=UJ.hp;if(!c||!$('#hpb'))return;
+  $('#hpb').disabled=!($('#hp1')&&$('#hp1').checked&&(!c.peringatan.length||($('#hp0')&&$('#hp0').checked))&&$('#hpj').value.trim()===String(c.Judul).trim())}
+async function uHapusPermGo(){const c=UJ.hp,b=$('#hpb');if(!c||b.disabled)return;b.disabled=true;b.textContent='Menghapus...';
+  try{const r=await api('u.hapusPermanen',{id:c.id,Konfirmasi:$('#hpj').value,SoalBank:true,Lanjut:!!($('#hp0')&&$('#hp0').checked)});
+    MEM.ug=(MEM.ug||[]).filter(x=>x.Ujian_ID!==c.id);UJ.hp=null;toast('Ujian dihapus permanen ('+r.murid+' murid)');uHome()}
+  catch(e){fail(e);if($('#hpb')){b.textContent='Hapus permanen';uHpCek()}}}
 
 /* uHome: tujuan setelah simpan/batal/kembali di layar guru. Halaman lama memuat ulang daftar ujian; MapelUI menimpanya agar tetap di tab Ujian CBT. */
 function uHome(){vGUjian()}
