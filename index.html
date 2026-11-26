@@ -8879,6 +8879,9 @@ function srrGambar(cv,f,html){
 })();
 </script>
 <style>
+.mmai{border:1px dashed #d97706;background:#fffaf0;border-radius:var(--r);padding:14px;margin:0 0 14px;max-width:900px}
+.mmai h3{margin:0 0 2px}
+.mmsec{max-width:900px;margin:18px 0 6px}
 .mmlead{max-width:680px;margin:0 0 16px}
 .mmform{max-width:1000px}
 .mmform .mmfs{border:0;border-radius:18px;padding:18px 20px 20px;margin:0 0 16px;box-shadow:0 8px 24px -18px rgba(10,37,64,.45)}
@@ -9152,8 +9155,9 @@ function srrGambar(cv,f,html){
       '<p class="note" style="max-width:640px">Tekan nama kampus atau negara, atau tombol "Lihat analisis", untuk melihat rincian kecocokannya.</p>' +
       (h.ringkasan ? '<div class="mmbox"><b>Ringkasan</b><p class="mmpre" style="margin:6px 0 0">' + esc(h.ringkasan) + '</p></div>' : '') +
       (h.catatan ? '<div class="mmbox"><b>Catatan dari guru</b><p class="mmpre" style="margin:6px 0 0">' + esc(h.catatan) + '</p></div>' : '') +
+      '<div class="mmsec"><h2 style="margin:0 0 2px">Hasil dari database sekolah</h2><p class="note" style="margin:0">Dihitung dari data kampus yang dicatat dan diperiksa sekolah.</p></div>' +
       mmTiers(h, false) +
-      (h.saran ? '<div class="mmbox"><b>Saran tambahan dari AI</b> <small>(belum diverifikasi sekolah, cek situs resmi)</small><p class="mmpre" style="margin:6px 0 0">' + esc(h.saran) + '</p>' + mmSumber(h.sumber) + '</div>' : '') +
+      (h.saran ? '<div class="mmai"><h3>Rekomendasi kampus tambahan dari AI</h3><p class="note" style="margin:0 0 6px">Dibuat oleh AI (Gemini + Google Search), bukan data sekolah, dan belum diverifikasi. Selalu cek situs resmi kampus.</p><p class="mmpre" style="margin:6px 0 0">' + esc(h.saran) + '</p>' + mmSumber(h.sumber) + '</div>' : '') +
       '<p class="note" style="max-width:640px">Ini gambaran awal. Biaya, syarat, dan jadwal beasiswa dapat berubah, selalu cek situs resmi kampus dan konsultasikan dengan guru BK.</p>');
   };
   window.mmKembaliMurid = function () { vMM(); };
@@ -9193,21 +9197,21 @@ function srrGambar(cv,f,html){
       ((p.cl && p.cl.length) ? '<ul style="margin:0;padding-left:18px">' + p.cl.map(function (x) { return '<li>' + esc(x.j) + ': <b>' + esc(x.v) + '</b></li>'; }).join('') + '</ul>' : '<p class="note" style="margin:0">Checklist tidak diisi.</p>') + '</div>';
     var aksi = kirim ? '' : '<div class="mmbox"><b>Jalankan analisis</b><p><small>Skor selalu dihitung dari database sekolah dan dikelompokkan ke 3 kategori. Gemini bersifat tambahan.</small></p>' +
       '<p class="row" style="align-items:center"><input id="mmAn" type="checkbox" style="width:auto" checked><label for="mmAn" style="margin:0">Tulis ringkasan dengan Gemini (dari hasil database)</label></p>' +
-      '<p class="row" style="align-items:center"><input id="mmAc" type="checkbox" style="width:auto"><label for="mmAc" style="margin:0">Cari saran kampus tambahan dengan Gemini + Google Search (belum diverifikasi)</label></p>' +
+      '<p class="row" style="align-items:center"><input id="mmAc" type="checkbox" style="width:auto"><label for="mmAc" style="margin:0">Cari rekomendasi kampus tambahan dengan Gemini + Google Search (terpisah dari hasil database, belum diverifikasi)</label></p>' +
       '<p class="row"><button class="btn" id="mmAnb" onclick="mmAnalisis()">' + (h ? 'Analisis ulang' : 'Jalankan analisis') + '</button></p></div>';
     var hasil = '';
     if (h) {
       var hit = h.hitung ? '<p class="note" style="margin:0 0 10px">Ditemukan di database: ' + esc(h.hitung.tinggi) + ' program di kategori 75% ke atas, ' + esc(h.hitung.sedang) + ' di 50 sampai 74%, ' + esc(h.hitung.rendah) + ' di bawah 50%. Ditampilkan maksimal 6 teratas per kategori.</p>' : '';
-      hasil = (h.galatAI ? '<p class="mmno">' + esc(h.galatAI) + '</p>' : '') + '<h3>Hasil analisis' + (h.dihitung ? ' <small>(dihitung ' + esc(h.dihitung) + ')</small>' : '') + '</h3>' + hit +
+      hasil = (h.galatAI ? '<p class="mmno">' + esc(h.galatAI) + '</p>' : '') + '<h3>Hasil dari database sekolah' + (h.dihitung ? ' <small>(dihitung ' + esc(h.dihitung) + ')</small>' : '') + '</h3>' + hit +
         '<p class="note" style="margin:0 0 12px">' + (kirim ? 'Program yang dikirim ke siswa.' : 'Centang program yang akan dikirim (maksimal 12 dari semua kategori). Tiga teratas tiap kategori sudah tercentang.') + ' Tekan kampus atau negara untuk melihat analisisnya.</p>' +
         (h.program.length ? mmTiers(h, !kirim) : '<div class="empty">Tidak ada program cocok di database.</div>');
       if (kirim) {
         hasil += (h.ringkasan ? '<div class="mmbox"><b>Ringkasan</b><p class="mmpre">' + esc(h.ringkasan) + '</p></div>' : '') + (p.catatan ? '<div class="mmbox"><b>Catatan guru</b><p class="mmpre">' + esc(p.catatan) + '</p></div>' : '') +
-          (h.saranAI ? '<div class="mmbox"><b>Saran AI yang dikirim</b><p class="mmpre">' + esc(h.saranAI) + '</p>' + mmSumber(h.sumber) + '</div>' : '') + '<p><small>Dikirim ' + esc(p.dikirim) + '.</small></p>';
+          (h.saranAI ? '<div class="mmai"><h3>Rekomendasi kampus AI yang dikirim</h3><p class="mmpre">' + esc(h.saranAI) + '</p>' + mmSumber(h.sumber) + '</div>' : '') + '<p><small>Dikirim ' + esc(p.dikirim) + '.</small></p>';
       } else if (h.program.length) {
         hasil += '<div class="mmbox"><label for="mmRi">Ringkasan untuk siswa (boleh diedit atau dikosongkan)</label><textarea id="mmRi" maxlength="1500" style="min-height:140px">' + esc(h.ringkasan || '') + '</textarea>' +
-          (h.saranAI || p.status === 'Dianalisis' ? '<label for="mmSa">Saran tambahan dari AI (belum diverifikasi; boleh diedit)</label><textarea id="mmSa" maxlength="3000" style="min-height:140px">' + esc(h.saranAI || '') + '</textarea>' + mmSumber(h.sumber) +
-            '<p class="row" style="align-items:center"><input id="mmSs" type="checkbox" style="width:auto"><label for="mmSs" style="margin:0">Sertakan saran AI ini dalam hasil untuk siswa</label></p>' : '') +
+          (h.saranAI || p.status === 'Dianalisis' ? '<label for="mmSa">Rekomendasi kampus dari AI + Google Search (terpisah dari hasil database, belum diverifikasi; boleh diedit)</label><textarea id="mmSa" maxlength="3000" style="min-height:140px">' + esc(h.saranAI || '') + '</textarea>' + mmSumber(h.sumber) +
+            '<p class="row" style="align-items:center"><input id="mmSs" type="checkbox" style="width:auto"><label for="mmSs" style="margin:0">Sertakan rekomendasi AI ini dalam hasil untuk siswa (tampil di bagian terpisah)</label></p>' : '') +
           '<label for="mmCt">Catatan dari guru (boleh kosong)</label><textarea id="mmCt" maxlength="500" style="min-height:80px"></textarea>' +
           '<p class="row"><button class="btn" id="mmKr" onclick="mmKirim()">Kirim ke siswa</button></p></div>';
       }
