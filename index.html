@@ -8879,6 +8879,24 @@ function srrGambar(cv,f,html){
 })();
 </script>
 <style>
+.mmlead{max-width:680px;margin:0 0 16px}
+.mmform{max-width:1000px}
+.mmform .mmfs{border:0;border-radius:18px;padding:18px 20px 20px;margin:0 0 16px;box-shadow:0 8px 24px -18px rgba(10,37,64,.45)}
+.mmform .mmfs legend{float:left;width:100%;padding:0;margin:0 0 14px;font-size:16px}
+.mmform .mmfs legend+*{clear:both}
+.mmgd{display:grid;gap:14px 16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.mmfull{grid-column:1/-1}
+.mmfw label{display:block;margin:0 0 5px;font-weight:600;font-size:14px}
+.mmfw input{width:100%;max-width:none;margin:0}
+.mmfw small{display:block;color:#5b7083;margin-top:4px;font-size:12px}
+.mmnote{max-width:680px;margin:0 0 12px}
+.mmrows{display:grid;gap:12px 14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.mmrows .mmrow{margin:0;padding:12px;border-radius:14px;background:var(--mist)}
+.mmrows .mmopt{grid-template-columns:1fr}
+.mmrows .mmo[aria-pressed="true"]{background:#fff;border-color:var(--teal);box-shadow:0 0 0 2px #0a8f9d33}
+.mmrows .mmq{font-size:14px;margin:0 0 8px}
+.mmsubmit{position:sticky;bottom:10px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fffffff2;border-radius:16px;padding:10px 16px;box-shadow:0 12px 30px -14px rgba(10,37,64,.5);font-size:14px;font-weight:600}
+@media(max-width:820px){.mmgd{grid-template-columns:1fr}.mmrows{grid-template-columns:1fr}.mmsubmit{bottom:0}}
 .mmg{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));max-width:900px}
 .mmr{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--r);background:#fff;padding:14px;margin:0 0 12px;max-width:900px}
 .mmr.t1{border-left-color:#0a7a4a}.mmr.t2{border-left-color:#d97706}.mmr.t3{border-left-color:#64748b}
@@ -9074,11 +9092,11 @@ function srrGambar(cv,f,html){
    
   function mmFormCl(def) {
     return def.map(function (b) {
-      return '<fieldset class="mmfs"><legend>' + esc(b.b) + '</legend>' + b.it.map(function (r) {
+      return '<fieldset class="mmfs"><legend>' + esc(b.b) + '</legend><div class="mmrows">' + b.it.map(function (r) {
         return '<div class="mmrow" role="group" aria-labelledby="mmq-' + esc(r.k) + '"><div class="mmq" id="mmq-' + esc(r.k) + '">' + esc(r.j) + '</div><div class="mmopt">' +
           ['A', 'B'].map(function (v) { return '<button type="button" class="mmo" aria-pressed="false" data-k="' + esc(r.k) + '" data-v="' + v + '" onclick="mmCl(this)">' + esc(v === 'A' ? r.a : r.b) + '</button>'; }).join('') +
           '</div></div>';
-      }).join('') + '</fieldset>';
+      }).join('') + '</div></fieldset>';
     }).join('');
   }
   async function vMM() {
@@ -9090,18 +9108,19 @@ function srrGambar(cv,f,html){
       return '<div class="mmbox"><b>' + esc(x.jurusan) + '</b><br><small>Diajukan ' + TGL(x.dibuat) + '</small><br>' +
         (x.status === 'Terkirim' ? '<span class="mmok">Hasil sudah dikirim ' + TGL(x.dikirim) + '</span> <button class="btn sm" style="margin-left:8px" onclick="mmLihat(\'' + esc(x.id) + '\')">Lihat hasil</button>' : '<span class="mmno">Sedang ditinjau guru. Hasilnya akan muncul di sini.</span>') + '</div>';
     }).join('') : '';
-    var form = d.bisa ? '<h3 style="margin-top:18px">Ajukan Mix &amp; Match</h3><p class="lead" style="max-width:640px">Isi jurusan yang kamu inginkan dan checklist berikut. Hasil rekomendasi akan dikirim oleh guru setelah ditinjau. Pengajuan terbatas, jadi isi dengan teliti.</p>' +
-      '<form onsubmit="return mmAjukan(event)" autocomplete="off" style="max-width:700px">' +
-      '<fieldset class="mmfs"><legend>Data dasar</legend>' +
-      '<label for="mmj">Jurusan yang diinginkan</label><input id="mmj" required maxlength="120" placeholder="mis. Informatika, Kedokteran, Hubungan Internasional">' +
-      '<label for="mmb">Budget biaya kuliah per tahun (USD, belum termasuk biaya hidup; boleh kosong)</label><input id="mmb" type="number" min="0" max="1000000" step="500" inputmode="numeric" placeholder="mis. 8000">' +
-      '<label for="mmi">Skor IELTS saat ini (kosongkan bila belum punya)</label><input id="mmi" type="number" min="0" max="9" step="0.5" inputmode="decimal" style="max-width:140px" placeholder="mis. 6.5">' +
-      '<label for="mmn">Rata-rata nilai rapor (0 sampai 100; boleh kosong)</label><input id="mmn" type="number" min="0" max="100" step="0.1" inputmode="decimal" style="max-width:140px" placeholder="mis. 85">' +
-      '<label>Negara yang diminati (boleh lebih dari satu, kosong = semua)</label><div class="chips" style="margin:6px 0 4px">' +
-      (o.negara.length ? o.negara.map(function (n) { return '<button type="button" class="chip" aria-pressed="false" data-id="' + esc(n.id) + '" onclick="mmNeg(this)">' + esc(n.n) + '</button>'; }).join('') : '<small>Belum ada negara tersedia.</small>') + '</div></fieldset>' +
-      '<p class="note" style="margin:0 0 10px">Checklist: pilih salah satu yang paling sesuai dengan kondisi atau keinginanmu. Tekan pilihan yang sama sekali lagi untuk mengosongkan. Butir yang kosong tidak ikut dinilai.</p>' +
+    MM.tot = (o.cl || []).reduce(function (n, g) { return n + g.it.length; }, 0);
+    var form = d.bisa ? '<p class="lead mmlead">Isi jurusan yang kamu inginkan dan checklist berikut. Hasil rekomendasi akan dikirim oleh guru setelah ditinjau. Pengajuan terbatas, jadi isi dengan teliti.</p>' +
+      '<form class="mmform" onsubmit="return mmAjukan(event)" autocomplete="off">' +
+      '<fieldset class="mmfs"><legend>Data dasar</legend><div class="mmgd">' +
+      '<div class="mmfw mmfull"><label for="mmj">Jurusan yang diinginkan</label><input id="mmj" required maxlength="120" placeholder="mis. Informatika, Kedokteran, Hubungan Internasional"></div>' +
+      '<div class="mmfw"><label for="mmb">Budget kuliah per tahun (USD)</label><input id="mmb" type="number" min="0" max="1000000" step="500" inputmode="numeric" placeholder="mis. 8000"><small>Belum termasuk biaya hidup. Boleh kosong.</small></div>' +
+      '<div class="mmfw"><label for="mmi">Skor IELTS saat ini</label><input id="mmi" type="number" min="0" max="9" step="0.5" inputmode="decimal" placeholder="mis. 6.5"><small>Kosongkan bila belum punya.</small></div>' +
+      '<div class="mmfw"><label for="mmn">Rata-rata nilai rapor</label><input id="mmn" type="number" min="0" max="100" step="0.1" inputmode="decimal" placeholder="mis. 85"><small>Skala 0 sampai 100. Boleh kosong.</small></div></div>' +
+      '<div class="mmfw" style="margin-top:14px"><label id="mmnl">Negara yang diminati</label><small>Boleh lebih dari satu. Kosong = semua negara.</small><div class="chips" role="group" aria-labelledby="mmnl" style="margin:8px 0 0">' +
+      (o.negara.length ? o.negara.map(function (n) { return '<button type="button" class="chip" aria-pressed="false" data-id="' + esc(n.id) + '" onclick="mmNeg(this)">' + esc(n.n) + '</button>'; }).join('') : '<small>Belum ada negara tersedia.</small>') + '</div></div></fieldset>' +
+      '<p class="note mmnote">Checklist: pilih salah satu yang paling sesuai dengan kondisi atau keinginanmu. Tekan pilihan yang sama sekali lagi untuk mengosongkan. Butir yang kosong tidak ikut dinilai.</p>' +
       mmFormCl(o.cl || []) +
-      '<p class="row"><button class="btn" id="mmgo">Kirim pengajuan</button></p></form>'
+      '<div class="mmsubmit"><span id="mmprog" aria-live="polite">0 dari ' + MM.tot + ' butir checklist terisi</span><button class="btn" id="mmgo">Kirim pengajuan</button></div></form>'
       : '<div class="empty" style="max-width:640px;margin-top:10px">' + esc(d.alasan) + '</div>';
     M('<h2>Mix &amp; Match Kampus</h2>' + riwayat + form);
   }
@@ -9109,6 +9128,7 @@ function srrGambar(cv,f,html){
     var k = b.getAttribute('data-k'), v = b.getAttribute('data-v');
     if (MM.cl[k] === v) delete MM.cl[k]; else MM.cl[k] = v;
     [].forEach.call(document.querySelectorAll('.mmo[data-k="' + k + '"]'), function (x) { x.setAttribute('aria-pressed', MM.cl[k] === x.getAttribute('data-v') ? 'true' : 'false'); });
+    var pg = $('#mmprog'); if (pg) pg.textContent = Object.keys(MM.cl).length + ' dari ' + (MM.tot || 0) + ' butir checklist terisi';
     if (k === 'tes') { var i = $('#mmi'); if (i) { if (MM.cl.tes === 'B') { i.value = ''; i.disabled = true; } else i.disabled = false; } }
   };
   window.mmNeg = function (b) {
