@@ -8874,6 +8874,7 @@ function srrGambar(cv,f,html){
 })();
 </script>
 <style>
+.side a .mmic{display:inline-block;vertical-align:-4px;margin-right:7px;width:20px;height:20px}
 .mmg{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));max-width:900px}
 .mmr{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--r);background:#fff;padding:14px;margin:0 0 12px;max-width:900px}
 .mmr.t1{border-left-color:#0a7a4a}.mmr.t2{border-left-color:#d97706}.mmr.t3{border-left-color:#64748b}
@@ -8919,7 +8920,9 @@ function srrGambar(cv,f,html){
   function tambahMenu(role, key, label) {
     if (MENU[role] && !MENU[role].some(function (m) { return m[0] === key; })) MENU[role].push([key, label]);
   }
-  tambahMenu('Murid', 'mm', 'Mix & Match Kampus');
+   
+  var MM_GLOBE = '<svg class="mmic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+  tambahMenu('Murid', 'mm', MM_GLOBE + 'Mix & Match Kampus');
   tambahMenu('Admin', 'mm-masuk', 'Pengajuan Mix & Match');
   tambahMenu('Admin', 'mm-admin', 'Data Mix & Match');
 
@@ -9296,7 +9299,7 @@ function srrGambar(cv,f,html){
     M('<h2>Data Negara</h2><div class="empty">Memuat...</div>');
     try { MM.nd = await api('mm.negaraList'); } catch (e) { fail(e); return; }
     var kosong = '<small>belum diisi</small>', v = function (x) { return x ? esc(x) : kosong; };
-    M('<p><button class="btn ghost sm" onclick="vMMAdminKembali()">&larr; Kembali ke Data Mix &amp; Match</button></p><h2>Data Negara</h2>' +
+    M('<p><button class="btn ghost sm" onclick="vMMAdminKembali()">&larr; Kembali ke Data Mix &amp; Match</button></p><div class="row" style="justify-content:space-between"><h2>Data Negara</h2><div class="row"><button class="btn ghost" onclick="mmTemplatNegara()">Unduh template</button><button class="btn" onclick="mmNegImporForm()">Impor CSV</button></div></div>' +
       '<p><small>Kondisi tiap negara yang dipakai pada bagian 3 checklist (kerja part-time, beasiswa pemerintah, biaya hidup, halal dan ibadah) dan target pasca-lulus. Negara diambil dari menu <b>Kampus Tujuan</b>. Yang belum diisi dinilai netral.</small></p>' +
       (MM.nd.length ? '<div class="tw"><table><thead><tr><th>Negara</th><th>Kerja part-time</th><th>Kerja pasca lulus</th><th>Beasiswa pemerintah</th><th>Biaya hidup</th><th>Halal &amp; ibadah</th><th></th></tr></thead><tbody>' + MM.nd.map(function (n) {
         return '<tr><td><b>' + esc(n.n) + '</b></td><td>' + v(n.Kerja_Paruh) + '</td><td>' + v(n.Kerja_Pasca) + '</td><td>' + v(n.Beasiswa_Pemerintah) + '</td><td>' + v(n.Biaya_Hidup) + '</td><td>' + v(n.Halal) + '</td>' +
@@ -9325,24 +9328,81 @@ function srrGambar(cv,f,html){
   };
 
    
+   
+  function mmUnduh(nama, baris) {
+    var teks = '﻿' + baris.map(function (r) {
+      return r.map(function (c) { c = String(c == null ? '' : c); return /[;"\r\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(';');
+    }).join('\r\n');
+    var a = document.createElement('a'), u = URL.createObjectURL(new Blob([teks], { type: 'text/csv;charset=utf-8' }));
+    a.href = u; a.download = nama; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(u); a.remove(); }, 1000);
+  }
+  function mmPanduan(teks, lebar) { var r = ['#PANDUAN ' + teks]; while (r.length < lebar) r.push(''); return r; }
+  window.mmBacaBerkas = function (inp, target) {
+    var f = inp.files && inp.files[0]; if (!f) return;
+    if (f.size > 1000000) { toast('Berkas terlalu besar (maksimal 1 MB)', 1); inp.value = ''; return; }
+    var rd = new FileReader();
+    rd.onload = function () { var t = $(target); if (t) t.value = String(rd.result || '').replace(/^﻿/, ''); toast('Berkas dimuat. Tekan "Periksa dulu".'); inp.value = ''; };
+    rd.onerror = function () { toast('Berkas tidak bisa dibaca', 1); };
+    rd.readAsText(f, 'UTF-8');
+  };
+  window.mmTemplatProgram = function () {
+    var head = ['kampus', 'jurusan', 'katakunci', 'biaya', 'ielts', 'nilai', 'beasiswa', 'ranking', 'catatan', 'status', 'jalur', 'bahasa', 'testambahan', 'fokus', 'lingkungan', 'portofolio'], w = head.length;
+    var k = MM.kampus.length ? MM.kampus[0].n : 'Nama Kampus Persis';
+    mmUnduh('template_mix_match_program.csv', [head,
+      ['#CONTOH ' + k, 'Informatika', 'informatika; ilmu komputer; IT', 8000, 6.5, 80, 'Ya', 150, 'Contoh catatan untuk siswa', 'Ya', 'Direct Entry', 'Inggris', 'Tidak', 'Spesifik', 'Metropolitan', 'Tidak'],
+      ['#CONTOH ' + k, 'Hubungan Internasional', 'HI; international relations', 4000, 0, 75, 'Tidak', '', '', 'Ya', 'Foundation', 'Lokal', 'Ya', 'Eksploratif', 'Kota Pelajar', 'Ya'],
+      mmPanduan('Satu baris = satu jurusan di satu kampus. Baris berawalan # (contoh dan panduan ini) tidak ikut diimpor. Salin baris contoh lalu hapus tulisan #CONTOH di kolom kampus.', w),
+      mmPanduan('kampus: nama atau singkatan persis seperti di menu Kampus Tujuan (daftar nama ada di halaman impor). jurusan wajib. katakunci: sinonim, pisahkan dengan titik koma.', w),
+      mmPanduan('biaya: USD per tahun (angka). ielts: isi 0 bila tidak disyaratkan. nilai: nilai rapor minimal 0 sampai 100. ranking: angka. beasiswa dan status: Ya atau Tidak (status kosong = aktif).', w),
+      mmPanduan('jalur: Direct Entry atau Foundation. bahasa: Inggris atau Lokal. testambahan dan portofolio: Ya atau Tidak. fokus: Spesifik atau Eksploratif. lingkungan: Metropolitan atau Kota Pelajar.', w),
+      mmPanduan('Kolom checklist yang dikosongkan dianggap belum tercatat dan dinilai netral. Baris yang sudah ada (kampus + jurusan sama) dilewati.', w)]);
+  };
+  window.mmTemplatNegara = function () {
+    var head = ['negara', 'kerja_paruh', 'kerja_pasca', 'beasiswa_pemerintah', 'biaya_hidup', 'halal', 'catatan'], w = head.length;
+    var b = [head];
+    MM.nd.forEach(function (n) { b.push([n.n, n.Kerja_Paruh, n.Kerja_Pasca, n.Beasiswa_Pemerintah, n.Biaya_Hidup, n.Halal, n.Catatan]); });
+    b.push(mmPanduan('Semua negara dari menu Kampus Tujuan sudah terisi di atas (beserta data yang sudah ada). Isi atau ubah kolomnya, lalu impor. Jangan ubah nama negara.', w));
+    b.push(mmPanduan('kerja_paruh (izin kerja part-time), kerja_pasca (peluang kerja setelah lulus), beasiswa_pemerintah: Ya atau Tidak. biaya_hidup: Tinggi atau Terjangkau. halal: Mudah atau Terbatas.', w));
+    b.push(mmPanduan('Sel yang dikosongkan tidak menghapus data lama. Baris berawalan # tidak diimpor.', w));
+    mmUnduh('template_mix_match_negara.csv', b);
+  };
+  function mmHasilImpor(r) {
+    $('#mir').innerHTML = '<p><b>' + (r.tersimpan ? 'Tersimpan: ' : 'Siap diimpor: ') + r.siap + ' baris</b>, dilewati ' + r.dilewati + ', ditolak ' + r.ditolak + '.</p>' +
+      (r.contoh.length ? '<p><small>Contoh: ' + r.contoh.map(esc).join('; ') + '</small></p>' : '') +
+      (r.galat.length ? '<ul style="color:var(--bad)">' + r.galat.map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('') + '</ul>' : '');
+    if (r.tersimpan) toast('Impor selesai');
+  }
+  var MM_BERKAS = '<p class="row" style="align-items:center"><label for="mif" style="margin:0">Atau pilih berkas CSV</label><input id="mif" type="file" accept=".csv,.txt,text/csv" style="max-width:300px" onchange="mmBacaBerkas(this,\'#mic\')"></p>';
+
+  window.mmNegImporForm = function () {
+    M('<p><button class="btn ghost sm" onclick="mmNegData()">&larr; Kembali ke Data Negara</button></p><h2>Impor CSV data negara</h2><div style="max-width:700px">' +
+      '<p><small>Langkah: (1) tekan <b>Unduh template</b>, semua negara sudah terisi; (2) isi kolom kondisi negara di Excel atau Google Sheets, simpan sebagai CSV (UTF-8); (3) pilih berkas di bawah atau tempel isinya; (4) <b>Periksa dulu</b>, lalu <b>Simpan</b>. Sel kosong tidak menghapus data lama.</small></p>' +
+      '<p class="row"><button class="btn ghost" onclick="mmTemplatNegara()">Unduh template negara (CSV)</button></p>' + MM_BERKAS +
+      '<textarea id="mic" style="min-height:200px" placeholder="negara;kerja_paruh;kerja_pasca;beasiswa_pemerintah;biaya_hidup;halal;catatan"></textarea>' +
+      '<p class="row"><button class="btn ghost" onclick="mmNegImpor(false)">Periksa dulu</button><button class="btn" onclick="mmNegImpor(true)">Simpan</button></p><div id="mir"></div></div>');
+  };
+  window.mmNegImpor = async function (simpan) {
+    var c = $('#mic').value; if (!c.trim()) { toast('Pilih berkas atau tempel isi CSV dulu', 1); return; }
+    try { mmHasilImpor(await api('mm.negaraImpor', { csv: c, simpan: simpan })); } catch (x) { fail(x); }
+  };
+
+   
   window.mmImporForm = function () {
-    M('<h2>Impor CSV program</h2><div style="max-width:700px">' +
+    M('<p><button class="btn ghost sm" onclick="mmDaftar()">&larr; Kembali</button></p><h2>Impor CSV program</h2><div style="max-width:700px">' +
+      '<p><small>Langkah: (1) tekan <b>Unduh template</b>; (2) isi di Excel atau Google Sheets, satu baris per jurusan, simpan sebagai CSV (UTF-8); (3) pilih berkas atau tempel isinya; (4) <b>Periksa dulu</b>, lalu <b>Simpan</b>. Baris contoh dan panduan di template (berawalan #) otomatis dilewati.</small></p>' +
+      '<p class="row"><button class="btn ghost" onclick="mmTemplatProgram()">Unduh template program (CSV)</button></p>' + MM_BERKAS +
+      '<details style="margin:0 0 10px"><summary>Nama kampus yang boleh dipakai (' + MM.kampus.length + ')</summary><ul class="mmul">' + MM.kampus.map(function (k) { return '<li>' + esc(k.n) + ' <small>(' + esc(k.neg) + ')</small></li>'; }).join('') + '</ul></details>' +
       '<p><small>Baris pertama = judul kolom. Kolom wajib: <b>kampus</b> (nama atau singkatan persis seperti di Kampus Tujuan) dan <b>jurusan</b>. Kolom lain: katakunci, biaya, ielts, nilai, beasiswa (Ya/Tidak), ranking, catatan, status. ' +
       'Kolom checklist (boleh kosong): <b>jalur</b> (Direct Entry / Foundation), <b>bahasa</b> (Inggris / Lokal), <b>testambahan</b> (Ya / Tidak), <b>fokus</b> (Spesifik / Eksploratif), <b>lingkungan</b> (Metropolitan / Kota Pelajar), <b>portofolio</b> (Ya / Tidak). ' +
       'Pemisah boleh koma, titik koma, atau tab. Baris yang sudah ada (kampus + jurusan sama) dilewati.</small></p>' +
       '<textarea id="mic" style="min-height:220px" placeholder="kampus,jurusan,katakunci,biaya,ielts,nilai,beasiswa,ranking,jalur,bahasa,testambahan,fokus,lingkungan,portofolio"></textarea>' +
-      '<p class="row"><button class="btn ghost" onclick="mmImpor(false)">Periksa dulu</button><button class="btn" onclick="mmImpor(true)">Simpan</button><button class="btn ghost" onclick="mmDaftar()">Kembali</button></p>' +
+      '<p class="row"><button class="btn ghost" onclick="mmImpor(false)">Periksa dulu</button><button class="btn" onclick="mmImpor(true)">Simpan</button></p>' +
       '<div id="mir"></div></div>');
   };
   window.mmImpor = async function (simpan) {
-    var c = $('#mic').value; if (!c.trim()) { toast('Tempel isi CSV dulu', 1); return; }
-    try {
-      var r = await api('mm.impor', { csv: c, simpan: simpan });
-      $('#mir').innerHTML = '<p><b>' + (r.tersimpan ? 'Tersimpan: ' : 'Siap diimpor: ') + r.siap + ' baris</b>, dilewati ' + r.dilewati + ', ditolak ' + r.ditolak + '.</p>' +
-        (r.contoh.length ? '<p><small>Contoh: ' + r.contoh.map(esc).join('; ') + '</small></p>' : '') +
-        (r.galat.length ? '<ul style="color:var(--bad)">' + r.galat.map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('') + '</ul>' : '');
-      if (r.tersimpan) toast('Impor selesai');
-    } catch (x) { fail(x); }
+    var c = $('#mic').value; if (!c.trim()) { toast('Pilih berkas atau tempel isi CSV dulu', 1); return; }
+    try { mmHasilImpor(await api('mm.impor', { csv: c, simpan: simpan })); } catch (x) { fail(x); }
   };
 
   VIEWS.mm = vMM;
@@ -9409,7 +9469,7 @@ function srrGambar(cv,f,html){
 
 (function () {
   var SUPERMODE = false, CABS = null;
-  var ADMIN_BASE = MENU.Admin.slice(), GLOBAL_MENU = ['artikel', 'kampus'];
+  var ADMIN_BASE = MENU.Admin.slice(), GLOBAL_MENU = ['artikel', 'kampus', 'mm-admin', 'mm-masuk'];
 
    
   var _cv = cabVal;
@@ -9497,7 +9557,7 @@ function srrGambar(cv,f,html){
         '<label for="cba">Nama lengkap admin</label><input id="cba" required maxlength="100">' +
         '<label for="cbe">Email admin (boleh kosong)</label><input id="cbe" type="email">' +
         '<p><button class="btn" id="cbs">Buat cabang</button> <small>Maksimal ' + d.maks + ' cabang. Proses beberapa detik.</small></p></form>' +
-        '<p><small>Menu Artikel, Kampus Tujuan, dan Mata Pelajaran adalah data bersama untuk semua cabang; hanya Superadmin yang bisa mengubahnya. ' +
+        '<p><small>Menu Artikel, Kampus Tujuan, Data Mix &amp; Match, Pengajuan Mix &amp; Match, dan Mata Pelajaran adalah data bersama untuk semua cabang; hanya Superadmin yang bisa mengubahnya. ' +
         'Cabang nonaktif tidak bisa dipakai masuk, tetapi datanya tidak dihapus. Lupa password admin cabang: pindah ke cabang itu, menu Pengguna, Reset password.</small></p>');
     } catch (e) { fail(e); }
   }
