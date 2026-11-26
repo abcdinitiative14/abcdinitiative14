@@ -7182,11 +7182,13 @@ const DS_P={
  out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
  search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>',
  chart:'<path d="M18 20V10M12 20V4M6 20v-6"/>',
+ inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
  dot:'<circle cx="12" cy="12" r="3"/>',
  school:'<path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/>',
  tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'};
 const DS_K={ringkasan:'grid',pengguna:'users',siswa:'user',guru:'user',kelas:'kelas',mapel:'book',wali:'users',pengampu:'clip',artikel:'edit',kampus:'globe',lab:'monitor',sert:'award',profil:'cap',bobot:'chart',backup:'db',migrasi:'upload',cek:'shield',log:'list',panduan:'help',
  'g-kelas':'cap','g-tugas':'clip','g-ujian':'edit','g-lab':'monitor','g-nilai':'chart','g-sert':'award','w-siswa':'users','w-rekap':'chart','w-rapor':'file','m-materi':'book','m-tugas':'clip','m-ujian':'edit','m-kelas':'kelas','m-ringkasan':'grid','m-lab':'monitor','m-pid':'monitor',
+ mm:'globe','mm-masuk':'inbox','mm-admin':'db',
  'w-ringkasan':'grid','g-ringkasan':'grid','w-nilai':'chart','w-binaan':'kelas','g-mapel':'kelas','g-prompt':'sparkle','urutan-prompt':'sparkle'};
 const dsI=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${DS_P[n]||DS_P.dot}</svg>`;
 const dsK=k=>dsI(DS_K[k]||'dot');
@@ -7202,7 +7204,7 @@ const DS_GROUPS=[
  {id:'pengguna',l:'Pengguna',i:'users',k:['pengguna']},
  {id:'sekolah',l:'Sekolah',i:'school',k:['siswa','guru','kelas','mapel','lab']},
  {id:'rapor',l:'Rapor',i:'file',k:['wali','pengampu','bobot']},
- {id:'global',l:'Global',i:'globe',k:['kampus']},
+ {id:'global',l:'Global',i:'globe',k:['kampus','mm-masuk','mm-admin']},
  {id:'sert',l:'Sertifikat',i:'award',k:['sert']},
  {id:'promptadm',l:'Generator Prompt',i:'sparkle',k:['urutan-prompt']},
  {id:'maint',l:'Maintenance',i:'tool',k:['backup','migrasi','cek','log']},
@@ -7230,6 +7232,9 @@ function dsPack(defs,menus){
  
 function dsGroups(role,menus){
   if(DS_PERAN[role])return dsPack(DS_PERAN[role],menus);
+  if(role==='Murid'){    
+    const mm=menus.filter(x=>x[0]==='mm'),rest=menus.filter(x=>x[0]!=='mm'),o=[{id:'menu',l:role,i:'grid',items:rest}];
+    if(mm.length)o.push({id:'mm',l:'Mix & Match',i:'globe',items:mm});return o}
   if(role!=='Admin')return [{id:'menu',l:role||'Menu',i:'grid',items:menus}];
   const used=new Set(),out=[];
   DS_GROUPS.forEach(g=>{const it=g.k.map(k=>menus.find(x=>x[0]===k)).filter(Boolean);it.forEach(x=>used.add(x[0]));if(it.length)out.push({id:g.id,l:g.l,i:g.i,items:it})});
@@ -8874,7 +8879,6 @@ function srrGambar(cv,f,html){
 })();
 </script>
 <style>
-.side a .mmic{display:inline-block;vertical-align:-4px;margin-right:7px;width:20px;height:20px}
 .mmg{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));max-width:900px}
 .mmr{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--r);background:#fff;padding:14px;margin:0 0 12px;max-width:900px}
 .mmr.t1{border-left-color:#0a7a4a}.mmr.t2{border-left-color:#d97706}.mmr.t3{border-left-color:#64748b}
@@ -8920,9 +8924,8 @@ function srrGambar(cv,f,html){
   function tambahMenu(role, key, label) {
     if (MENU[role] && !MENU[role].some(function (m) { return m[0] === key; })) MENU[role].push([key, label]);
   }
-   
-  var MM_GLOBE = '<svg class="mmic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
-  tambahMenu('Murid', 'mm', MM_GLOBE + 'Mix & Match Kampus');
+  tambahMenu('Murid', 'mm', 'Mix & Match Kampus');
+
   tambahMenu('Admin', 'mm-masuk', 'Pengajuan Mix & Match');
   tambahMenu('Admin', 'mm-admin', 'Data Mix & Match');
 
