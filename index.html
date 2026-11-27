@@ -9231,6 +9231,8 @@ function srrGambar(cv,f,html){
     var pilih = [].map.call(document.querySelectorAll('.mmpilih:checked'), function (x) { return x.getAttribute('data-id'); });
     if (!pilih.length) { toast('Pilih minimal satu program', 1); return; }
     if (pilih.length > 12) { toast('Maksimal 12 program', 1); return; }
+    var sa0 = $('#mmSa'), ss0 = $('#mmSs');
+    if (ss0 && ss0.checked && sa0 && !sa0.value.trim()) { toast('Kotak rekomendasi AI dicentang tetapi kosong. Isi dulu, atau hapus centangnya.', 1); return; }
     var ya = await ask('Kirim hasil (' + pilih.length + ' program) ke ' + MM.cur.p.nama + '? Setelah dikirim tidak bisa diubah.', { title: 'Kirim ke siswa', ok: 'Kirim' });
     if (!ya) return;
     var sa = $('#mmSa'), ss = $('#mmSs'), b = $('#mmKr'); b.disabled = true; b.textContent = 'Mengirim...';
